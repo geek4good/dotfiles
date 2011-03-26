@@ -1,3 +1,6 @@
 [submodule "etc/vim/bundle/fugitive"]
 	path = etc/vim/bundle/fugitive
 	url = https://github.com/tpope/vim-fugitive.git
+[submodule "etc/vim/bundle/rails"]
+	path = etc/vim/bundle/rails
+	url = https://github.com/tpope/vim-rails.git
