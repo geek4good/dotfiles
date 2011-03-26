@@ -1,0 +1,10 @@
+Installation:
+
+  git clone git://github.com/geek4good/dotfiles.git ~/Library/DotFiles
+
+Create symlinks:
+
+  ln -s ~/Library/DotFiles/etc/vim  ~/.vim
+  ln -s ~/.vim/vimrc ~/.vimrc
+  ln -s ~/.vim/gvimrc ~/.gvimrc
+

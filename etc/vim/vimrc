@@ -1,0 +1,3 @@
+set nocompatible
+let mapleader = ","
+imap jj <Esc> " Keep your fingers on the home row.
