@@ -2,8 +2,8 @@ call pathogen#runtime_append_all_bundles()
 call pathogen#helptags()
 
 set nocompatible
-let mapleader = "," " , is the leader character
-imap jj <ESC> " Keep your fingers on the home row.
+let mapleader = ","
+imap jj <ESC>
 
 " Tabs ************************************************************************
 "set sta " a <Tab> in an indent inserts 'shiftwidth' spaces
