@@ -46,8 +46,8 @@ set equalalways " Multiple windows, when created, are equal in size
 set splitbelow splitright
 
 " Vertical and horizontal split then hop to a new buffer
-:noremap <Leader>vv :vsp^M^W^W<cr>
-:noremap <Leader>hh :split^M^W^W<cr>
+:noremap <Leader>vv :vsp^M^W^W<CR>
+:noremap <Leader>hh :split^M^W^W<CR>
 
 
 " Cursor highlights ***********************************************************
@@ -141,3 +141,37 @@ autocmd FileType ruby,eruby set omnifunc=rubycomplete#Complete
 imap uu _
 imap hh =>
 imap aa @
+
+
+" -----------------------------------------------------------------------------  
+" |                              Plug-ins                                     |
+" -----------------------------------------------------------------------------  
+
+" NERDTree ********************************************************************
+:noremap <Leader>n :NERDTreeToggle<CR>
+let NERDTreeHijackNetrw=1 " User instead of Netrw when doing an edit /foobar
+let NERDTreeMouseMode=1 " Single click for everything
+
+
+" NERD Commenter **************************************************************
+let NERDCreateDefaultMappings=0 " I turn this off to make it simple
+
+" Toggle commenting on 1 line or all selected lines. Wether to comment or not
+" is decided based on the first line; if it's not commented then all lines
+" will be commented
+:map <Leader>c :call NERDComment(0, "toggle")<CR> 
+
+
+" railsvim ***************************************************************
+map <Leader>ra :AS<CR>
+map <Leader><Leader>ra :AV<CR>
+map <Leader>rr :RS<CR>
+map <Leader><Leader>rr :RV<CR>
+map <Leader>rm :Rmodel 
+map <Leader><Leader>rm :RVcmodel 
+map <Leader>rv :Rview 
+map <Leader><Leader>rv :RVview 
+map <Leader>rc :Rcontroller 
+map <Leader><Leader>rc :RVcontroller 
+map <Leader>rs :Rspec 
+map <Leader><Leader>rs :RVspec 
