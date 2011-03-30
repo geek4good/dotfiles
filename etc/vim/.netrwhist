@@ -1,0 +1,9 @@
+let g:netrw_dirhistmax  =10
+let g:netrw_dirhist_cnt =7
+let g:netrw_dirhist_1='/Users/lucas/Sites/ralv'
+let g:netrw_dirhist_2='/Users/lucas/Sites/ralv/app'
+let g:netrw_dirhist_3='/Users/lucas/Sites/ralv/app/controllers'
+let g:netrw_dirhist_4='/Users/lucas/Documents/Projects/macvim/src'
+let g:netrw_dirhist_5='/Users/lucas/Documents/Projects/macvim/src/VisVim'
+let g:netrw_dirhist_6='/Users/lucas/Sites/ralv'
+let g:netrw_dirhist_7='/Users/lucas/Sites/ralv/app/stylesheets'
