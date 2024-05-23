@@ -1,0 +1,3 @@
+tmux/plugins/
+wireguard/*.conf
+zed/.tmp*
