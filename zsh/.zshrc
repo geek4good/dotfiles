@@ -23,6 +23,19 @@ source "$ZINIT_HOME/zinit.zsh"
 # Add in Powerlevel10k
 zinit ice depth=1; zinit light romkatv/powerlevel10k
 
+# Install mise-en-place (mise)
+zinit as="command" lucid from="gh-r" for \
+    id-as="usage" \
+    atpull="%atclone" \
+    jdx/usage
+
+zinit as="command" lucid from="gh-r" for \
+    id-as="mise" mv="mise* -> mise" \
+    atclone="./mise* completion zsh > _mise" \
+    atpull="%atclone" \
+    atload='eval "$(mise activate zsh)"' \
+    jdx/mise
+
 # Add in zsh plugins
 zinit light zsh-users/zsh-syntax-highlighting
 zinit light zsh-users/zsh-completions
@@ -30,13 +43,10 @@ zinit light zsh-users/zsh-autosuggestions
 zinit light Aloxaf/fzf-tab
 
 # Add in snippets
-zinit snippet OMZP::asdf
 zinit snippet OMZP::command-not-found
 zinit snippet OMZP::direnv
-zinit snippet OMZP::docker
 zinit snippet OMZP::docker-compose
 zinit snippet OMZP::git
-zinit snippet OMZP::ripgrep
 zinit snippet OMZP::tmux
 
 # Load completions
@@ -75,6 +85,8 @@ zstyle ':fzf-tab:complete:cd:*' fzf-preview 'ls --color $realpath'
 
 # Aliases
 alias ls='ls --color'
+alias ll='ls -lh'
+alias la='ll -A'
 
 alias bubo='brew update && brew outdated'
 alias bubc='brew upgrade && brew cleanup'
@@ -87,6 +99,26 @@ alias vim="nvim"
 alias view="nvim -R"
 alias vimdiff="nvim -d"
 
+alias docker=docker.lima
+
+# Custom functions
+docker_start() {
+  limactl start docker
+  export DOCKER_HOST=$(limactl list docker --format 'unix://{{.Dir}}/sock/docker.sock')
+}
+
+docker_stop() {
+  limactl stop docker
+}
+
 # Shell integrations
 eval "$(fzf --zsh)"
-# eval "$(zoxide init --cmd cd zsh)"
+eval "$(zoxide init --cmd cd zsh)"
+
+# pnpm
+export PNPM_HOME="/Users/geek4good/Library/pnpm"
+case ":$PATH:" in
+  *":$PNPM_HOME:"*) ;;
+  *) export PATH="$PNPM_HOME:$PATH" ;;
+esac
+# pnpm end
