@@ -1,9 +1,15 @@
 {
   "extras": [
-
+    "lazyvim.plugins.extras.lang.astro",
+    "lazyvim.plugins.extras.lang.ruby",
+    "lazyvim.plugins.extras.lang.svelte",
+    "lazyvim.plugins.extras.lang.typescript",
+    "lazyvim.plugins.extras.lang.zig",
+    "lazyvim.plugins.extras.test.core",
+    "lazyvim.plugins.extras.util.mini-hipatterns"
   ],
   "news": {
-    "NEWS.md": "3314"
+    "NEWS.md": "11866"
   },
-  "version": 3
+  "version": 8
 }
