@@ -10,6 +10,7 @@
   "language_models": {
     "ollama": {
       "api_url": "http://localhost:11434",
+      "keep_alive": "5m",
       "available_models": [
         {
           "name": "qwen3:8b",
@@ -24,6 +25,7 @@
   },
   "context_servers": {
     "mcp-server-context7": {
+      "source": "extension",
       "settings": {
         "default_minimum_tokens": "10000"
       }
