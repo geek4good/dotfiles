@@ -1,11 +1,7 @@
 return {
   {
     "nvim-treesitter/nvim-treesitter",
-    opts = {
-      incremental_selection = {
-        enable = false,
-        keymaps = {},
-      },
-    },
+    lazy = false,
+    build = ":TSUpdate",
   },
 }
