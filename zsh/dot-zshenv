@@ -1,2 +1,17 @@
+export XDG_CONFIG_HOME="$HOME/.config"
 export ZDOTDIR="$HOME/.config/zsh"
-source "$ZDOTDIR/.zshenv"
+
+export PATH="$HOME/Applications:$HOME/.bun/bin:bin:$HOME/.local/bin:$PATH"
+export LC_ALL="en_GB.UTF-8"
+
+export EDITOR="nvim"
+export LESS="-R"
+
+export HOMEBREW_NO_ENV_HINTS="1"
+
+umask 022
+
+# Load encrypted secrets via fnox + age
+if command -v fnox &>/dev/null; then
+  eval "$(fnox activate zsh)"
+fi
