@@ -1,0 +1,36 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+DOTFILES_DIR="$(cd "$(dirname "$0")" && pwd)"
+
+# Install stow if needed
+if ! command -v stow &>/dev/null; then
+    echo "Installing stow..."
+    brew install stow
+fi
+
+# If packages specified, use those; otherwise stow all
+if [ $# -gt 0 ]; then
+    packages=("$@")
+else
+    packages=()
+    for dir in "$DOTFILES_DIR"/*/; do
+        packages+=("$(basename "$dir")")
+    done
+fi
+
+cd "$DOTFILES_DIR"
+for pkg in "${packages[@]}"; do
+    if [ ! -d "$pkg" ]; then
+        echo "Package '$pkg' not found, skipping."
+        continue
+    fi
+
+    echo "Stowing $pkg..."
+    stow --dotfiles --adopt --restow -t ~ "$pkg"
+done
+
+# Restore repo versions in case --adopt pulled in different files
+git -C "$DOTFILES_DIR" checkout -- .
+
+echo "Done!"
