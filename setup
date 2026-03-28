@@ -27,7 +27,7 @@ for pkg in "${packages[@]}"; do
     fi
 
     echo "Stowing $pkg..."
-    stow --dotfiles --adopt --restow -t ~ "$pkg"
+    stow --dotfiles --no-folding --adopt --restow -t ~ "$pkg"
 done
 
 # Restore repo versions in case --adopt pulled in different files
