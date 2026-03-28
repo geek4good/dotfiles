@@ -1,3 +1,7 @@
+# Make zsh behave like bash when it comes to special characters
+autoload -U select-word-style
+select-word-style bash
+
 # Enable Powerlevel10k instant prompt. Should stay close to the top of ~/.config/zsh/.zshrc.
 # Initialization code that may require console input (password prompts, [y/n]
 # confirmations, etc.) must go above this block; everything else may go below.
@@ -44,8 +48,8 @@ zinit light Aloxaf/fzf-tab
 
 # Add in snippets
 zinit snippet OMZP::command-not-found
-zinit snippet OMZP::direnv
 zinit snippet OMZP::docker-compose
+zinit snippet OMZP::fancy-ctrl-z
 zinit snippet OMZP::git
 zinit snippet OMZP::tmux
 
@@ -94,14 +98,19 @@ alias bcubo='brew update && brew outdated --cask'
 alias bcubc='brew upgrade --cask && brew cleanup'
 alias bubu='bubo && bcubo && bubc && bcubc'
 
+alias ml='mise latest'
+
 alias vi="nvim"
 alias vim="nvim"
 alias view="nvim -R"
 alias vimdiff="nvim -d"
 
-alias docker=docker.lima
+alias docker="docker.lima"
+alias oc="ocx oc -p ws"
 
 # Custom functions
+v() { nvim "${@:-.}"; }
+
 docker_start() {
   limactl start docker
   export DOCKER_HOST=$(limactl list docker --format 'unix://{{.Dir}}/sock/docker.sock')
@@ -122,3 +131,5 @@ case ":$PATH:" in
   *) export PATH="$PNPM_HOME:$PATH" ;;
 esac
 # pnpm end
+
+if command -v wt >/dev/null 2>&1; then eval "$(command wt config shell init zsh)"; fi
