@@ -1,0 +1,54 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+DOTFILES_REPO="git@github.com:geek4good/dotfiles.git"
+DOTFILES_DIR="$HOME/Projects/GEEK4GOOD/dotfiles"
+
+# Install Homebrew
+if ! command -v brew &>/dev/null; then
+    echo "Installing Homebrew..."
+    /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+    eval "$(/opt/homebrew/bin/brew shellenv)"
+fi
+
+# Install essential brew packages
+echo "Installing brew packages..."
+brew install \
+    age \
+    bat \
+    fd \
+    fnox \
+    fzf \
+    git \
+    jq \
+    lazygit \
+    mise \
+    neovim \
+    stow \
+    zoxide
+
+# Clone dotfiles
+if [ ! -d "$DOTFILES_DIR" ]; then
+    echo "Cloning dotfiles..."
+    mkdir -p "$(dirname "$DOTFILES_DIR")"
+    git clone "$DOTFILES_REPO" "$DOTFILES_DIR"
+fi
+
+# Stow dotfiles
+echo "Stowing dotfiles..."
+"$DOTFILES_DIR/setup"
+
+# Install mise tools
+echo "Installing mise tools..."
+mise install
+
+# Generate age identity for fnox
+AGE_IDENTITY="$HOME/.config/fnox/age.txt"
+SSH_KEY="$HOME/.ssh/id_ed25519"
+if [ ! -f "$AGE_IDENTITY" ] && [ -f "$SSH_KEY" ]; then
+    echo "Generating age identity from SSH key..."
+    mkdir -p "$(dirname "$AGE_IDENTITY")"
+    ssh-to-age -private-key -i "$SSH_KEY" > "$AGE_IDENTITY"
+fi
+
+echo "Done!"
