@@ -1,11 +1,14 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-DOTFILES_DIR="$(cd "$(dirname "$0")" && pwd)"
-# If running from ~/.local/bin, resolve to actual dotfiles dir
-if [[ "$DOTFILES_DIR" == "$HOME/.local/bin" ]]; then
-    DOTFILES_DIR="$HOME/Projects/GEEK4GOOD/dotfiles"  # canonical location
-fi
+# Resolve through symlinks to find the actual dotfiles directory
+SOURCE="$0"
+while [ -L "$SOURCE" ]; do
+    DIR="$(cd "$(dirname "$SOURCE")" && pwd)"
+    SOURCE="$(readlink "$SOURCE")"
+    [[ "$SOURCE" != /* ]] && SOURCE="$DIR/$SOURCE"
+done
+DOTFILES_DIR="$(cd "$(dirname "$SOURCE")" && pwd)"
 
 # --- 1. Homebrew ---
 if ! command -v brew &>/dev/null; then
