@@ -1,0 +1,13 @@
+[tools]
+# Runtimes & languages (multi-version per project)
+node = "latest"
+bun = "latest"
+python = "latest"
+ruby = "latest"
+go = "latest"
+zig = "latest"
+elm = "latest"
+
+# Package managers & tooling
+pnpm = "latest"
+pipx = "latest"
