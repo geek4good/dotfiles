@@ -1,0 +1,6 @@
+.DS_Store
+.dir-locals.el
+.envrc
+.tool-versions
+.vscode
+TODOs.org

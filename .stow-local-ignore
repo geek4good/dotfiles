@@ -1,0 +1,6 @@
+_bootstrap
+\.git
+\.gitignore
+\.stow-local-ignore
+\.context
+README\.md

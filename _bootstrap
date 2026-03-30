@@ -1,0 +1,32 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+DOTFILES_DIR="$(cd "$(dirname "$0")" && pwd)"
+# If running from ~/.local/bin, resolve to actual dotfiles dir
+if [[ "$DOTFILES_DIR" == "$HOME/.local/bin" ]]; then
+    DOTFILES_DIR="$HOME/Projects/GEEK4GOOD/dotfiles"  # canonical location
+fi
+
+# --- 1. Homebrew ---
+if ! command -v brew &>/dev/null; then
+    /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+    eval "$(/opt/homebrew/bin/brew shellenv)"
+fi
+
+# --- 2. Install stow (needed before anything else) ---
+brew install stow 2>/dev/null || true
+
+# --- 3. Stow all configs (creates ~/.Brewfile, ~/.config/mise/config.toml, etc.) ---
+"$DOTFILES_DIR/setup"
+
+# --- 4. Brew packages (reads ~/.Brewfile created by stow) ---
+brew bundle --global --no-lock
+
+# --- 5. Mise tools (reads ~/.config/mise/config.toml created by stow) ---
+mise install
+
+# --- 6. Self-install to ~/.local/bin ---
+mkdir -p "$HOME/.local/bin"
+ln -sf "$DOTFILES_DIR/_bootstrap" "$HOME/.local/bin/_bootstrap"
+
+echo "Bootstrap complete."

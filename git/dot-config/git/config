@@ -1,0 +1,33 @@
+[core]
+	excludesFile = ~/.config/git/ignore
+	editor = nvim
+
+[user]
+	name = Lucas Mbiwe
+	email = lucas@geek4good.com
+	signingKey = D56F23E681A939AE
+
+[commit]
+	gpgSign = true
+	verbose = false
+
+[alias]
+	br = branch
+	ci = commit
+	co = checkout
+	dc = diff --cached
+	df = diff
+	st = status
+	up = pull --rebase --autostash
+
+[init]
+	defaultBranch = main
+
+[rebase]
+	autoSquash = true
+
+[rerere]
+	enabled = true
+
+[url "ssh://git@github.com/"]
+	insteadOf = https://github.com/

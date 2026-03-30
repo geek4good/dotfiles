@@ -1,0 +1,22 @@
+Host *
+  AddKeysToAgent yes
+  UseKeychain yes
+  Compression yes
+  ForwardAgent no
+  KeepAlive yes
+  IdentityFile ~/.ssh/id_ed25519
+
+Host geek
+  HostName geek4good.com
+  User lucas
+  ForwardAgent yes
+
+Host mbiwe
+  HostName mbiwe.com
+  User lucas
+  ForwardAgent yes
+
+Host silo
+  HostName 168.119.49.221
+  User geek4good
+  ForwardAgent yes
