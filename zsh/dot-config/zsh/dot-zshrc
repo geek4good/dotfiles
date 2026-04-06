@@ -44,7 +44,6 @@ zinit snippet OMZP::command-not-found
 zinit snippet OMZP::docker-compose
 zinit snippet OMZP::fancy-ctrl-z
 zinit snippet OMZP::git
-zinit snippet OMZP::tmux
 
 # Load completions
 autoload -Uz compinit && compinit
