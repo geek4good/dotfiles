@@ -43,6 +43,18 @@ keybind = ctrl+l=goto_split:right
 # Split creation
 keybind = cmd+d=new_split:right
 keybind = cmd+shift+d=new_split:down
+keybind = ctrl+space>h=new_split:left
+keybind = ctrl+space>j=new_split:down
+keybind = ctrl+space>k=new_split:top
+keybind = ctrl+space>l=new_split:right
+keybind = ctrl+space>z=toggle_split_zoom
+keybind = ctrl+space>ctrl+c=new_tab
+
+# Tab navigation
+keybind = ctrl+shift+h=previous_tab
+keybind = ctrl+shift+j=previous_tab
+keybind = ctrl+shift+k=next_tab
+keybind = ctrl+shift+l=next_tab
 
 # Shell
 command = /bin/zsh
