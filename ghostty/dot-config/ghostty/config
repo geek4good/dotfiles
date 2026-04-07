@@ -51,10 +51,13 @@ keybind = ctrl+space>z=toggle_split_zoom
 keybind = ctrl+space>ctrl+c=new_tab
 
 # Tab navigation
-keybind = ctrl+shift+h=previous_tab
-keybind = ctrl+shift+j=previous_tab
-keybind = ctrl+shift+k=next_tab
-keybind = ctrl+shift+l=next_tab
+keybind = ctrl+alt+h=previous_tab
+keybind = ctrl+alt+j=previous_tab
+keybind = ctrl+alt+k=next_tab
+keybind = ctrl+alt+l=next_tab
+
+# Clear screen
+keybind = ctrl+shift+l=text:\x0c
 
 # Shell
 command = /bin/zsh
