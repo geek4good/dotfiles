@@ -4,3 +4,17 @@
 .tool-versions
 .vscode
 TODOs.org
+
+# Secrets - NEVER track
+*.pem
+*.key
+id_ed25519
+id_rsa
+id_ecdsa
+id_dsa
+*.ppk
+credentials
+.env
+.env.*
+hosts.yml
+cert.pem
