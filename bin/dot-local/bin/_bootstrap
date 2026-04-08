@@ -38,17 +38,39 @@ fi
 echo "Stowing dotfiles..."
 "$DOTFILES_DIR/setup"
 
-# Install mise tools
+# Brew bundle (reads ~/.Brewfile created by stow)
+echo "Installing Brewfile packages..."
+brew bundle --global --no-lock
+
+# Install mise tools (reads ~/.config/mise/config.toml created by stow)
 echo "Installing mise tools..."
 mise install
 
 # Generate age identity for fnox
 AGE_IDENTITY="$HOME/.config/fnox/age.txt"
+DECRYPT_KEY="$HOME/.ssh/id_ed25519"
 SSH_KEY="$HOME/.ssh/id_ed25519"
 if [ ! -f "$AGE_IDENTITY" ] && [ -f "$SSH_KEY" ]; then
     echo "Generating age identity from SSH key..."
     mkdir -p "$(dirname "$AGE_IDENTITY")"
     ssh-to-age -private-key -i "$SSH_KEY" > "$AGE_IDENTITY"
+    chmod 600 "$AGE_IDENTITY"
+fi
+
+# Provision secrets via age
+if [ -d "$DOTFILES_DIR/secrets/encrypted" ] && [ -f "$DECRYPT_KEY" ]; then
+    echo "Provisioning secrets..."
+
+    # GPG keys
+    age -d -i "$DECRYPT_KEY" "$DOTFILES_DIR/secrets/encrypted/gpg-private-keys.age" 2>/dev/null | gpg --import 2>/dev/null || true
+    age -d -i "$DECRYPT_KEY" "$DOTFILES_DIR/secrets/encrypted/gpg-ownertrust.age" 2>/dev/null | gpg --import-ownertrust 2>/dev/null || true
+
+    # Cloudflare tunnel credentials
+    if [ -f "$DOTFILES_DIR/secrets/encrypted/cloudflared-creds.age" ]; then
+        mkdir -p "$HOME/.cloudflared"
+        age -d -i "$DECRYPT_KEY" "$DOTFILES_DIR/secrets/encrypted/cloudflared-creds.age" > "$HOME/.cloudflared/99877567-2599-4a31-a39d-cc2564eb9dad.json"
+        chmod 600 "$HOME/.cloudflared/99877567-2599-4a31-a39d-cc2564eb9dad.json"
+    fi
 fi
 
 echo "Done!"
