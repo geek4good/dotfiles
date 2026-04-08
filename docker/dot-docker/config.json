@@ -1,0 +1,21 @@
+{
+	"auths": {
+		"773242019938.dkr.ecr.eu-west-2.amazonaws.com": {},
+		"https://index.docker.io/v1/": {},
+		"https://index.docker.io/v1/access-token": {},
+		"https://index.docker.io/v1/refresh-token": {}
+	},
+	"credsStore": "osxkeychain",
+	"currentContext": "lima-docker",
+	"plugins": {
+		"debug": {
+			"hooks": "exec"
+		},
+		"scout": {
+			"hooks": "pull,buildx build"
+		}
+	},
+	"features": {
+		"hooks": "true"
+	}
+}

@@ -1,0 +1,7 @@
+tunnel: 99877567-2599-4a31-a39d-cc2564eb9dad
+credentials-file: /Users/geek4good/.cloudflared/99877567-2599-4a31-a39d-cc2564eb9dad.json
+
+ingress:
+  - hostname: opencode.geek4good.com
+    service: http://localhost:57188
+  - service: http_status:404

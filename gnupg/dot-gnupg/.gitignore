@@ -1,0 +1,12 @@
+private-keys-v1.d/
+*.gpg
+*.kbx
+*.kbx~
+*.db
+*.db~
+*.rev
+S.gpg-agent
+S.gpg-agent.browser
+S.gpg-agent.extra
+S.gpg-agent.ssh
+*.pub
