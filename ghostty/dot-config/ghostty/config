@@ -58,6 +58,3 @@ keybind = ctrl+alt+l=next_tab
 
 # Clear screen
 keybind = ctrl+shift+l=text:\x0c
-
-# Shell
-command = /bin/zsh
