@@ -1,0 +1,90 @@
+# If not running interactively, don't do anything
+[[ $- != *i* ]] && return
+
+# Start zmx if not already inside a session
+if command -v zmx &>/dev/null && [[ -z $ZMX ]]; then
+  exec zmx
+fi
+
+# Prompt — green ❯ on success, red ❯ on failure
+PS1='\[\e[$(( $? ? 35 : 36 ))m\]❯\[\e[0m\] '
+
+# Homebrew
+eval "$(/opt/homebrew/bin/brew shellenv)"
+
+# Completion
+[[ -r "$(brew --prefix)/etc/profile.d/bash_completion.sh" ]] && source "$(brew --prefix)/etc/profile.d/bash_completion.sh"
+
+# History
+HISTSIZE=9999
+HISTFILESIZE=9999
+HISTFILE=~/.local/share/bash/.bash_history
+HISTCONTROL=ignoreboth:erasedups
+shopt -s histappend
+
+# Keybindings (emacs mode)
+set -o emacs
+bind '"\C-p": history-search-backward'
+bind '"\C-n": history-search-forward'
+
+# Fancy Ctrl-Z — toggle between shell and suspended job
+fancy-ctrl-z() {
+  if [[ -n $(jobs -s) ]]; then
+    fg 2>/dev/null
+  fi
+}
+trap fancy-ctrl-z SIGTSTP
+
+# Encrypted secrets via fnox + age
+if command -v fnox &>/dev/null; then
+  eval "$(fnox activate bash)"
+fi
+
+# Mise
+eval "$(mise activate bash)"
+
+# fzf
+eval "$(fzf --bash)"
+
+# Aliases
+alias ls='ls --color'
+alias ll='ls -lh'
+alias la='ll -A'
+
+alias bubo='brew update && brew outdated'
+alias bubc='brew upgrade && brew cleanup'
+alias bcubo='brew update && brew outdated --cask'
+alias bcubc='brew upgrade --cask && brew cleanup'
+alias bubu='bubo && bcubo && bubc && bcubc'
+
+alias ml='mise latest'
+
+alias vi="nvim"
+alias vim="nvim"
+alias view="nvim -R"
+alias vimdiff="nvim -d"
+
+alias docker="docker.lima"
+alias oc="ocx oc -p ws"
+
+# Functions
+v() { nvim "${@:-.}"; }
+
+docker_start() {
+  limactl start docker
+  export DOCKER_HOST=$(limactl list docker --format 'unix://{{.Dir}}/sock/docker.sock')
+}
+
+docker_stop() {
+  limactl stop docker
+}
+
+# pnpm
+export PNPM_HOME="/Users/geek4good/Library/pnpm"
+case ":$PATH:" in
+  *":$PNPM_HOME:"*) ;;
+  *) export PATH="$PNPM_HOME:$PATH" ;;
+esac
+
+# Worktrunk
+if command -v wt >/dev/null 2>&1; then eval "$(command wt config shell init bash)"; fi
