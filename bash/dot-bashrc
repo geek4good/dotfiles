@@ -1,6 +1,14 @@
 # If not running interactively, don't do anything
 [[ $- != *i* ]] && return
 
+# Environment
+export PATH="$HOME/.local/share/mise/shims:$HOME/Applications:$HOME/.bun/bin:bin:$HOME/.local/bin:$PATH"
+export LC_ALL="en_GB.UTF-8"
+export EDITOR="nvim"
+export LESS="-R"
+export HOMEBREW_NO_ENV_HINTS="1"
+umask 022
+
 # Start zmx if not already inside a session
 if command -v zmx &>/dev/null && [[ -z $ZMX ]]; then
   exec zmx
