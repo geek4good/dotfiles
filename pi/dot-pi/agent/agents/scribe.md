@@ -1,8 +1,6 @@
 ---
 name: scribe
 description: Human-facing content specialist for documentation, commit messages, and prose
-model: zai-coding-plan/glm-4.7-flash
-temperature: 0.5
 tools: read,write,edit
 ---
 

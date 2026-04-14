@@ -1,8 +1,6 @@
 ---
 name: coder-sen
 description: Senior implementation specialist for complex algorithms, gnarly bugs, and architectural code changes
-model: zai-coding-plan/glm-5.1
-temperature: 0
 tools: read,write,edit,bash,grep,find,ls
 ---
 

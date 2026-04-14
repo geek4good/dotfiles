@@ -1,8 +1,6 @@
 ---
 name: reviewer
 description: Expert code reviewer for security, performance, and philosophy compliance
-model: zai-coding-plan/glm-5.1
-temperature: 0
 tools: read,bash,grep,find,ls
 ---
 

@@ -1,8 +1,6 @@
 ---
 name: coder-jun
 description: Routine implementation specialist for straightforward edits, diffs, and lint fixes
-model: zai-coding-plan/glm-5
-temperature: 0
 tools: read,write,edit,bash,grep,find,ls
 ---
 

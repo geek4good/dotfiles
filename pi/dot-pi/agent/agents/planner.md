@@ -1,8 +1,6 @@
 ---
 name: planner
 description: Architecture and implementation planning — produces structured, phased plans with file-level specificity
-model: zai-coding-plan/glm-5.1
-temperature: 0
 tools: read,grep,find,ls
 ---
 

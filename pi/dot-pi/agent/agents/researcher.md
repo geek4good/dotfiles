@@ -1,8 +1,6 @@
 ---
 name: researcher
 description: Knowledge architect for external research using web search, code search, and documentation lookup
-model: zai-coding-plan/glm-5.1
-temperature: 0.3
 tools: read,grep,find,ls,bash,web_search,code_search,fetch_content
 ---
 
