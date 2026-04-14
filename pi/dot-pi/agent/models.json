@@ -11,22 +11,50 @@
       "provider": "zai-coding-plan",
       "model": "glm-5.1",
       "supportsReasoning": true,
-      "contextWindow": 128000,
-      "maxOutputTokens": 16000
+      "contextWindow": 200000,
+      "maxOutputTokens": 128000
+    },
+    "zai-coding-plan/glm-5-turbo": {
+      "provider": "zai-coding-plan",
+      "model": "glm-5-turbo",
+      "supportsReasoning": true,
+      "contextWindow": 200000,
+      "maxOutputTokens": 128000
     },
     "zai-coding-plan/glm-5": {
       "provider": "zai-coding-plan",
       "model": "glm-5",
       "supportsReasoning": true,
-      "contextWindow": 128000,
-      "maxOutputTokens": 16000
+      "contextWindow": 200000,
+      "maxOutputTokens": 128000
+    },
+    "zai-coding-plan/glm-4.7": {
+      "provider": "zai-coding-plan",
+      "model": "glm-4.7",
+      "supportsReasoning": true,
+      "contextWindow": 200000,
+      "maxOutputTokens": 128000
     },
     "zai-coding-plan/glm-4.7-flash": {
       "provider": "zai-coding-plan",
       "model": "glm-4.7-flash",
       "supportsReasoning": false,
-      "contextWindow": 128000,
-      "maxOutputTokens": 8000
+      "contextWindow": 200000,
+      "maxOutputTokens": 128000
+    },
+    "zai-coding-plan/glm-4.7-flashx": {
+      "provider": "zai-coding-plan",
+      "model": "glm-4.7-flashx",
+      "supportsReasoning": false,
+      "contextWindow": 200000,
+      "maxOutputTokens": 128000
+    },
+    "zai-coding-plan/glm-4.6": {
+      "provider": "zai-coding-plan",
+      "model": "glm-4.6",
+      "supportsReasoning": true,
+      "contextWindow": 200000,
+      "maxOutputTokens": 128000
     }
   }
 }

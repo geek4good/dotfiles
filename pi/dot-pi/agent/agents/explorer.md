@@ -1,7 +1,7 @@
 ---
 name: explorer
 description: Read-only codebase navigator for architecture mapping, file discovery, and pattern analysis
-model: zai-coding-plan/glm-5.1
+model: zai-coding-plan/glm-5-turbo
 temperature: 0.2
 tools: read,grep,find,ls
 ---
