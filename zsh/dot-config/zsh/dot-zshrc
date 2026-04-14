@@ -45,6 +45,7 @@ zinit snippet OMZP::docker-compose
 zinit snippet OMZP::fancy-ctrl-z
 zinit snippet OMZP::git
 
+
 # Load completions
 autoload -Uz compinit && compinit
 
@@ -111,7 +112,6 @@ docker_stop() {
 
 # Shell integrations
 eval "$(fzf --zsh)"
-eval "$(zoxide init --cmd cd zsh)"
 
 # pnpm
 export PNPM_HOME="/Users/geek4good/Library/pnpm"
