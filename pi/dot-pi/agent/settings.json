@@ -1,6 +1,9 @@
 {
   "defaultProvider": "zai-coding-plan",
   "defaultModel": "glm-5.1",
+  "packages": [
+    "npm:pi-web-access"
+  ],
   "defaultThinkingLevel": "high",
   "compaction": {
     "enabled": true,
@@ -11,5 +14,6 @@
     "enabled": true,
     "maxRetries": 3,
     "baseDelayMs": 2000
-  }
+  },
+  "lastChangelogVersion": "0.67.1"
 }
