@@ -40,7 +40,7 @@ echo "Stowing dotfiles..."
 
 # Brew bundle (reads ~/.Brewfile created by stow)
 echo "Installing Brewfile packages..."
-brew bundle --global --no-lock
+brew bundle --global
 
 # Touch ID for sudo (works inside tmux/zmx too)
 if [[ "$(uname)" == "Darwin" ]]; then
