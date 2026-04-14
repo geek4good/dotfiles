@@ -12,6 +12,7 @@ brew "gnupg"
 brew "mise"
 brew "neurosnap/tap/zmx"
 brew "tmux"
+brew "pam-reattach"
 
 # Editors
 brew "neovim"

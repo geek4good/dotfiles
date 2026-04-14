@@ -42,6 +42,19 @@ echo "Stowing dotfiles..."
 echo "Installing Brewfile packages..."
 brew bundle --global --no-lock
 
+# Touch ID for sudo (works inside tmux/zmx too)
+if [[ "$(uname)" == "Darwin" ]]; then
+    SUDO_LOCAL="/etc/pam.d/sudo_local"
+    if ! grep -q pam_tid.so "$SUDO_LOCAL" 2>/dev/null; then
+        echo "Configuring Touch ID for sudo..."
+        sudo tee "$SUDO_LOCAL" >/dev/null <<'PAMSUDOEOF'
+# sudo_local: local config file which survives system update and is included for sudo
+auth       optional       pam_reattach.so
+auth       sufficient     pam_tid.so
+PAMSUDOEOF
+    fi
+fi
+
 # Install mise tools (reads ~/.config/mise/config.toml created by stow)
 echo "Installing mise tools..."
 mise install
