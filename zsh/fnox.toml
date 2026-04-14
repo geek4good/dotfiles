@@ -1,7 +1,0 @@
-default_provider = "age"
-
-[providers.age]
-type = "age"
-recipients = ["ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAICw+xueoNjCkUFfWmIt5uoBMHjyFn2sojo3HN+2UqULM lucas@geek4good.com"]
-
-[secrets]
