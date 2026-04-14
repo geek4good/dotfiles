@@ -1,0 +1,32 @@
+{
+  "providers": {
+    "zai-coding-plan": {
+      "type": "openai",
+      "baseURL": "https://api.z.ai/api/coding/paas/v4",
+      "apiKeyEnv": "Z_AI_API_KEY"
+    }
+  },
+  "models": {
+    "zai-coding-plan/glm-5.1": {
+      "provider": "zai-coding-plan",
+      "model": "glm-5.1",
+      "supportsReasoning": true,
+      "contextWindow": 128000,
+      "maxOutputTokens": 16000
+    },
+    "zai-coding-plan/glm-5": {
+      "provider": "zai-coding-plan",
+      "model": "glm-5",
+      "supportsReasoning": true,
+      "contextWindow": 128000,
+      "maxOutputTokens": 16000
+    },
+    "zai-coding-plan/glm-4.7-flash": {
+      "provider": "zai-coding-plan",
+      "model": "glm-4.7-flash",
+      "supportsReasoning": false,
+      "contextWindow": 128000,
+      "maxOutputTokens": 8000
+    }
+  }
+}
