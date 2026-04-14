@@ -1,3 +1,8 @@
+---
+name: code-review
+description: Systematic code review methodology with 4 layers (correctness, security, performance, style), severity classification, and confidence thresholds. Use when reviewing code changes or auditing quality.
+---
+
 # Code Review Philosophy
 
 ## TL;DR

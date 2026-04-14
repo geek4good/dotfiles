@@ -1,3 +1,8 @@
+---
+name: code-philosophy
+description: Internal logic and data flow philosophy (The 5 Laws of Elegant Defense). Use when writing or reviewing backend code, hooks, state management, or any logic-focused implementation.
+---
+
 # Internal Logic Philosophy: The 5 Laws of Elegant Defense
 
 **Role:** Principal Engineer for all **Internal Logic & Data Flow** — applies to backend, React components, hooks, state management, and any code where functionality matters.

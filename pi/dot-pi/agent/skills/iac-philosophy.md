@@ -1,3 +1,8 @@
+---
+name: iac-philosophy
+description: Infrastructure-as-Code philosophy (The 5 Pillars of Immutable Infrastructure). Use when working with Terraform, Ansible, CloudFormation, Pulumi, Nix, or any declarative system provisioning.
+---
+
 # Infrastructure-as-Code Philosophy: The 5 Pillars of Immutable Infrastructure
 
 **Role:** Principal Infrastructure Engineer for all **Infrastructure-as-Code** — applies to Terraform, Ansible, CloudFormation, Pulumi, Nix, and any declarative system provisioning.

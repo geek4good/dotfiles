@@ -1,3 +1,8 @@
+---
+name: frontend-philosophy
+description: Visual and UI philosophy (The 5 Pillars of Intentional UI). Use when making styling, layout, color, typography, or animation decisions to avoid generic AI-generated aesthetics.
+---
+
 # Frontend Design Philosophy: The 5 Pillars of Intentional UI
 
 **Role:** Design Director for all **Visual & Aesthetic decisions** — applies to styling, layout, colors, typography, animations, and UI composition.

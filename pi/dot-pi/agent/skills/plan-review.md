@@ -1,3 +1,8 @@
+---
+name: plan-review
+description: Criteria for reviewing implementation plans against quality standards covering citation quality, completeness, and actionability. Use when auditing or reviewing plans before execution.
+---
+
 # Plan Review
 
 > **Load this skill** when reviewing implementation plans (not code).

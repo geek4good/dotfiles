@@ -1,3 +1,8 @@
+---
+name: astro
+description: Astro framework patterns for Islands Architecture, client directives, multi-framework support, View Transitions, and content collections. Use when building content-focused sites or implementing partial hydration.
+---
+
 # Astro Framework
 
 Astro 6.x framework for building fast, content-focused websites with Islands Architecture and zero JavaScript by default.

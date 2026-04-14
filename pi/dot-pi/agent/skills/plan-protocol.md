@@ -1,3 +1,8 @@
+---
+name: plan-protocol
+description: Guidelines for creating and managing structured implementation plans with phased tasks, citations, and progress tracking. Use when starting multi-step implementations.
+---
+
 # Plan Protocol
 
 > **Load this skill** when creating or updating implementation plans.
