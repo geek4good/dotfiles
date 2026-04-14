@@ -8,9 +8,9 @@ Configuration files managed with [GNU Stow](https://www.gnu.org/software/stow/).
 - **Homebrew** — system packages
 - **mise** — dev tool version management (Node, Go, Rust, Python, etc.)
 - **fnox** + **age** — encrypted secrets, decrypted at shell init via SSH key
-- **zinit** — zsh plugin manager
+- **bash** — shell, with bash-completion, fzf integration, and fancy Ctrl-Z
 - **Neovim** (LazyVim) — editor
-- **fzf** + **zoxide** — fuzzy finder and directory jumper
+- **fzf** — fuzzy finder (Ctrl+R history, Ctrl+T files, Alt+C dirs)
 
 ## Setup
 
