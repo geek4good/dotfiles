@@ -1,0 +1,40 @@
+{
+  "$schema": "https://charm.land/crush.json",
+  "models": {
+    "large": {
+      "model": "glm-5.1",
+      "provider": "zai",
+      "think": true
+    },
+    "small": {
+      "model": "glm-4.7-flash",
+      "provider": "zai",
+      "think": false
+    }
+  },
+  "lsp": {
+    "astro": {
+      "command": "astro-ls",
+      "args": ["--stdio"]
+    },
+    "go": {
+      "command": "gopls",
+      "env": {
+        "GOTOOLCHAIN": "go1.26.2"
+      }
+    },
+    "ruby": {
+      "command": "ruby-lsp"
+    },
+    "typescript": {
+      "command": "typescript-language-server",
+      "args": ["--stdio"]
+    }
+  },
+  "options": {
+    "attribution": {
+      "trailer_style": "none",
+      "generated_with": false
+    }
+  }
+}
