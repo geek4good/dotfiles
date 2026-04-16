@@ -1,5 +1,6 @@
 {
   "theme": "opencode",
+  "quietStartup": true,
   "defaultProvider": "zai-coding-plan",
   "defaultModel": "glm-5.1",
   "packages": [
