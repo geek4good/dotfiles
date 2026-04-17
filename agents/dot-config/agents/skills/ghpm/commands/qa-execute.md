@@ -1,0 +1,1490 @@
+---
+description: Execute QA Steps using Playwright automation
+allowed-tools: [Read, Bash, Grep, Glob]
+arguments:
+  qa:
+    description: "QA issue number (format: qa=#123)"
+    required: false
+  step:
+    description: "Specific QA Step to execute (format: step=#123)"
+    required: false
+---
+
+<objective>
+You are GHPM (GitHub Project Manager). Execute QA Steps using Playwright browser automation, recording pass/fail results on GitHub issues and triggering bug creation on failures.
+</objective>
+
+<arguments>
+**Optional arguments:**
+- `qa=#123` - Execute all QA Steps linked to this QA Issue
+- `step=#123` - Execute a specific QA Step
+
+**Resolution order if omitted:**
+
+1. Most recent open QA issue with QA Steps:
+   `gh issue list -l QA -s open --limit 1 --json number -q '.[0].number'`
+</arguments>
+
+<usage_examples>
+**Execute a single QA Step:**
+
+```bash
+/ghpm:qa-execute step=#42
+```
+
+**Execute all Steps in a QA Issue:**
+
+```bash
+/ghpm:qa-execute qa=#10
+```
+
+**Auto-resolve most recent QA Issue:**
+
+```bash
+/ghpm:qa-execute
+```
+
+</usage_examples>
+
+<workflow>
+
+## Step 0: Resolve Target QA Steps
+
+### If `step=#N` provided (single Step execution)
+
+```bash
+STEP=$N
+
+# Fetch Step details
+STEP_DATA=$(gh issue view "$STEP" --json title,body,url,labels -q '.')
+STEP_TITLE=$(echo "$STEP_DATA" | jq -r '.title')
+STEP_BODY=$(echo "$STEP_DATA" | jq -r '.body')
+
+# Verify it's a QA Step
+HAS_LABEL=$(echo "$STEP_DATA" | jq -r '.labels[].name' | grep -c "QA-Step" || true)
+if [ "$HAS_LABEL" -eq 0 ]; then
+  echo "Warning: Issue #$STEP does not have QA-Step label. Proceeding anyway."
+fi
+
+# Extract parent QA Issue number from body
+QA=$(echo "$STEP_BODY" | grep -oE 'QA: #[0-9]+' | head -1 | grep -oE '[0-9]+')
+
+STEPS_TO_EXECUTE=("$STEP")
+```
+
+### If `qa=#N` provided (all Steps in QA Issue)
+
+```bash
+QA=$N
+OWNER=$(gh repo view --json owner -q '.owner.login')
+REPO=$(gh repo view --json name -q '.name')
+
+# Fetch all QA Steps linked as sub-issues of this QA Issue
+cat > /tmp/ghpm-qa-subissues.graphql << 'GRAPHQL'
+query($owner: String!, $repo: String!, $number: Int!) {
+  repository(owner: $owner, name: $repo) {
+    issue(number: $number) {
+      subIssues(first: 50) {
+        nodes {
+          number
+          title
+          state
+          labels(first: 10) {
+            nodes { name }
+          }
+        }
+      }
+    }
+  }
+}
+GRAPHQL
+
+# Get open QA Steps
+STEPS_TO_EXECUTE=$(gh api graphql -F owner="$OWNER" -F repo="$REPO" -F number=$QA \
+  -f query="$(cat /tmp/ghpm-qa-subissues.graphql)" \
+  --jq '.data.repository.issue.subIssues.nodes[] | select(.state == "OPEN") | select(.labels.nodes[].name == "QA-Step") | .number')
+
+if [ -z "$STEPS_TO_EXECUTE" ]; then
+  echo "Error: No open QA Steps found for QA Issue #$QA"
+  exit 1
+fi
+
+echo "Found $(echo "$STEPS_TO_EXECUTE" | wc -l | tr -d ' ') QA Steps to execute"
+```
+
+### If no argument provided (auto-resolve)
+
+```bash
+# Find most recent open QA issue
+QA=$(gh issue list -l QA -s open --limit 1 --json number -q '.[0].number')
+
+if [ -z "$QA" ]; then
+  echo "Error: No open QA issue found. Specify qa=#N or step=#N"
+  exit 1
+fi
+
+echo "Auto-resolved to QA Issue #$QA"
+
+# Then fetch Steps as above
+```
+
+## Step 1: Fetch Step Details
+
+For each Step to execute, fetch the full details:
+
+```bash
+for STEP in $STEPS_TO_EXECUTE; do
+  STEP_DATA=$(gh issue view "$STEP" --json title,body,url -q '.')
+  STEP_TITLE=$(echo "$STEP_DATA" | jq -r '.title')
+  STEP_BODY=$(echo "$STEP_DATA" | jq -r '.body')
+  STEP_URL=$(echo "$STEP_DATA" | jq -r '.url')
+
+  echo "Processing: #$STEP - $STEP_TITLE"
+
+  # Extract Given/When/Then from body
+  # Look for Scenario section
+  SCENARIO=$(echo "$STEP_BODY" | sed -n '/## Scenario/,/## /p' | head -n -1)
+
+  # Extract Test Details
+  URL_PAGE=$(echo "$STEP_BODY" | grep -oE '\*\*URL/Page:\*\* .+' | sed 's/\*\*URL\/Page:\*\* //')
+
+  # Continue to parsing and execution...
+done
+```
+
+## Step 2: Parse Given/When/Then into Playwright Actions
+
+Parse the Scenario section to extract actionable Playwright commands.
+
+### Parser Pattern Reference
+
+| Pattern | Playwright Action |
+|---------|-------------------|
+| `Given I am on <URL>` | `await page.goto('<URL>')` |
+| `Given I am on the <page> page` | `await page.goto(baseUrl + '/<page>')` |
+| `When I click <element>` | `await page.click('<selector>')` |
+| `When I click the <text> button` | `await page.click('button:has-text("<text>")')` |
+| `When I click the <text> link` | `await page.click('a:has-text("<text>")')` |
+| `When I type <text> into <field>` | `await page.fill('<selector>', '<text>')` |
+| `When I enter <text> in the <field> field` | `await page.fill('[name="<field>"], [placeholder*="<field>"]', '<text>')` |
+| `When I select <option> from <dropdown>` | `await page.selectOption('<selector>', '<option>')` |
+| `When I check <checkbox>` | `await page.check('<selector>')` |
+| `When I uncheck <checkbox>` | `await page.uncheck('<selector>')` |
+| `When I wait for <seconds> seconds` | `await page.waitForTimeout(<seconds> * 1000)` |
+| `Then I should see <text>` | `await expect(page.locator('body')).toContainText('<text>')` |
+| `Then I should see the <text> button` | `await expect(page.locator('button:has-text("<text>")')).toBeVisible()` |
+| `Then I should be on <URL>` | `await expect(page).toHaveURL('<URL>')` |
+| `Then I should be redirected to <page>` | `await expect(page).toHaveURL(/<page>/)` |
+| `Then the <field> field should contain <value>` | `await expect(page.locator('<selector>')).toHaveValue('<value>')` |
+| `Then I should not see <text>` | `await expect(page.locator('body')).not.toContainText('<text>')` |
+
+### Parsing Logic
+
+```javascript
+function parseScenario(scenario) {
+  const actions = [];
+  const lines = scenario.split('\n').map(l => l.trim()).filter(l => l);
+
+  for (const line of lines) {
+    // Given - Setup/Navigation
+    if (/^Given I am on (.+)$/i.test(line)) {
+      const url = line.match(/^Given I am on (.+)$/i)[1];
+      actions.push({ type: 'navigate', url: url.replace(/['"]/g, '') });
+    }
+
+    // When - Actions
+    else if (/^When I click (?:the )?(.+?) button$/i.test(line)) {
+      const text = line.match(/^When I click (?:the )?(.+?) button$/i)[1];
+      actions.push({ type: 'click', selector: `button:has-text("${text}")` });
+    }
+    else if (/^When I click (?:the )?(.+?) link$/i.test(line)) {
+      const text = line.match(/^When I click (?:the )?(.+?) link$/i)[1];
+      actions.push({ type: 'click', selector: `a:has-text("${text}")` });
+    }
+    else if (/^When I click (.+)$/i.test(line)) {
+      const element = line.match(/^When I click (.+)$/i)[1];
+      actions.push({ type: 'click', selector: element });
+    }
+    else if (/^When I (?:type|enter) ['""]?(.+?)['""]? (?:into|in) (?:the )?(.+?)(?: field)?$/i.test(line)) {
+      const match = line.match(/^When I (?:type|enter) ['""]?(.+?)['""]? (?:into|in) (?:the )?(.+?)(?: field)?$/i);
+      actions.push({ type: 'fill', selector: match[2], value: match[1] });
+    }
+    else if (/^When I select ['""]?(.+?)['""]? from (.+)$/i.test(line)) {
+      const match = line.match(/^When I select ['""]?(.+?)['""]? from (.+)$/i);
+      actions.push({ type: 'select', selector: match[2], value: match[1] });
+    }
+    else if (/^When I wait for (\d+) seconds?$/i.test(line)) {
+      const seconds = line.match(/^When I wait for (\d+) seconds?$/i)[1];
+      actions.push({ type: 'wait', duration: parseInt(seconds) * 1000 });
+    }
+
+    // Then - Assertions
+    else if (/^Then I should see ['""]?(.+?)['""]?$/i.test(line)) {
+      const text = line.match(/^Then I should see ['""]?(.+?)['""]?$/i)[1];
+      actions.push({ type: 'assertText', text });
+    }
+    else if (/^Then I should be on (.+)$/i.test(line)) {
+      const url = line.match(/^Then I should be on (.+)$/i)[1];
+      actions.push({ type: 'assertURL', url: url.replace(/['"]/g, '') });
+    }
+    else if (/^Then I should be redirected to (.+)$/i.test(line)) {
+      const page = line.match(/^Then I should be redirected to (.+)$/i)[1];
+      actions.push({ type: 'assertURLContains', pattern: page });
+    }
+    else if (/^Then I should not see ['""]?(.+?)['""]?$/i.test(line)) {
+      const text = line.match(/^Then I should not see ['""]?(.+?)['""]?$/i)[1];
+      actions.push({ type: 'assertNoText', text });
+    }
+
+    // Unparseable line
+    else if (line && !line.startsWith('As a')) {
+      console.warn(`Warning: Could not parse line: "${line}"`);
+      actions.push({ type: 'unparseable', line });
+    }
+  }
+
+  return actions;
+}
+```
+
+### Handling Unparseable Steps
+
+When a step cannot be parsed:
+
+1. Log warning with the unparseable line
+2. Add to actions array with type `unparseable`
+3. During execution, skip unparseable actions but include in report
+4. Do not fail the entire step for unparseable clauses
+
+## Step 3: Execute Playwright Actions
+
+### Step 3.0: Claim Step Before Execution
+
+Before executing any step, claim it to prevent duplicate work and enable progress tracking.
+
+**Important for QA mode:** Claim each step only when its execution begins, NOT all steps at once upfront. This allows other workers to claim and execute other steps.
+
+```bash
+# Get current GitHub user
+CURRENT_USER=$(gh api user -q '.login')
+if [ -z "$CURRENT_USER" ]; then
+  echo "ERROR: Could not determine current GitHub user. Run 'gh auth login'"
+  exit 1
+fi
+
+# Check existing assignees on the QA Step
+ASSIGNEES=$(gh issue view "$STEP" --json assignees -q '.assignees[].login')
+
+# Handle assignment scenarios
+if [ -z "$ASSIGNEES" ]; then
+  # No assignees - claim the step
+  gh issue edit "$STEP" --add-assignee @me
+  echo "✓ Assigned to @$CURRENT_USER"
+
+  # Post audit comment
+  TIMESTAMP=$(date -u +"%Y-%m-%d %H:%M:%S UTC")
+  gh issue comment "$STEP" --body "🏷️ Claimed by @$CURRENT_USER at $TIMESTAMP"
+
+elif echo "$ASSIGNEES" | grep -qx "$CURRENT_USER"; then
+  # Already assigned to current user - proceed
+  echo "✓ Already assigned to you (@$CURRENT_USER)"
+
+else
+  # Assigned to another user - abort this step only
+  EXISTING_ASSIGNEE=$(echo "$ASSIGNEES" | head -1)
+  echo "✗ Step #$STEP is already claimed by @$EXISTING_ASSIGNEE"
+  # Continue to next step (don't abort entire QA run)
+  continue
+fi
+
+# Update project status to "In Progress" (best-effort)
+if [ -n "$GHPM_PROJECT" ]; then
+  OWNER=$(gh repo view --json owner -q '.owner.login')
+  echo "Note: Project status update to 'In Progress' is best-effort"
+fi
+
+# Warn on orphaned state (In Progress without assignee)
+if [ -z "$ASSIGNEES" ] && [ -n "$GHPM_PROJECT" ]; then
+  PROJECT_STATUS=$(gh issue view "$STEP" --json projectItems -q '.projectItems[0].status.name // empty' 2>/dev/null)
+  if [ "$PROJECT_STATUS" = "In Progress" ]; then
+    echo "⚠ Warning: Step #$STEP had status 'In Progress' but no assignee"
+  fi
+fi
+```
+
+**UX Output:**
+
+| Scenario | Output |
+|----------|--------|
+| Success (new claim) | `✓ Assigned to @username` |
+| Self-claim | `✓ Already assigned to you (@username)` |
+| Conflict | `✗ Step #N is already claimed by @another-user` |
+| Orphaned state | `⚠ Warning: Step #N had status 'In Progress' but no assignee` |
+
+**Behavior:**
+
+- For `step=#N` mode: claim the single step before execution
+- For `qa=#N` mode: claim each step ONLY when its execution begins (not all upfront)
+- On conflict, skip that step and continue to next (other workers can still execute other steps)
+- On self-claim, proceed normally
+- All claiming operations complete within 3 seconds
+
+### Step 3.1: Execute Playwright
+
+Execute the parsed actions in a browser using Playwright.
+
+### Browser Launch Configuration
+
+```javascript
+const { chromium, expect } = require('@playwright/test');
+
+async function executeStep(stepNumber, actions, options = {}) {
+  const {
+    headless = true,
+    timeout = 30000,
+    viewport = { width: 1280, height: 720 },
+    baseUrl = ''
+  } = options;
+
+  const browser = await chromium.launch({ headless });
+  const context = await browser.newContext({ viewport });
+  const page = await context.newPage();
+
+  page.setDefaultTimeout(timeout);
+
+  const results = {
+    stepNumber,
+    pass: true,
+    actions: [],
+    error: null,
+    screenshot: null
+  };
+
+  try {
+    for (const action of actions) {
+      const actionResult = { action, success: false, error: null };
+
+      try {
+        switch (action.type) {
+          case 'navigate':
+            const url = action.url.startsWith('http') ? action.url : baseUrl + action.url;
+            await page.goto(url, { waitUntil: 'networkidle' });
+            actionResult.success = true;
+            break;
+
+          case 'click':
+            await page.click(action.selector);
+            actionResult.success = true;
+            break;
+
+          case 'fill':
+            // Try common selector patterns
+            const fillSelector = action.selector.startsWith('[') || action.selector.startsWith('#') || action.selector.startsWith('.')
+              ? action.selector
+              : `[name="${action.selector}"], [placeholder*="${action.selector}" i], label:has-text("${action.selector}") + input`;
+            await page.fill(fillSelector, action.value);
+            actionResult.success = true;
+            break;
+
+          case 'select':
+            const selectSelector = action.selector.startsWith('[') || action.selector.startsWith('#')
+              ? action.selector
+              : `select[name="${action.selector}"]`;
+            await page.selectOption(selectSelector, action.value);
+            actionResult.success = true;
+            break;
+
+          case 'wait':
+            await page.waitForTimeout(action.duration);
+            actionResult.success = true;
+            break;
+
+          case 'assertText':
+            await expect(page.locator('body')).toContainText(action.text, { timeout });
+            actionResult.success = true;
+            break;
+
+          case 'assertNoText':
+            await expect(page.locator('body')).not.toContainText(action.text, { timeout });
+            actionResult.success = true;
+            break;
+
+          case 'assertURL':
+            await expect(page).toHaveURL(action.url, { timeout });
+            actionResult.success = true;
+            break;
+
+          case 'assertURLContains':
+            await expect(page).toHaveURL(new RegExp(action.pattern), { timeout });
+            actionResult.success = true;
+            break;
+
+          case 'unparseable':
+            // Skip but log
+            actionResult.skipped = true;
+            actionResult.success = true;
+            console.log(`Skipped unparseable action: ${action.line}`);
+            break;
+
+          default:
+            actionResult.error = `Unknown action type: ${action.type}`;
+        }
+      } catch (actionError) {
+        actionResult.error = actionError.message;
+        results.pass = false;
+        results.error = actionError.message;
+        // Capture screenshot on failure (handled in Step 4)
+        break; // Stop execution on first failure
+      }
+
+      results.actions.push(actionResult);
+    }
+  } finally {
+    await browser.close();
+  }
+
+  return results;
+}
+```
+
+### Execution Flow
+
+1. Launch headless Chromium browser
+2. Create new page with configured viewport
+3. Execute each action in sequence
+4. Stop on first failure and capture error
+5. Close browser and return results
+
+### Timeout and Wait Handling
+
+- Default action timeout: 30 seconds
+- Navigation waits for `networkidle` state
+- Explicit waits via `When I wait for X seconds`
+- Assertions have configurable timeout
+
+## Step 4: Capture Screenshot on Failure
+
+When a QA Step fails, capture a screenshot of the current page state for inclusion in bug reports.
+
+### Screenshot Capture Implementation
+
+Update the executeStep function to capture screenshots on failure:
+
+```javascript
+async function executeStep(stepNumber, actions, options = {}) {
+  // ... browser launch code from Step 3 ...
+
+  try {
+    for (const action of actions) {
+      const actionResult = { action, success: false, error: null };
+
+      try {
+        // ... action execution code from Step 3 ...
+      } catch (actionError) {
+        actionResult.error = actionError.message;
+        results.pass = false;
+        results.error = actionError.message;
+
+        // Capture screenshot on failure
+        const screenshotPath = `/tmp/qa-screenshot-step-${stepNumber}-${Date.now()}.png`;
+        try {
+          await page.screenshot({
+            path: screenshotPath,
+            fullPage: true
+          });
+          results.screenshot = screenshotPath;
+          console.log(`Screenshot captured: ${screenshotPath}`);
+        } catch (screenshotError) {
+          console.warn(`Failed to capture screenshot: ${screenshotError.message}`);
+        }
+
+        break; // Stop execution on first failure
+      }
+
+      results.actions.push(actionResult);
+    }
+  } finally {
+    await browser.close();
+  }
+
+  return results;
+}
+```
+
+### Screenshot Configuration
+
+| Option | Default | Description |
+|--------|---------|-------------|
+| `fullPage` | `true` | Capture entire scrollable page |
+| `path` | `/tmp/qa-screenshot-step-{N}-{timestamp}.png` | File path |
+| `type` | `png` | Image format (png for quality) |
+
+### Screenshot Handling Notes
+
+1. **Temp directory**: Screenshots saved to `/tmp/` for accessibility
+2. **Naming convention**: `qa-screenshot-step-{stepNumber}-{timestamp}.png`
+3. **Full page**: Captures entire page, not just viewport
+4. **Error resilience**: Screenshot failure doesn't fail the test (warns only)
+5. **No screenshot on pass**: Only captured when test fails
+
+### Accessing Screenshots
+
+The screenshot path is returned in the results object:
+
+```javascript
+const results = await executeStep(42, actions);
+if (!results.pass && results.screenshot) {
+  console.log(`Failure screenshot: ${results.screenshot}`);
+  // Pass to bug creation workflow
+}
+```
+
+## Step 5: Handle Pass Result with GitHub Comment
+
+When a QA Step passes, post a success comment on the Step issue.
+
+### Pass Comment Template
+
+```bash
+gh issue comment "$STEP" --body "$(cat <<'COMMENT'
+## ✅ Passed
+
+- **Executed by:** AI (Claude Code)
+- **Timestamp:** $(date -u +"%Y-%m-%d %H:%M:%S UTC")
+- **Result:** All assertions passed
+
+### Actions Executed
+
+- Navigate to <URL>
+- Click <element>
+- Fill <field> with <value>
+- Assert text "<text>" visible
+COMMENT
+)"
+```
+
+### Pass Handler Implementation
+
+```javascript
+async function handlePassResult(stepNumber, results) {
+  const timestamp = new Date().toISOString().replace('T', ' ').replace(/\.\d+Z$/, ' UTC');
+
+  // Build action summary
+  const actionSummary = results.actions
+    .filter(a => a.success && !a.skipped)
+    .map(a => {
+      switch (a.action.type) {
+        case 'navigate': return `- Navigate to ${a.action.url}`;
+        case 'click': return `- Click \`${a.action.selector}\``;
+        case 'fill': return `- Fill \`${a.action.selector}\` with "${a.action.value}"`;
+        case 'select': return `- Select "${a.action.value}" from \`${a.action.selector}\``;
+        case 'wait': return `- Wait ${a.action.duration / 1000} seconds`;
+        case 'assertText': return `- Assert text "${a.action.text}" visible`;
+        case 'assertNoText': return `- Assert text "${a.action.text}" not visible`;
+        case 'assertURL': return `- Assert URL is ${a.action.url}`;
+        case 'assertURLContains': return `- Assert URL contains "${a.action.pattern}"`;
+        default: return `- ${a.action.type}`;
+      }
+    })
+    .join('\n');
+
+  const comment = `## ✅ Passed
+
+- **Executed by:** AI (Claude Code)
+- **Timestamp:** ${timestamp}
+- **Result:** All assertions passed
+
+### Actions Executed
+
+${actionSummary}`;
+
+  // Post comment using gh CLI
+  const { execSync } = require('child_process');
+  execSync(`gh issue comment ${stepNumber} --body "${comment.replace(/"/g, '\\"')}"`, {
+    stdio: 'inherit'
+  });
+
+  console.log(`Posted pass comment on QA Step #${stepNumber}`);
+}
+```
+
+### Pass Comment Format
+
+| Field | Value |
+|-------|-------|
+| Emoji | ✅ |
+| Executed by | AI (Claude Code) |
+| Timestamp | UTC timestamp |
+| Result | All assertions passed |
+| Actions | Bulleted list of executed actions |
+
+## Step 6: Handle Fail Result and Trigger Bug Creation
+
+When a QA Step fails, post a failure comment and trigger the bug creation workflow.
+
+### Fail Comment Template
+
+```bash
+gh issue comment "$STEP" --body "$(cat <<'COMMENT'
+## ❌ Failed
+
+- **Executed by:** AI (Claude Code)
+- **Timestamp:** $(date -u +"%Y-%m-%d %H:%M:%S UTC")
+- **Error:** <error message>
+
+### Failed Action
+
+- **Action:** <action that failed>
+- **Expected:** <what was expected>
+- **Actual:** <what happened>
+
+### Screenshot
+
+📸 Screenshot captured for bug report
+
+### Bug Report
+
+🐛 Creating bug issue...
+COMMENT
+)"
+```
+
+### Fail Handler Implementation
+
+```javascript
+// Bug creation must complete within 30 seconds per NFR2 (Task #43)
+const BUG_CREATION_TIMEOUT_MS = 30000;
+
+async function handleFailResult(stepNumber, stepTitle, stepBody, results, qaNumber) {
+  const startTime = Date.now();
+  const timestamp = new Date().toISOString().replace('T', ' ').replace(/\.\d+Z$/, ' UTC');
+
+  // Helper to check if we're approaching timeout
+  const checkTimeout = (operation) => {
+    const elapsed = Date.now() - startTime;
+    if (elapsed > BUG_CREATION_TIMEOUT_MS * 0.9) {
+      console.warn(`Warning: Bug creation approaching 30s timeout at ${operation} (${elapsed}ms elapsed)`);
+    }
+    return elapsed;
+  };
+
+  // Find the failed action
+  const failedAction = results.actions.find(a => a.error);
+  const failedActionDesc = failedAction
+    ? describeAction(failedAction.action)
+    : 'Unknown action';
+
+  // Extract scenario from step body
+  const scenarioMatch = stepBody.match(/## Scenario\s+([\s\S]*?)(?=##|$)/);
+  const scenario = scenarioMatch ? scenarioMatch[1].trim() : 'Scenario not found';
+
+  // Build failure comment
+  const comment = `## ❌ Failed
+
+- **Executed by:** AI (Claude Code)
+- **Timestamp:** ${timestamp}
+- **Error:** ${results.error}
+
+### Failed Action
+
+\`\`\`
+${failedActionDesc}
+\`\`\`
+
+### Scenario
+
+\`\`\`
+${scenario}
+\`\`\`
+
+### Screenshot
+
+${results.screenshot ? '📸 Screenshot captured: `' + results.screenshot + '`' : '⚠️ No screenshot available'}
+
+### Bug Report
+
+🐛 Creating bug issue...`;
+
+  // Post failure comment (Task #43 timing: ~2s)
+  checkTimeout('post failure comment');
+  const { execSync } = require('child_process');
+  execSync(`gh issue comment ${stepNumber} --body "${comment.replace(/"/g, '\\"').replace(/`/g, '\\`')}"`, {
+    stdio: 'inherit'
+  });
+
+  // Bug creation timing breakdown (Task #43 - NFR2):
+  // - Post failure comment: ~2s
+  // - Fetch QA Issue for PRD: ~1s
+  // - Process screenshot: ~2-5s
+  // - Build bug body: ~0.1s
+  // - Create bug issue: ~2s
+  // - Link as sub-issue: ~2s
+  // - Update Bugs Found: ~2s
+  // - Post bug link comment: ~1s
+  // Total estimated: 12-17s (well under 30s target)
+
+  // Trigger bug creation workflow (Epic #9)
+  // Pass context: step number, error, screenshot path, scenario
+  const bugContext = {
+    qaStep: stepNumber,
+    qaIssue: qaNumber,
+    title: `Bug: ${stepTitle.replace('QA Step: ', '')} - Failed`,
+    error: results.error,
+    scenario: scenario,
+    screenshot: results.screenshot,
+    timestamp: timestamp
+  };
+
+  // Create bug issue with full template (Epic #9 implementation)
+  // Build traceability chain: Bug → QA Step → QA Issue → PRD (Task #42)
+  // Chain traversal:
+  //   1. Bug knows QA Step number (passed in as stepNumber)
+  //   2. QA Step body contains QA Issue reference (passed in as qaNumber)
+  //   3. QA Issue body contains PRD reference (extracted below)
+  const qaIssueData = JSON.parse(
+    execSync(`gh issue view ${qaNumber} --json body,title`, { encoding: 'utf-8' })
+  );
+  // Look for PRD reference in various formats: "PRD: #123", "PRD #123", "PRD: 123"
+  const prdPatterns = [
+    /PRD:\s*#(\d+)/i,
+    /PRD\s*#(\d+)/i,
+    /PRD:\s*(\d+)/i,
+    /-\s*PRD:\s*#(\d+)/i,
+    /\*\*PRD:\*\*\s*#(\d+)/i
+  ];
+  let prdNumber = null;
+  for (const pattern of prdPatterns) {
+    const match = qaIssueData.body.match(pattern);
+    if (match) {
+      prdNumber = match[1];
+      break;
+    }
+  }
+  // If still not found, it might be in the title or not linked
+  if (!prdNumber) {
+    console.warn('Warning: Could not find PRD reference in QA Issue body');
+    prdNumber = 'Not linked';
+  }
+
+  // Extract Then clause for expected behavior
+  const thenMatch = scenario.match(/Then\s+(.+?)(?:\n|$)/i);
+  const expectedBehavior = thenMatch ? thenMatch[1].trim() : 'As specified in the QA Step assertions';
+
+  // Process screenshot for attachment (Task #38)
+  let screenshotSection;
+  if (results.screenshot) {
+    const screenshotInfo = await uploadScreenshotToGitHub(results.screenshot);
+    if (screenshotInfo) {
+      screenshotSection = screenshotInfo.note;
+    } else {
+      screenshotSection = `📸 Screenshot captured but upload failed.\n\nLocal path: \`${results.screenshot}\``;
+    }
+  } else {
+    screenshotSection = '⚠️ No screenshot available';
+  }
+
+  // Build bug body with full template structure (FR6 from PRD #5)
+  // All references use #<NUMBER> format for clickable GitHub links
+  const prdReference = /^\d+$/.test(prdNumber) ? `#${prdNumber}` : prdNumber;
+  const bugBody = `# Bug: ${stepTitle.replace('QA Step: ', '')}
+
+## Source
+
+- **QA Step:** #${stepNumber}
+- **QA Issue:** #${qaNumber}
+- **PRD:** ${prdReference}
+
+## Reproduction Steps
+
+${generateReproductionSteps(scenario, results.error)}
+
+## Expected Behavior
+
+${expectedBehavior}
+
+## Actual Behavior
+
+${results.error}
+
+## Screenshot
+
+${screenshotSection}
+
+## Environment
+
+- **Browser:** Chromium (Playwright)
+- **Viewport:** 1280x720
+- **Timestamp:** ${timestamp}
+- **Executor:** AI (Claude Code)
+`;
+
+  // Ensure required labels exist (create if missing)
+  try {
+    execSync('gh label create bug --color D73A4A --description "Something isn\'t working" 2>/dev/null || true', { stdio: 'pipe' });
+    execSync('gh label create QA-Bug --color B60205 --description "Bug found via QA automation" 2>/dev/null || true', { stdio: 'pipe' });
+  } catch (e) {
+    // Labels may already exist, continue
+  }
+
+  // Generate error summary for title (truncate if too long)
+  const errorSummary = results.error.length > 50
+    ? results.error.substring(0, 47) + '...'
+    : results.error;
+
+  // Clean step title for bug title
+  const cleanStepTitle = stepTitle
+    .replace(/^QA Step:\s*/i, '')
+    .replace(/^Step:\s*/i, '');
+
+  const bugTitle = `Bug: ${cleanStepTitle} - ${errorSummary}`;
+
+  // Write body to temp file to avoid shell escaping issues
+  const fs = require('fs');
+  const tempBodyFile = `/tmp/bug-body-${stepNumber}-${Date.now()}.md`;
+  fs.writeFileSync(tempBodyFile, bugBody);
+
+  // Create bug issue with both labels
+  const bugUrl = execSync(
+    `gh issue create --title "${bugTitle.replace(/"/g, '\\"')}" --label "bug,QA-Bug" --body-file "${tempBodyFile}"`,
+    { encoding: 'utf-8' }
+  ).trim();
+
+  // Clean up temp file
+  fs.unlinkSync(tempBodyFile);
+
+  const bugNumber = bugUrl.match(/\/(\d+)$/)?.[1];
+
+  // Link Bug as sub-issue of QA Step (Task #39)
+  // This creates third-level nesting: PRD → QA → Step → Bug
+  let subIssueLinkSuccess = false;
+  try {
+    // Get repo info
+    const repoInfo = JSON.parse(
+      execSync('gh repo view --json owner,name', { encoding: 'utf-8' })
+    );
+    const owner = repoInfo.owner.login;
+    const repo = repoInfo.name;
+
+    // Get the Bug's internal issue ID (different from issue number)
+    const bugId = JSON.parse(
+      execSync(`gh api repos/${owner}/${repo}/issues/${bugNumber} --jq '.id'`, { encoding: 'utf-8' }).trim()
+    );
+
+    // Add Bug as sub-issue of QA Step
+    execSync(
+      `gh api repos/${owner}/${repo}/issues/${stepNumber}/sub_issues -X POST -F sub_issue_id=${bugId} --silent`,
+      { stdio: 'pipe' }
+    );
+    subIssueLinkSuccess = true;
+    console.log(`Linked Bug #${bugNumber} as sub-issue of QA Step #${stepNumber}`);
+  } catch (linkError) {
+    // Sub-issue linking may fail if:
+    // - Feature not available in this GitHub instance
+    // - Third-level nesting not supported
+    // - Bug already has a parent
+    console.warn(`Warning: Could not link Bug #${bugNumber} as sub-issue of Step #${stepNumber}: ${linkError.message}`);
+    // Continue without sub-issue link - the body reference is sufficient
+  }
+
+  // Update the failure comment with bug link
+  const linkNote = subIssueLinkSuccess
+    ? '(linked as sub-issue)'
+    : '(sub-issue link failed, see bug body for traceability)';
+  execSync(`gh issue comment ${stepNumber} --body "🐛 Bug created: ${bugUrl} ${linkNote}"`, {
+    stdio: 'inherit'
+  });
+
+  // Update QA Step's Bugs Found section with bug link (Task #41)
+  // Skip if we're running low on time (Task #43)
+  const elapsedBeforeBugsUpdate = checkTimeout('before bugs found update');
+  if (elapsedBeforeBugsUpdate < BUG_CREATION_TIMEOUT_MS * 0.8) {
+    try {
+      await updateBugsFoundSection(stepNumber, bugNumber, stepTitle);
+      console.log(`Updated Bugs Found section in QA Step #${stepNumber}`);
+    } catch (updateError) {
+      console.warn(`Warning: Could not update Bugs Found section: ${updateError.message}`);
+      // Non-critical - the comment already links to the bug
+    }
+  } else {
+    console.log('Skipping Bugs Found update to meet 30s target');
+  }
+
+  // Add Bug to GitHub Project if GHPM_PROJECT is set (Task #48)
+  // Skip if we're running low on time (Task #43)
+  const elapsedBeforeProjectAdd = checkTimeout('before project add');
+  if (elapsedBeforeProjectAdd < BUG_CREATION_TIMEOUT_MS * 0.85) {
+    if (process.env.GHPM_PROJECT) {
+      try {
+        const repoInfo = JSON.parse(
+          execSync('gh repo view --json owner,name', { encoding: 'utf-8' })
+        );
+        const owner = repoInfo.owner.login;
+        execSync(
+          `gh project item-add "${process.env.GHPM_PROJECT}" --owner "${owner}" --url "${bugUrl}"`,
+          { stdio: 'pipe' }
+        );
+        console.log(`Added Bug #${bugNumber} to project: ${process.env.GHPM_PROJECT}`);
+      } catch (projectError) {
+        console.warn(`Warning: Could not add Bug #${bugNumber} to project: ${projectError.message}`);
+        // Non-critical - continue without project association
+      }
+    }
+  } else {
+    console.log('Skipping project add to meet 30s target');
+  }
+
+  // Log total bug creation time (Task #43 - NFR2 compliance)
+  const totalTime = Date.now() - startTime;
+  const timeStatus = totalTime <= BUG_CREATION_TIMEOUT_MS ? '✅' : '⚠️';
+  console.log(`${timeStatus} Bug creation completed in ${totalTime}ms (target: ${BUG_CREATION_TIMEOUT_MS}ms)`);
+
+  if (totalTime > BUG_CREATION_TIMEOUT_MS) {
+    console.warn(`Warning: Bug creation exceeded 30s target. Consider optimizing screenshot upload or parallel execution.`);
+  }
+
+  console.log(`Posted fail comment and created bug #${bugNumber} for QA Step #${stepNumber}`);
+
+  return bugNumber;
+}
+
+// Update QA Step's Bugs Found section with bug link (Task #41)
+async function updateBugsFoundSection(stepNumber, bugNumber, bugTitle) {
+  const fs = require('fs');
+
+  // Fetch current step body
+  const stepData = JSON.parse(
+    execSync(`gh issue view ${stepNumber} --json body`, { encoding: 'utf-8' })
+  );
+  let body = stepData.body;
+
+  // Format: - #<BUG_NUMBER> Bug: <Title>
+  const cleanBugTitle = bugTitle
+    .replace(/^QA Step:\s*/i, '')
+    .replace(/^Step:\s*/i, '');
+  const bugLink = `- #${bugNumber} Bug: ${cleanBugTitle}`;
+
+  // Find Bugs Found section and update it
+  // Pattern: ## Bugs Found\n\n(None) or ## Bugs Found\n\n- #123 ...
+  const bugsFoundRegex = /## Bugs Found\s*\n\n(\(None\)|[-*][\s\S]*?)(?=\n##|\n*$)/;
+
+  if (bugsFoundRegex.test(body)) {
+    body = body.replace(bugsFoundRegex, (match, existingContent) => {
+      if (existingContent.trim() === '(None)') {
+        // Replace "(None)" with bug link
+        return `## Bugs Found\n\n${bugLink}`;
+      } else {
+        // Append to existing bug list
+        return `## Bugs Found\n\n${existingContent.trim()}\n${bugLink}`;
+      }
+    });
+  } else {
+    // If no Bugs Found section exists, append it
+    body = body.trimEnd() + `\n\n## Bugs Found\n\n${bugLink}`;
+  }
+
+  // Write updated body to temp file and update issue
+  const tempFile = `/tmp/qa-step-body-${stepNumber}-${Date.now()}.md`;
+  fs.writeFileSync(tempFile, body);
+
+  execSync(`gh issue edit ${stepNumber} --body-file "${tempFile}"`, {
+    stdio: 'pipe'
+  });
+
+  // Clean up temp file
+  fs.unlinkSync(tempFile);
+}
+
+// Upload screenshot to GitHub and return markdown image embed (Task #38)
+async function uploadScreenshotToGitHub(screenshotPath) {
+  if (!screenshotPath) return null;
+
+  const fs = require('fs');
+  const path = require('path');
+
+  // Check if file exists
+  if (!fs.existsSync(screenshotPath)) {
+    console.warn(`Screenshot file not found: ${screenshotPath}`);
+    return null;
+  }
+
+  try {
+    // Get file stats for size check
+    const stats = fs.statSync(screenshotPath);
+    const fileSizeMB = stats.size / (1024 * 1024);
+
+    // Compress if over 5MB (GitHub has 10MB limit)
+    if (fileSizeMB > 5) {
+      console.log(`Screenshot is ${fileSizeMB.toFixed(2)}MB, may need compression`);
+      // Note: Compression would require additional tools like sharp
+      // For now, proceed and let GitHub reject if too large
+    }
+
+    // Get repo info
+    const repoInfo = JSON.parse(
+      execSync('gh repo view --json owner,name', { encoding: 'utf-8' })
+    );
+    const owner = repoInfo.owner.login;
+    const repo = repoInfo.name;
+
+    // GitHub's file upload for issues uses the uploads endpoint
+    // We can use gh api with file upload to create an asset
+    // However, direct issue image upload requires special handling
+
+    // Alternative approach: Upload via issue comment which auto-uploads images
+    // Create a temp issue comment with the image, extract the URL, then delete
+    // This is the most reliable way to get a GitHub-hosted image URL
+
+    // For now, we'll embed the local path and note that manual upload may be needed
+    // A production implementation would use GitHub's upload API or a separate image host
+
+    // Read file as base64 for inline embedding (works in some contexts)
+    const imageData = fs.readFileSync(screenshotPath);
+    const base64 = imageData.toString('base64');
+    const filename = path.basename(screenshotPath);
+    const mimeType = 'image/png';
+
+    // Return markdown with note about screenshot location
+    return {
+      markdown: `![Screenshot](${screenshotPath})`,
+      localPath: screenshotPath,
+      base64: base64,
+      filename: filename,
+      note: `📸 Screenshot saved locally: \`${screenshotPath}\`\n\n_To attach: drag and drop the screenshot file into this issue on GitHub._`
+    };
+  } catch (error) {
+    console.warn(`Failed to process screenshot: ${error.message}`);
+    return null;
+  }
+}
+
+function describeAction(action) {
+  switch (action.type) {
+    case 'navigate': return `Navigate to ${action.url}`;
+    case 'click': return `Click ${action.selector}`;
+    case 'fill': return `Fill ${action.selector} with "${action.value}"`;
+    case 'select': return `Select "${action.value}" from ${action.selector}`;
+    case 'assertText': return `Assert text "${action.text}" is visible`;
+    case 'assertNoText': return `Assert text "${action.text}" is not visible`;
+    case 'assertURL': return `Assert URL is ${action.url}`;
+    case 'assertURLContains': return `Assert URL contains "${action.pattern}"`;
+    default: return JSON.stringify(action);
+  }
+}
+
+// Generate numbered reproduction steps from Given/When/Then scenario (Task #40)
+// Converts Given/When clauses to numbered action steps and adds failure observation
+function generateReproductionSteps(scenario, error) {
+  const steps = [];
+  const lines = scenario.split('\n').map(l => l.trim()).filter(l => l);
+  let expectedBehavior = null;
+
+  let stepNum = 1;
+  for (const line of lines) {
+    if (/^Given\s+/i.test(line)) {
+      // Convert Given to setup step
+      let action = line.replace(/^Given\s+/i, '');
+      // Transform common patterns to clearer language
+      action = action.replace(/^I am on the /, 'Navigate to the ');
+      action = action.replace(/^I am on /, 'Navigate to ');
+      action = action.replace(/^I have /, 'Ensure ');
+      action = action.replace(/^the /, 'Ensure the ');
+      steps.push(`${stepNum}. ${action.charAt(0).toUpperCase() + action.slice(1)}`);
+      stepNum++;
+    } else if (/^When\s+/i.test(line)) {
+      // Convert When to action step
+      let action = line.replace(/^When\s+/i, '');
+      // Transform first-person to imperative
+      action = action.replace(/^I click /, 'Click ');
+      action = action.replace(/^I type /, 'Type ');
+      action = action.replace(/^I enter /, 'Enter ');
+      action = action.replace(/^I select /, 'Select ');
+      action = action.replace(/^I submit /, 'Submit ');
+      action = action.replace(/^I scroll /, 'Scroll ');
+      action = action.replace(/^I wait /, 'Wait ');
+      steps.push(`${stepNum}. ${action.charAt(0).toUpperCase() + action.slice(1)}`);
+      stepNum++;
+    } else if (/^And\s+/i.test(line)) {
+      // And clauses continue previous context
+      let action = line.replace(/^And\s+/i, '');
+      // Apply same transformations
+      action = action.replace(/^I click /, 'Click ');
+      action = action.replace(/^I type /, 'Type ');
+      action = action.replace(/^I enter /, 'Enter ');
+      action = action.replace(/^I select /, 'Select ');
+      action = action.replace(/^I should see /, 'Should see ');
+      steps.push(`${stepNum}. ${action.charAt(0).toUpperCase() + action.slice(1)}`);
+      stepNum++;
+    } else if (/^Then\s+/i.test(line)) {
+      // Capture expected behavior from Then clause (used in step observation)
+      expectedBehavior = line.replace(/^Then\s+/i, '').replace(/^I should /, 'Should ');
+    }
+    // Skip other lines (comments, blank, etc.)
+  }
+
+  // Handle empty scenario
+  if (steps.length === 0) {
+    steps.push('1. (Scenario steps could not be parsed)');
+    stepNum = 2;
+  }
+
+  // Add failure observation as final step, including what was expected
+  const expectedNote = expectedBehavior ? ` (expected: ${expectedBehavior})` : '';
+  steps.push(`${stepNum}. **Observe:** ${error}${expectedNote}`);
+
+  return steps.join('\n');
+}
+```
+
+### Fail Comment Format
+
+| Field | Value |
+|-------|-------|
+| Emoji | ❌ |
+| Executed by | AI (Claude Code) |
+| Timestamp | UTC timestamp |
+| Error | Error message from Playwright |
+| Failed Action | Description of the action that failed |
+| Scenario | The Given/When/Then from the step |
+| Screenshot | Path to captured screenshot |
+| Bug Report | Link to created bug issue |
+
+### Bug Issue Template Structure (FR6 from PRD #5)
+
+The created bug issue follows this template:
+
+```markdown
+# Bug: <Brief Description>
+
+## Source
+- QA Step: #<step_number>
+- QA Issue: #<qa_number>
+- PRD: #<prd_number>
+
+## Reproduction Steps
+1. Navigate to <URL>
+2. <action from When clause>
+3. <additional actions>
+4. **Observe:** <error message>
+
+## Expected Behavior
+<from the QA Step's Then clause>
+
+## Actual Behavior
+<what actually happened / error message>
+
+## Screenshot
+📸 Screenshot attached below (or warning if unavailable)
+
+## Environment
+- Browser: Chromium (Playwright)
+- Viewport: 1280x720
+- Timestamp: <execution time>
+- Executor: AI (Claude Code)
+```
+
+The bug issue includes:
+
+1. **Source**: Full traceability chain (QA Step → QA Issue → PRD)
+2. **Reproduction Steps**: Numbered list generated from Given/When/Then + failure observation
+3. **Expected Behavior**: Extracted from Then clause
+4. **Actual Behavior**: Error message from Playwright
+5. **Screenshot**: Attached screenshot (when available)
+6. **Environment**: Browser, viewport, timestamp details
+
+## Step 7: Update QA Step Execution Log Section
+
+Update the Execution Log section in the QA Step issue body with execution results.
+
+### Execution Log Section Format
+
+The QA Step issue body contains an Execution Log section:
+
+```markdown
+## Execution Log
+
+- [ ] Pass / Fail
+- **Executed by:** (not yet executed)
+- **Timestamp:** (pending)
+- **Notes:** (none)
+```
+
+After execution, update to:
+
+**On Pass:**
+
+```markdown
+## Execution Log
+
+- [x] Pass / ~~Fail~~
+- **Executed by:** AI (Claude Code)
+- **Timestamp:** 2025-01-15 14:30:00 UTC
+- **Notes:** All 5 actions completed successfully
+```
+
+**On Fail:**
+
+```markdown
+## Execution Log
+
+- [ ] ~~Pass~~ / Fail
+- **Executed by:** AI (Claude Code)
+- **Timestamp:** 2025-01-15 14:30:00 UTC
+- **Notes:** Failed at action 3: Assert text "Welcome" visible - Bug #123 created
+```
+
+### Update Implementation
+
+```javascript
+async function updateExecutionLog(stepNumber, results, bugNumber = null) {
+  const timestamp = new Date().toISOString().replace('T', ' ').replace(/\.\d+Z$/, ' UTC');
+
+  // Fetch current issue body
+  const { execSync } = require('child_process');
+  const issueData = JSON.parse(
+    execSync(`gh issue view ${stepNumber} --json body`, { encoding: 'utf-8' })
+  );
+  let body = issueData.body;
+
+  // Build new Execution Log content
+  let newExecutionLog;
+  if (results.pass) {
+    const actionCount = results.actions.filter(a => a.success).length;
+    newExecutionLog = `## Execution Log
+
+- [x] Pass / ~~Fail~~
+- **Executed by:** AI (Claude Code)
+- **Timestamp:** ${timestamp}
+- **Notes:** All ${actionCount} actions completed successfully`;
+  } else {
+    const failedIndex = results.actions.findIndex(a => a.error);
+    const notes = bugNumber
+      ? `Failed at action ${failedIndex + 1}: ${results.error} - Bug #${bugNumber} created`
+      : `Failed at action ${failedIndex + 1}: ${results.error}`;
+    newExecutionLog = `## Execution Log
+
+- [ ] ~~Pass~~ / Fail
+- **Executed by:** AI (Claude Code)
+- **Timestamp:** ${timestamp}
+- **Notes:** ${notes}`;
+  }
+
+  // Replace Execution Log section in body
+  // Match from "## Execution Log" to next "##" or end of string
+  const executionLogRegex = /## Execution Log[\s\S]*?(?=##[^#]|$)/;
+
+  if (executionLogRegex.test(body)) {
+    body = body.replace(executionLogRegex, newExecutionLog + '\n\n');
+  } else {
+    // If no Execution Log section exists, append it
+    body = body + '\n\n' + newExecutionLog;
+  }
+
+  // Update issue body
+  // Write body to temp file to avoid shell escaping issues
+  const fs = require('fs');
+  const tempFile = `/tmp/qa-step-body-${stepNumber}.md`;
+  fs.writeFileSync(tempFile, body);
+
+  execSync(`gh issue edit ${stepNumber} --body-file "${tempFile}"`, {
+    stdio: 'inherit'
+  });
+
+  // Clean up temp file
+  fs.unlinkSync(tempFile);
+
+  console.log(`Updated Execution Log for QA Step #${stepNumber}`);
+}
+```
+
+### Update Notes
+
+1. **Preserve other sections**: Only replace the Execution Log section
+2. **Shell escaping**: Use temp file to avoid issues with special characters
+3. **Pass/Fail checkbox**: Use strikethrough to indicate the opposite result
+4. **Bug reference**: Include bug number in notes when applicable
+
+</workflow>
+
+<operating_rules>
+
+- Do not ask clarifying questions. Make reasonable assumptions and proceed.
+- Do not create local markdown files. All output goes into GitHub issues/comments.
+- Execute steps sequentially, posting results after each step completes.
+- If a step fails, continue to the next step (don't abort entire QA run).
+- Minimize noise: only comment at meaningful milestones (pass/fail results).
+- Never retry failed steps automatically (manual retry or bug triage expected).
+
+</operating_rules>
+
+<prerequisites>
+
+Before execution, verify:
+
+```bash
+# 1. Check gh CLI authentication
+gh auth status || { echo "ERROR: Not authenticated. Run 'gh auth login'"; exit 1; }
+
+# 2. Check Playwright installation
+npx playwright --version || { echo "ERROR: Playwright not installed. Run 'npm install -D @playwright/test'"; exit 1; }
+
+# 3. Check browser availability
+npx playwright install chromium --dry-run 2>/dev/null || {
+  echo "WARNING: Chromium may not be installed. Run 'npx playwright install chromium'"
+}
+```
+
+</prerequisites>
+
+<input_validation>
+
+## Validation Checks
+
+```bash
+# Validate step number format (if provided)
+if [[ -n "$STEP" && ! "$STEP" =~ ^[0-9]+$ ]]; then
+  echo "ERROR: Invalid step number. Use format: step=#123"
+  exit 1
+fi
+
+# Validate QA number format (if provided)
+if [[ -n "$QA" && ! "$QA" =~ ^[0-9]+$ ]]; then
+  echo "ERROR: Invalid QA number. Use format: qa=#123"
+  exit 1
+fi
+
+# Verify issue exists and is accessible
+if [[ -n "$STEP" ]]; then
+  gh issue view "$STEP" > /dev/null 2>&1 || { echo "ERROR: Cannot access QA Step #$STEP"; exit 1; }
+fi
+
+if [[ -n "$QA" ]]; then
+  gh issue view "$QA" > /dev/null 2>&1 || { echo "ERROR: Cannot access QA Issue #$QA"; exit 1; }
+fi
+```
+
+</input_validation>
+
+<error_handling>
+
+## Common Errors and Recovery
+
+**If gh CLI not authenticated:**
+
+- Check: `gh auth status`
+- Fix: `gh auth login`
+
+**If Playwright not installed:**
+
+- Check: `npx playwright --version`
+- Fix: `npm install -D @playwright/test && npx playwright install chromium`
+
+**If browser not installed:**
+
+- Check: `npx playwright install chromium --dry-run`
+- Fix: `npx playwright install chromium`
+
+**If QA Step/Issue not found:**
+
+- Verify issue number is correct
+- Check repository access permissions
+- Confirm issue is not closed/deleted
+
+**If no QA Steps found for QA Issue:**
+
+- Verify QA Steps are linked as sub-issues
+- Check that QA Steps have the `QA-Step` label
+- Confirm QA Steps are in OPEN state
+
+**If Given/When/Then parsing fails:**
+
+- Log warning with unparseable line
+- Skip unparseable actions during execution
+- Include unparseable lines in execution report
+
+**If Playwright action fails:**
+
+- Capture screenshot before closing browser
+- Post failure comment with error details
+- Create bug issue with context
+- Continue to next QA Step (don't abort run)
+
+**If screenshot capture fails:**
+
+- Log warning but don't fail the step
+- Note "No screenshot available" in bug report
+
+**If GitHub API rate limited:**
+
+- Check: `gh api rate_limit`
+- Wait and retry, or authenticate with higher-privilege token
+
+</error_handling>
+
+<success_criteria>
+
+Command completes successfully when:
+
+1. Target QA Steps have been resolved (from argument or auto-resolved)
+2. Each QA Step has been executed through Playwright
+3. Pass results: ✅ comment posted, Execution Log updated
+4. Fail results: ❌ comment posted, bug created, Execution Log updated
+5. Bug issues added to `GHPM_PROJECT` when set (best-effort)
+6. All steps processed (failures don't abort the run)
+
+**Verification:**
+
+```bash
+# Check execution comments on QA Steps
+gh issue view "$STEP" --json comments -q '.comments[-1].body'
+
+# Check Execution Log was updated
+gh issue view "$STEP" --json body -q '.body' | grep -A5 "## Execution Log"
+
+# Check bugs created for failures
+gh issue list -l Bug --json number,title
+```
+
+</success_criteria>
+
+<output>
+
+After completion, report:
+
+1. **QA Steps executed:** Count and issue numbers
+2. **Results:**
+   - Passed: Count and step numbers
+   - Failed: Count, step numbers, and bug numbers created
+3. **Project association:** Success/warning/skipped for bugs
+4. **Unparseable steps:** Count and warnings
+5. **Execution time:** Total duration
+6. **Errors:** Any issues encountered
+
+**Example output:**
+
+```
+## QA Execution Complete
+
+- **QA Issue:** #42
+- **Steps executed:** 5
+
+### Results
+
+| Step | Title | Result | Bug |
+|------|-------|--------|-----|
+| #101 | Valid login | ✅ Pass | - |
+| #102 | Invalid password | ✅ Pass | - |
+| #103 | Form validation | ❌ Fail | #150 |
+| #104 | Password reset | ✅ Pass | - |
+| #105 | Logout | ✅ Pass | - |
+
+### Summary
+
+- **Passed:** 4
+- **Failed:** 1
+- **Bugs created:** 1 (#150)
+- **Execution time:** 2m 34s
+```
+
+</output>
+
+Proceed now.
