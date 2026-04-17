@@ -3,6 +3,7 @@ name: plan-protocol
 description: Guidelines for creating and managing implementation plans with citations
 tags: [planning, project-management, workflow]
 triggers: [creating implementation plans, multi-step features, tracking phased work, research citations]
+model_hint: reasoning
 ---
 
 # Plan Protocol

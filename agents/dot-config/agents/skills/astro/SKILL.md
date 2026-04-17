@@ -5,6 +5,7 @@ description: >
   Use when building content-focused sites, implementing partial hydration with islands, setting up multi-framework projects, optimizing performance with zero-JS by default, or deploying static/SSR sites.
 tags: [framework, frontend, ssg, ssr, web]
 triggers: [astro project, .astro files, islands architecture, content-focused website]
+model_hint: large
 ---
 
 # Astro Framework

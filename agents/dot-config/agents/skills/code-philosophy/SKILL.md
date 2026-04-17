@@ -3,6 +3,7 @@ name: code-philosophy
 description: Internal logic and data flow philosophy (The 5 Laws of Elegant Defense). Understand deeply to ensure code guides data naturally and prevents errors.
 tags: [philosophy, backend, logic, patterns]
 triggers: [writing core logic, refactoring functions, data flow design, error handling]
+model_hint: large
 ---
 
 # Internal Logic Philosophy: The 5 Laws of Elegant Defense

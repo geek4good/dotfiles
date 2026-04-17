@@ -3,6 +3,7 @@ name: code-review
 description: Comprehensive code review methodology with severity classification and confidence thresholds
 tags: [review, quality, security, performance]
 triggers: [reviewing code, /review command, before merge, post-implementation audit]
+model_hint: reasoning
 ---
 
 # Code Review Philosophy

@@ -3,6 +3,7 @@ name: frontend-philosophy
 description: Visual & UI philosophy (The 5 Pillars of Intentional UI). Understand deeply to avoid "AI slop" and create distinctive, memorable interfaces.
 tags: [philosophy, frontend, design, ui, css]
 triggers: [styling components, layout design, choosing fonts, color palette, animation, visual design]
+model_hint: large
 ---
 
 # Frontend Design Philosophy: The 5 Pillars of Intentional UI
