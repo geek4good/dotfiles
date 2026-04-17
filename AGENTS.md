@@ -84,6 +84,28 @@ Skills follow the Agent Skills standard: each is a directory with a `SKILL.md` (
 | `plan-protocol` | Implementation plan format with citations |
 | `plan-review` | Plan quality review criteria |
 | `commit` | Git commit workflow and Conventional Commits format |
+| `rails-upgrade` | Rails upgrade assistant (2.3→8.1) with version guides, detection patterns, and FastRuby.io methodology |
+| `github-actions` | CI/CD workflow creation and optimization (from el-feo/ai-context) |
+| `kamal` | Docker deployment configuration with Kamal (from el-feo/ai-context) |
+| `tailscale` | VPN setup and configuration (from el-feo/ai-context) |
+| `mermaid-diagrams` | Software diagrams with Mermaid syntax (from el-feo/ai-context) |
+| `eslint` | JavaScript/TypeScript linting with ESLint (from el-feo/ai-context) |
+| `vitest` | Vitest testing framework and Jest migration (from el-feo/ai-context) |
+| `javascript-unit-testing` | Unit testing patterns with Jest (from el-feo/ai-context) |
+| `rails` | Comprehensive Rails v8.1 development guide (from el-feo/ai-context) |
+| `ruby` | Ruby language fundamentals and design patterns (from el-feo/ai-context) |
+| `rspec` | RSpec testing patterns and best practices (from el-feo/ai-context) |
+| `rubocop` | Ruby linting and code style (from el-feo/ai-context) |
+| `rubycritic` | Code quality analysis (from el-feo/ai-context) |
+| `simplecov` | Test coverage analysis (from el-feo/ai-context) |
+| `brakeman` | Rails security vulnerability scanner (from el-feo/ai-context) |
+| `rails-generators` | Creating custom Rails generators (from el-feo/ai-context) |
+| `review-ruby-code` | Code review with Sandi Metz rules, SOLID, and OO design (from el-feo/ai-context) |
+| `postgresql-rails-analyzer` | PostgreSQL optimization for Rails (from el-feo/ai-context) |
+| `cucumber-gherkin` | Cucumber/Gherkin BDD testing (from el-feo/ai-context) |
+| `design-patterns-ruby` | Ruby design patterns (creational, structural, behavioral) (from el-feo/ai-context) |
+| `ghpm` | GitHub Project Management workflow — PRD→Epics→Tasks→TDD (from el-feo/ai-context) |
+| `ghpmplus` | Autonomous GitHub Project Management with parallel execution (from el-feo/ai-context) |
 
 ### Rules
 
