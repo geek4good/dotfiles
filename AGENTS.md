@@ -106,6 +106,14 @@ Skills follow the Agent Skills standard: each is a directory with a `SKILL.md` (
 | `design-patterns-ruby` | Ruby design patterns (creational, structural, behavioral) (from el-feo/ai-context) |
 | `ghpm` | GitHub Project Management workflow — PRD→Epics→Tasks→TDD (from el-feo/ai-context) |
 | `ghpmplus` | Autonomous GitHub Project Management with parallel execution (from el-feo/ai-context) |
+| `cloudflare` | Comprehensive Cloudflare platform (Workers, Pages, KV, D1, R2, AI, networking, security, IaC) (from cloudflare/skills) |
+| `agents-sdk` | Building stateful AI agents with state, scheduling, RPC, MCP, email, and streaming chat on Cloudflare (from cloudflare/skills) |
+| `cloudflare-email-service` | Cloudflare email routing, sending, deliverability, and REST API (from cloudflare/skills) |
+| `durable-objects` | Stateful coordination, RPC, SQLite, alarms, and WebSocket with Durable Objects (from cloudflare/skills) |
+| `sandbox-sdk` | Secure code execution for AI code interpreters, CI/CD, and interactive dev environments (from cloudflare/skills) |
+| `web-perf` | Core Web Vitals auditing (FCP, LCP, TBT, CLS) and render-blocking resource analysis (from cloudflare/skills) |
+| `workers-best-practices` | Cloudflare Workers best practices, review checklist, and performance rules (from cloudflare/skills) |
+| `wrangler` | Deploying and managing Workers, KV, R2, D1, Vectorize, Queues, and Workflows (from cloudflare/skills) |
 
 ### Rules
 
