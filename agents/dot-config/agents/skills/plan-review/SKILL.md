@@ -3,6 +3,7 @@ name: plan-review
 description: Criteria for reviewing implementation plans against quality standards
 tags: [review, planning, quality]
 triggers: [reviewing implementation plans, validating plan quality, auditing plan structure]
+model_hint: large
 ---
 
 # Plan Review

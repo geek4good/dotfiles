@@ -3,6 +3,7 @@ name: iac-philosophy
 description: Infrastructure-as-Code philosophy (The 5 Pillars of Immutable Infrastructure). Understand deeply to ensure infrastructure is reproducible, auditable, and resilient by design.
 tags: [philosophy, infrastructure, terraform, devops, iac]
 triggers: [writing terraform, cloudformation, pulumi, ansible, nix, infrastructure provisioning]
+model_hint: large
 ---
 
 # Infrastructure-as-Code Philosophy: The 5 Pillars of Immutable Infrastructure
