@@ -1,0 +1,32 @@
+format = """
+$username\
+$directory\
+$git_branch\
+$git_status\
+$line_break\
+$character"""
+
+[username]
+style_user = "bold yellow"
+style_root = "bold red"
+format = "[$user]($style) in "
+disabled = false
+show_always = false
+
+[character]
+success_symbol = "[❯](bold purple)"
+error_symbol = "[❯](bold red)"
+
+[directory]
+truncation_length = 3
+truncate_to_repo = true
+style = "bold cyan"
+
+[git_branch]
+symbol = " "
+format = " on [$symbol$branch]($style)"
+style = "bold purple"
+
+[git_status]
+format = '([\[$all_status$ahead_behind\]]($style) )'
+style = "bold red"
