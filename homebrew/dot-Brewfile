@@ -10,7 +10,7 @@ brew "git"
 brew "nushell"
 brew "gnupg"
 brew "mise"
-brew "neurosnap/tap/zmx"
+brew "joshmedeski/tap/sesh"
 brew "tmux"
 brew "pam-reattach"
 
