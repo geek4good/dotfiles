@@ -1,12 +1,3 @@
-if status is-interactive
-    # Auto-attach tmux
-    if not set -q TMUX
-        if command -q tmux
-            tmux attach; or tmux
-        end
-    end
-end
-
 # Environment
 set -gx LC_ALL "en_GB.UTF-8"
 set -gx EDITOR nvim
@@ -55,7 +46,7 @@ abbr -a bubo 'brew update && brew outdated'
 abbr -a bubc 'brew upgrade && brew cleanup'
 abbr -a bcubo 'brew update && brew outdated --cask'
 abbr -a bcubc 'brew upgrade --cask && brew cleanup'
-abbr -a bubu 'bubo; and bcubo; and bubc; and bcubc'
+abbr -a bubu 'brew update && brew outdated && brew update && brew outdated --cask && brew upgrade && brew cleanup && brew upgrade --cask && brew cleanup'
 
 # Abbreviations — mise
 abbr -a ml 'mise latest'
