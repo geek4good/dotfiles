@@ -31,6 +31,11 @@ if command -q wt
     wt config shell init fish | source
 end
 
+# starship
+if command -q starship
+    starship init fish | source
+end
+
 # Abbreviations — editor
 abbr -a vi nvim
 abbr -a vim nvim
