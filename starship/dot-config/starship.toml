@@ -21,12 +21,13 @@ error_symbol = "[❯](bold red)"
 truncation_length = 3
 truncate_to_repo = true
 style = "bold cyan"
+format = "[$path]($style)[$read_only]($read_only_style)"
 
 [git_branch]
-symbol = " "
-format = " on [$symbol$branch]($style)"
+symbol = ""
+format = " on [$branch]($style)"
 style = "bold purple"
 
 [git_status]
-format = '([\[$all_status$ahead_behind\]]($style) )'
+format = '( [\[$all_status$ahead_behind\]]($style))'
 style = "bold red"
