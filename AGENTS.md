@@ -43,8 +43,8 @@ stow -t ~ <package>
 
 ## Key directories
 
-- **agents/** — shared agent skills (SKILL.md files) → `~/.config/agents/skills/`
 - **bash/** — shell config (`.bashrc`, `.bash_profile`)
+- **claude/** — Claude Code config → `~/.claude/` (skills) and `~/.config/claude-plugins/` (local plugin marketplace)
 - **crush/** — Crush AI assistant config → `~/.config/crush/`
 - **fnox/** — fnox secrets config → `~/.config/fnox/`
 - **gh/** — GitHub CLI config → `~/.config/gh/`
@@ -64,69 +64,47 @@ stow -t ~ <package>
 - **gnupg/** — GPG keys and ownertrust
 - **ssh/dot-ssh/** — SSH config only; keys must never be committed
 
-## Shared agent skills (`agents/`)
+## Shared skills and Claude Code plugins (`claude/`)
 
-`agents/dot-config/agents/skills/` is the **single source of truth** for all shared skills. Every coding agent (pi, opencode, crush) loads skills from here via `~/.config/agents/skills/`.
+Claude Code is the primary consumer and source of truth. Shared skills live at `claude/dot-claude/skills/<name>/SKILL.md` and stow into `~/.claude/skills/`. A local plugin marketplace at `claude/dot-config/claude-plugins/` stows into `~/.config/claude-plugins/` and hosts `ghpm` and `ghpmplus`.
 
-Skills follow the Agent Skills standard: each is a directory with a `SKILL.md` (YAML frontmatter + Markdown body) and optional `references/`.
+### Managing skills
 
-### Shared skills
+Skills are managed with the [`skills` npm CLI](https://github.com/vercel-labs/skills):
 
-| Skill | Purpose |
-|-------|---------|
-| `skill-loading` | Mandatory pre-implementation protocol (philosophy selection + skill discovery) |
-| `behavioral-rules` | Universal coding behavior (concise output, no debug, fail fast, etc.) |
-| `code-philosophy` | The 5 Laws of Elegant Defense (backend/logic) |
-| `frontend-philosophy` | The 5 Pillars of Intentional UI |
-| `iac-philosophy` | The 5 Pillars of Immutable Infrastructure |
-| `astro` | Astro framework patterns + 14 reference docs |
-| `code-review` | 4-layer review methodology with severity classification |
-| `plan-protocol` | Implementation plan format with citations |
-| `plan-review` | Plan quality review criteria |
-| `commit` | Git commit workflow and Conventional Commits format |
-| `rails-upgrade` | Rails upgrade assistant (2.3→8.1) with version guides, detection patterns, and FastRuby.io methodology |
-| `github-actions` | CI/CD workflow creation and optimization (from el-feo/ai-context) |
-| `kamal` | Docker deployment configuration with Kamal (from el-feo/ai-context) |
-| `tailscale` | VPN setup and configuration (from el-feo/ai-context) |
-| `mermaid-diagrams` | Software diagrams with Mermaid syntax (from el-feo/ai-context) |
-| `eslint` | JavaScript/TypeScript linting with ESLint (from el-feo/ai-context) |
-| `vitest` | Vitest testing framework and Jest migration (from el-feo/ai-context) |
-| `javascript-unit-testing` | Unit testing patterns with Jest (from el-feo/ai-context) |
-| `rails` | Comprehensive Rails v8.1 development guide (from el-feo/ai-context) |
-| `ruby` | Ruby language fundamentals and design patterns (from el-feo/ai-context) |
-| `rspec` | RSpec testing patterns and best practices (from el-feo/ai-context) |
-| `rubocop` | Ruby linting and code style (from el-feo/ai-context) |
-| `rubycritic` | Code quality analysis (from el-feo/ai-context) |
-| `simplecov` | Test coverage analysis (from el-feo/ai-context) |
-| `brakeman` | Rails security vulnerability scanner (from el-feo/ai-context) |
-| `rails-generators` | Creating custom Rails generators (from el-feo/ai-context) |
-| `review-ruby-code` | Code review with Sandi Metz rules, SOLID, and OO design (from el-feo/ai-context) |
-| `postgresql-rails-analyzer` | PostgreSQL optimization for Rails (from el-feo/ai-context) |
-| `cucumber-gherkin` | Cucumber/Gherkin BDD testing (from el-feo/ai-context) |
-| `design-patterns-ruby` | Ruby design patterns (creational, structural, behavioral) (from el-feo/ai-context) |
-| `ghpm` | GitHub Project Management workflow — PRD→Epics→Tasks→TDD (from el-feo/ai-context) |
-| `ghpmplus` | Autonomous GitHub Project Management with parallel execution (from el-feo/ai-context) |
-| `cloudflare` | Comprehensive Cloudflare platform (Workers, Pages, KV, D1, R2, AI, networking, security, IaC) (from cloudflare/skills) |
-| `agents-sdk` | Building stateful AI agents with state, scheduling, RPC, MCP, email, and streaming chat on Cloudflare (from cloudflare/skills) |
-| `cloudflare-email-service` | Cloudflare email routing, sending, deliverability, and REST API (from cloudflare/skills) |
-| `durable-objects` | Stateful coordination, RPC, SQLite, alarms, and WebSocket with Durable Objects (from cloudflare/skills) |
-| `sandbox-sdk` | Secure code execution for AI code interpreters, CI/CD, and interactive dev environments (from cloudflare/skills) |
-| `web-perf` | Core Web Vitals auditing (FCP, LCP, TBT, CLS) and render-blocking resource analysis (from cloudflare/skills) |
-| `workers-best-practices` | Cloudflare Workers best practices, review checklist, and performance rules (from cloudflare/skills) |
-| `wrangler` | Deploying and managing Workers, KV, R2, D1, Vectorize, Queues, and Workflows (from cloudflare/skills) |
+```
+npx skills add <source> -a claude-code -g    # install a skill
+npx skills update -g                          # update all skills
+npx skills remove <name> -g                   # remove a skill
+```
+
+After any add/update/remove, run `./sync` from the repo root. `sync` calls `dotfiles-sync-skills`, which ingests anything new in `~/.claude/skills/` into `claude/dot-claude/skills/`, then stows everything back so the repo is the version-controlled source of truth.
+
+### Bridge for opencode and pi
+
+`~/.config/agents/skills/` is a generated mirror of `~/.claude/skills/`. After stow runs, `dotfiles-link-shared-skills` (invoked from `sync`) creates one symlink per skill. opencode (`opencode/dot-config/opencode/tools/skills.md`) and pi (`pi/dot-pi/agent/SYSTEM.md`) read from the bridge unchanged.
+
+### Plugins (ghpm, ghpmplus)
+
+The local marketplace at `claude/dot-config/claude-plugins/` has a `.claude-plugin/marketplace.json` listing `ghpm` and `ghpmplus`. Each plugin is a subdirectory with `.claude-plugin/plugin.json`, `commands/`, `agents/`, and (for ghpm) `skills/`. One-time registration per machine inside Claude Code:
+
+```
+/plugin marketplace add ~/.config/claude-plugins
+/plugin install ghpm@dotfiles-local ghpmplus@dotfiles-local
+```
 
 ### Rules
 
-- **Never duplicate** a skill into an agent-specific directory. If it's useful across agents, it belongs in `agents/`.
-- **Agent-specific configs** (model settings, role definitions, plugins, themes) stay in their own directories (`pi/`, `opencode/`, `crush/`).
-- **When updating a skill**, update it only in `agents/`. All agents pick it up automatically.
+- **Shared skills** live only under `claude/dot-claude/skills/`. Never duplicate into agent-specific directories.
+- **Agent-specific configs** (model settings, role definitions, themes) stay in their own stow packages (`pi/`, `opencode/`, `crush/`).
+- **Plugin commands and sub-agents** belong inside their plugin directory under `claude/dot-config/claude-plugins/`, not in `claude/dot-claude/commands/` or `claude/dot-claude/agents/`, so they stay namespaced (`/ghpm:create-prd` rather than `/create-prd`).
 
 ## Git conventions
 
 - Default branch: `main`
 - All commits GPG-signed
 - Commit style: `type(scope): description` (e.g., `feat(crush):`, `refactor(aerospace):`)
-- `setup/` directory is empty; bootstrap lives in `bin/dot-local/bin/_bootstrap`
+- `./sync` runs stow (including the skills sync + shared-skills bridge); full-machine bootstrap lives in `bin/dot-local/bin/_bootstrap`
 
 ## What not to do
 
@@ -135,4 +113,4 @@ Skills follow the Agent Skills standard: each is a directory with a `SKILL.md` (
 - Don't create files at the repo root unless they're repo-level config (`.gitignore`, `.stow-local-ignore`, `README.md`, this file)
 - Don't add stow packages that don't follow the `dot-` naming convention
 - Don't touch `secrets/encrypted/*.age` files unless explicitly asked
-- Don't duplicate shared skills into agent-specific directories — `agents/` is the single source of truth
+- Don't duplicate shared skills into agent-specific directories — `claude/dot-claude/skills/` is the single source of truth
