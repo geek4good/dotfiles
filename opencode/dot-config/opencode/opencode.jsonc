@@ -1,11 +1,11 @@
 {
   "$schema": "https://opencode.ai/config.json",
   "model": "zai-coding-plan/glm-5.1",
-  "small_model": "zai-coding-plan/glm-5.1",
+  "small_model": "zai-coding-plan/glm-4.7",
   "agent": {
     "plan": {
-      "model": "zai-coding-plan/glm-5.1",
-      "temperature": 0.3,
+      "model": "zai-coding-plan/glm-4.7",
+      "temperature": 0,
       "reasoningEffort": "high",
 			"textVerbosity": "low",
 			"permission": {
@@ -19,9 +19,9 @@
 			}
     },
     "build": {
-      "model": "zai-coding-plan/glm-5.1",
-      "temperature": 0.3,
-      "reasoningEffort": "high",
+      "model": "zai-coding-plan/glm-4.7",
+      "temperature": 0,
+      "reasoningEffort": "none",
 			"textVerbosity": "low",
 			"prompt": "You are a **build orchestrator**. You coordinate implementation through delegation - you do NOT implement directly.\\\\\\\\n\\\\\\\\n## Your Role\\\\\\\\n- Delegate implementation to `coder`\\\\\\\\n- Delegate documentation to `scribe`\\\\\\\\n- Delegate codebase analysis to `explore`\\\\\\\\n- Delegate external research to `researcher`\\\\\\\\n- Interpret results and decide next steps\\\\\\\\n\\\\\\\\n## Critical Constraint\\\\\\\\nYou CANNOT edit files or run commands directly. For ALL implementation and verification, delegate to `coder`.",
 			"permission": {
@@ -36,7 +36,7 @@
     },
     "coder": {
       "model": "zai-coding-plan/glm-5.1",
-      "temperature": 0.2,
+      "temperature": 0,
       "reasoningEffort": "high",
 			"textVerbosity": "low",
 			"permission": {
@@ -54,9 +54,9 @@
 			}
     },
     "explore": {
-      "model": "zai-coding-plan/glm-5.1",
-      "temperature": 0.2,
-      "reasoningEffort": "low",
+      "model": "zai-coding-plan/glm-4.7",
+      "temperature": 0,
+      "reasoningEffort": "none",
 			"textVerbosity": "low",
 			"permission": {
 				"edit": "deny",
@@ -93,9 +93,9 @@
 			}
     },
     "researcher": {
-      "model": "zai-coding-plan/glm-5.1",
-      "temperature": 0.4,
-      "reasoningEffort": "high",
+      "model": "zai-coding-plan/glm-4.7",
+      "temperature": 0.3,
+      "reasoningEffort": "none",
 			"textVerbosity": "medium",
 			"permission": {
 				"context7_*": "allow",
@@ -150,8 +150,8 @@
 			}
     },
     "scribe": {
-      "model": "zai-coding-plan/glm-5.1",
-      "temperature": 1,
+      "model": "zai-coding-plan/glm-4.7",
+      "temperature": 0.5,
       "reasoningEffort": "low",
 			"textVerbosity": "high",
 			"permission": {
@@ -168,7 +168,7 @@
     },
     "reviewer": {
       "model": "zai-coding-plan/glm-5.1",
-      "temperature": 0.1,
+      "temperature": 0,
       "reasoningEffort": "high",
 			"textVerbosity": "medium",
 			"permission": {
