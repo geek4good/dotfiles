@@ -1,0 +1,22 @@
+{
+  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
+  "name": "dotfiles-local",
+  "description": "Personal Claude Code plugins tracked in the dotfiles repo.",
+  "owner": {
+    "name": "Lucas Mbiwe"
+  },
+  "plugins": [
+    {
+      "name": "ghpm",
+      "description": "GitHub Project Management — spec-driven workflow from PRD to Epics to Tasks to TDD, using GitHub Issues as the store.",
+      "source": "./ghpm",
+      "category": "development"
+    },
+    {
+      "name": "ghpmplus",
+      "description": "Autonomous GHPM — orchestrator-driven parallel task execution via git worktrees, with integrated review cycles and QA.",
+      "source": "./ghpmplus",
+      "category": "development"
+    }
+  ]
+}

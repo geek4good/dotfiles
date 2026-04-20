@@ -1,0 +1,4 @@
+{
+  "name": "ghpmplus",
+  "description": "Autonomous GHPM — orchestrator-driven parallel task execution via git worktrees, with integrated review cycles and QA."
+}
