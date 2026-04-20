@@ -92,4 +92,5 @@ abbr -a gf 'git fetch'
 abbr -a gclean 'git clean -fd'
 
 # Abbreviations — work
+abbr -a cf 'v ~/.config/fish/config.fish'
 abbr -a oc 'ocx oc -p ws'
