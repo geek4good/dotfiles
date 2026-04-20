@@ -34,27 +34,12 @@ window-padding-x = 8
 window-padding-y = 8
 macos-titlebar-style = tabs
 
-# Split navigation (replaces vim-tmux-navigator)
-keybind = ctrl+h=goto_split:left
-keybind = ctrl+j=goto_split:bottom
-keybind = ctrl+k=goto_split:top
-keybind = ctrl+l=goto_split:right
-
 # Split creation
 keybind = cmd+d=new_split:right
 keybind = cmd+shift+d=new_split:down
-keybind = ctrl+space>h=new_split:left
-keybind = ctrl+space>j=new_split:down
-keybind = ctrl+space>k=new_split:up
-keybind = ctrl+space>l=new_split:right
-keybind = ctrl+space>z=toggle_split_zoom
-keybind = ctrl+space>ctrl+c=new_tab
-
-# Tab navigation
-keybind = ctrl+alt+h=previous_tab
-keybind = ctrl+alt+j=previous_tab
-keybind = ctrl+alt+k=next_tab
-keybind = ctrl+alt+l=next_tab
 
 # Clear screen
 keybind = ctrl+shift+l=text:\x0c
+
+# alt+shift+backspace → fish bigword backward kill (paired with fish bind)
+keybind = alt+shift+backspace=text:\x1b[127;4u
