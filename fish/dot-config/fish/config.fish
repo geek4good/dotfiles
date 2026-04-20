@@ -1,7 +1,7 @@
 # Environment
 set -gx LC_ALL "en_GB.UTF-8"
 set -gx EDITOR nvim
-set -gx LESS -R
+set -gx LESS -FRX
 set -gx HOMEBREW_NO_ENV_HINTS 1
 umask 022
 
