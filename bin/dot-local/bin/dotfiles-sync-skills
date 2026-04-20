@@ -1,0 +1,49 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# Ingest ~/.claude/skills/<name> into the dotfiles repo so newly installed
+# skills (e.g., from `npx skills add`) become version-controlled. Idempotent.
+# stow then re-symlinks them on the next sync run.
+
+DOTFILES_DIR="${DOTFILES_DIR:-$HOME/Projects/GEEK4GOOD/dotfiles}"
+REPO_SKILLS="$DOTFILES_DIR/claude/dot-claude/skills"
+HOME_SKILLS="$HOME/.claude/skills"
+
+if [ ! -d "$DOTFILES_DIR" ]; then
+    echo "dotfiles-sync-skills: DOTFILES_DIR not found: $DOTFILES_DIR" >&2
+    exit 1
+fi
+
+if [ ! -d "$HOME_SKILLS" ]; then
+    exit 0
+fi
+
+mkdir -p "$REPO_SKILLS"
+
+ingested=0
+shopt -s nullglob
+for entry in "$HOME_SKILLS"/*; do
+    name="$(basename "$entry")"
+    repo_target="$REPO_SKILLS/$name"
+
+    if [ -L "$entry" ]; then
+        target="$(readlink -f "$entry" 2>/dev/null || true)"
+        if [ -n "$target" ] && [[ "$target" == "$DOTFILES_DIR"/* ]]; then
+            continue
+        fi
+    fi
+
+    if [ -e "$repo_target" ]; then
+        continue
+    fi
+
+    echo "Ingesting new skill: $name"
+    cp -RL "$entry" "$repo_target"
+    rm -rf "$entry"
+    ingested=$((ingested + 1))
+done
+
+if [ "$ingested" -gt 0 ]; then
+    echo "Ingested $ingested skill(s) into $REPO_SKILLS"
+    echo "Re-run sync to symlink them back to \$HOME."
+fi

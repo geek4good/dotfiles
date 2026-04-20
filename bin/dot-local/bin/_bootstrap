@@ -36,7 +36,7 @@ fi
 
 # Stow dotfiles
 echo "Stowing dotfiles..."
-"$DOTFILES_DIR/setup"
+"$DOTFILES_DIR/sync"
 
 # Brew bundle (reads ~/.Brewfile created by stow)
 echo "Installing Brewfile packages..."

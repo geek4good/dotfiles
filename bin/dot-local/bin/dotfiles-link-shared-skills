@@ -1,0 +1,42 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# Mirror ~/.claude/skills/<name> into ~/.config/agents/skills/<name> as
+# symlinks so opencode and pi (which read from ~/.config/agents/skills/)
+# see the same catalog Claude Code does. Idempotent.
+
+SRC="$HOME/.claude/skills"
+DEST="$HOME/.config/agents/skills"
+
+if [ ! -d "$SRC" ]; then
+    exit 0
+fi
+
+mkdir -p "$DEST"
+
+shopt -s nullglob
+for entry in "$SRC"/*; do
+    name="$(basename "$entry")"
+    link="$DEST/$name"
+
+    if [ -L "$link" ]; then
+        if [ "$(readlink "$link")" = "$entry" ]; then
+            continue
+        fi
+        rm "$link"
+    elif [ -e "$link" ]; then
+        echo "dotfiles-link-shared-skills: $link exists and is not a symlink; refusing to overwrite" >&2
+        exit 1
+    fi
+
+    ln -s "$entry" "$link"
+done
+
+for link in "$DEST"/*; do
+    [ -L "$link" ] || continue
+    target="$(readlink "$link")"
+    if [[ "$target" == "$SRC"/* ]] && [ ! -e "$target" ]; then
+        echo "Removing stale bridge: $(basename "$link")"
+        rm "$link"
+    fi
+done

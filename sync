@@ -9,6 +9,9 @@ if ! command -v stow &>/dev/null; then
     brew install stow
 fi
 
+# Ingest any skills installed via `npx skills ...` into the repo before stowing
+DOTFILES_DIR="$DOTFILES_DIR" "$DOTFILES_DIR/bin/dot-local/bin/dotfiles-sync-skills"
+
 # If packages specified, use those; otherwise stow all
 if [ $# -gt 0 ]; then
     packages=("$@")
@@ -32,5 +35,8 @@ done
 
 # Restore repo versions in case --adopt pulled in different files
 git -C "$DOTFILES_DIR" checkout -- .
+
+# Bridge ~/.claude/skills/ into ~/.config/agents/skills/ for opencode/pi
+"$DOTFILES_DIR/bin/dot-local/bin/dotfiles-link-shared-skills"
 
 echo "Done!"
