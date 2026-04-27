@@ -1,7 +1,7 @@
 {
   "theme": "opencode",
   "quietStartup": true,
-  "defaultProvider": "zai-coding-plan",
+  "defaultProvider": "zai",
   "defaultModel": "glm-5.1",
   "packages": [
     "npm:pi-web-access"
@@ -17,5 +17,5 @@
     "maxRetries": 3,
     "baseDelayMs": 2000
   },
-  "lastChangelogVersion": "0.67.1"
+  "lastChangelogVersion": "0.67.3"
 }
