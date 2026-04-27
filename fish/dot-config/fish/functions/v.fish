@@ -1,7 +1,7 @@
 function v
     if test (count $argv) -eq 0
-        neovide .
+        nvim .
     else
-        neovide $argv
+        nvim $argv
     end
 end
