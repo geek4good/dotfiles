@@ -41,3 +41,58 @@ keybind = cmd+shift+d=new_split:down
 
 # alt+shift+backspace → fish bigword backward kill (paired with fish bind)
 keybind = alt+shift+backspace=text:\x1b[127;4u
+
+# ─── tmux integration (prefix: Ctrl-Space = \x00) ────────────────────────────
+# File manager (gokcehan/lf — requires `lf` and `lfcd` in PATH)
+keybind = cmd+f=text:lfcd\n
+
+# tmux copy-mode search (requires mode-keys vi in tmux)
+keybind = cmd+shift+f=text:\x00/
+
+# Git manager (jesseduffield/lazygit — requires `lazygit` in PATH)
+keybind = cmd+g=text:\x00g
+
+# tmux interactive session chooser
+keybind = cmd+k=text:\x00s
+
+# Switch to last tmux session
+keybind = cmd+l=text:\x00L
+
+# Open URLs (tmux-fzf-url plugin)
+keybind = cmd+o=text:\x00u
+
+# Neovim: GoToFile
+keybind = cmd+p=text::GoToFile\n
+# Neovim: GoToCommand
+keybind = cmd+shift+p=text::GoToCommand\n
+# New tmux window
+keybind = cmd+t=text:\x00c
+
+# Kill current pane
+keybind = cmd+w=text:\x00x
+
+# Toggle zoom
+keybind = cmd+z=text:\x00z
+
+# Next tmux window
+keybind = ctrl+tab=text:\x00n
+
+# Previous tmux window
+keybind = ctrl+backquote=text:\x00p
+
+# Rename tmux window
+keybind = cmd+comma=text:\x00,
+
+# tmux command prompt
+keybind = cmd+semicolon=text:\x00:
+
+# Select tmux window 1–9
+keybind = cmd+one=text:\x001
+keybind = cmd+two=text:\x002
+keybind = cmd+three=text:\x003
+keybind = cmd+four=text:\x004
+keybind = cmd+five=text:\x005
+keybind = cmd+six=text:\x006
+keybind = cmd+seven=text:\x007
+keybind = cmd+eight=text:\x008
+keybind = cmd+nine=text:\x009
