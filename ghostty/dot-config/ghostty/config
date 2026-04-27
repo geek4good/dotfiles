@@ -38,8 +38,6 @@ macos-titlebar-style = tabs
 keybind = cmd+d=new_split:right
 keybind = cmd+shift+d=new_split:down
 
-# Clear screen
-keybind = ctrl+shift+l=text:\x0c
 
 # alt+shift+backspace → fish bigword backward kill (paired with fish bind)
 keybind = alt+shift+backspace=text:\x1b[127;4u
