@@ -23,6 +23,14 @@ else
 fi
 
 cd "$DOTFILES_DIR"
+
+# Remove gitignored paths that conflict with stow
+_plugins_link="$HOME/.config/tmux/plugins"
+_plugins_target="$DOTFILES_DIR/tmux/dot-config/tmux/plugins"
+if [[ -L "$_plugins_link" || -d "$_plugins_link" ]]; then
+    rm -rf "$_plugins_link"
+fi
+
 for pkg in "${packages[@]}"; do
     if [ ! -d "$pkg" ]; then
         echo "Package '$pkg' not found, skipping."
@@ -35,6 +43,12 @@ done
 
 # Restore repo versions in case --adopt pulled in different files
 git -C "$DOTFILES_DIR" checkout -- .
+
+# Restore gitignored symlinks that were removed for stow
+if [[ -d "$_plugins_target" && ! -e "$_plugins_link" ]]; then
+    ln -s "$_plugins_target" "$_plugins_link"
+    echo "Restored $_plugins_link"
+fi
 
 # Bridge ~/.claude/skills/ into ~/.config/agents/skills/ for opencode/pi
 "$DOTFILES_DIR/bin/dot-local/bin/dotfiles-link-shared-skills"
