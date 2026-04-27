@@ -17,5 +17,5 @@
     "maxRetries": 3,
     "baseDelayMs": 2000
   },
-  "lastChangelogVersion": "0.67.3"
+  "lastChangelogVersion": "0.70.2"
 }
