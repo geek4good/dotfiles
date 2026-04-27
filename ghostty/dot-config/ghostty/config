@@ -78,7 +78,7 @@ keybind = cmd+z=text:\x00z
 keybind = ctrl+tab=text:\x00n
 
 # Previous tmux window
-keybind = ctrl+backquote=text:\x00p
+keybind = ctrl+shift+tab=text:\x00p
 
 # Rename tmux window
 keybind = cmd+comma=text:\x00,
