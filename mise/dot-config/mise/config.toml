@@ -11,3 +11,5 @@ elm = "latest"
 # Package managers & tooling
 pnpm = "latest"
 pipx = "latest"
+yarn = "latest"
+uv = "latest"
