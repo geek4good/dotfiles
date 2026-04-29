@@ -2,7 +2,7 @@
 
 Before ANY implementation, load `skill-loading` and `behavioral-rules` from the shared skills directory. These define philosophy selection, skill discovery protocol, and universal coding behavior. Use the `skill` tool to load them.
 
-The shared skills are located at `~/.config/agents/skills/` and include:
+The shared skills are located at `~/.claude/skills/` and include:
 
 - **`skill-loading`** — philosophy selection and skill discovery protocol
 - **`behavioral-rules`** — universal coding behavior (concise output, no debug, fail fast, etc.)

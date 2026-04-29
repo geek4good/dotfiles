@@ -50,7 +50,4 @@ if [[ -d "$_plugins_target" && ! -e "$_plugins_link" ]]; then
     echo "Restored $_plugins_link"
 fi
 
-# Bridge ~/.claude/skills/ into ~/.config/agents/skills/ for opencode/pi
-"$DOTFILES_DIR/bin/dot-local/bin/dotfiles-link-shared-skills"
-
 echo "Done!"

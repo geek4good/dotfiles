@@ -80,10 +80,6 @@ npx skills remove <name> -g                   # remove a skill
 
 After any add/update/remove, run `./sync` from the repo root. `sync` calls `dotfiles-sync-skills`, which ingests anything new in `~/.claude/skills/` into `claude/dot-claude/skills/`, then stows everything back so the repo is the version-controlled source of truth.
 
-### Bridge for opencode and pi
-
-`~/.config/agents/skills/` is a generated mirror of `~/.claude/skills/`. After stow runs, `dotfiles-link-shared-skills` (invoked from `sync`) creates one symlink per skill. opencode (`opencode/dot-config/opencode/tools/skills.md`) and pi (`pi/dot-pi/agent/SYSTEM.md`) read from the bridge unchanged.
-
 ### Plugins (ghpm, ghpmplus)
 
 The local marketplace at `claude/dot-config/claude-plugins/` has a `.claude-plugin/marketplace.json` listing `ghpm` and `ghpmplus`. Each plugin is a subdirectory with `.claude-plugin/plugin.json`, `commands/`, `agents/`, and (for ghpm) `skills/`. One-time registration per machine inside Claude Code:
@@ -104,7 +100,7 @@ The local marketplace at `claude/dot-config/claude-plugins/` has a `.claude-plug
 - Default branch: `main`
 - All commits GPG-signed
 - Commit style: `type(scope): description` (e.g., `feat(crush):`, `refactor(aerospace):`)
-- `./sync` runs stow (including the skills sync + shared-skills bridge); full-machine bootstrap lives in `bin/dot-local/bin/_bootstrap`
+- `./sync` runs stow (including the skills sync); full-machine bootstrap lives in `bin/dot-local/bin/_bootstrap`
 
 ## What not to do
 
