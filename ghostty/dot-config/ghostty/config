@@ -43,8 +43,8 @@ keybind = cmd+shift+d=new_split:down
 keybind = alt+shift+backspace=text:\x1b[127;4u
 
 # ─── tmux integration (prefix: Ctrl-Space = \x00) ────────────────────────────
-# File manager (gokcehan/lf — requires `lf` and `lfcd` in PATH)
-keybind = cmd+f=text:lfcd\n
+# Floax floating terminal (omerxx/tmux-floax — bound to root F12)
+keybind = cmd+o=text:\x1b[24~
 
 # tmux copy-mode search (requires mode-keys vi in tmux)
 keybind = cmd+shift+f=text:\x00/
@@ -59,7 +59,7 @@ keybind = cmd+k=text:\x00s
 keybind = cmd+l=text:\x00L
 
 # Open URLs (tmux-fzf-url plugin)
-keybind = cmd+o=text:\x00u
+keybind = cmd+shift+o=text:\x00u
 
 # Neovim: GoToFile
 keybind = cmd+p=text::GoToFile\n
