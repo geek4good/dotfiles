@@ -1,4 +1,5 @@
 format = """
+${env_var.ZMX_SESSION}\
 $username\
 $directory\
 $git_branch\
@@ -6,10 +7,16 @@ $git_status\
 $line_break\
 $status$character"""
 
+[env_var.ZMX_SESSION]
+symbol = " "
+format = "[$symbol$env_value]($style) in "
+description = "zmx session name"
+style = "bold blue"
+
 [username]
 style_user = "bold yellow"
 style_root = "bold red"
-format = "[$user]($style) in "
+format = "as [$user]($style) "
 disabled = false
 show_always = false
 
