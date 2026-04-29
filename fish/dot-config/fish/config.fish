@@ -93,6 +93,5 @@ abbr -a gclean 'git clean -fd'
 
 # Abbreviations — work
 abbr -a auto 'npx autoskills'
+abbr -a ash "autossh -M 0 -q"
 abbr -a cf 'v ~/.config/fish/config.fish'
-abbr -a oc 'ocx oc -p ws'
-abbr -a s 'sesh connect "$(sesh list -ti | gum filter --limit 1 --placeholder \'Pick a sesh\' --prompt=\'⚡\')"'
