@@ -20,3 +20,12 @@ Host silo
   HostName 168.119.49.221
   User geek4good
   ForwardAgent yes
+
+Host = s.*
+  HostName 168.119.49.221
+  User geek4good
+  RemoteCommand zmx attach %k
+  RequestTTY yes
+  ControlPath ~/.ssh/cm-%r@%h:%p
+  ControlMaster auto
+  ControlPersist 10m
