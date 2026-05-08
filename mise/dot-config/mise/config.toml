@@ -1,6 +1,6 @@
 [tools]
 # Runtimes & languages (multi-version per project)
-node = "latest"
+node = "25"
 bun = "latest"
 python = "latest"
 ruby = "latest"
@@ -13,3 +13,8 @@ pnpm = "latest"
 pipx = "latest"
 yarn = "latest"
 uv = "latest"
+pi = "latest"
+claude = "latest"
+
+[settings]
+experimental = true
