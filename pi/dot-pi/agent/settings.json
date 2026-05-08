@@ -1,9 +1,10 @@
 {
   "quietStartup": true,
-  "defaultProvider": "zai-coding-plan",
+  "defaultProvider": "zai",
   "defaultModel": "glm-5.1",
   "packages": [
-    "npm:pi-web-access"
+    "npm:pi-web-access",
+    "npm:pi-mcp-adapter"
   ],
   "defaultThinkingLevel": "high",
   "compaction": {
@@ -16,5 +17,6 @@
     "maxRetries": 3,
     "baseDelayMs": 2000
   },
-  "lastChangelogVersion": "0.70.2"
+  "lastChangelogVersion": "0.73.1",
+  "hideThinkingBlock": true
 }
