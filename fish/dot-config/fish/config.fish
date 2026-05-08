@@ -91,7 +91,14 @@ abbr -a gt 'git tag'
 abbr -a gf 'git fetch'
 abbr -a gclean 'git clean -fd'
 
+# Abbreviations — zmx
+abbr -a za 'zmx attach'
+abbr -a zk 'zmx kill'
+abbr -a zl 'zmx list'
+abbr -a zr 'zmx run'
+
 # Abbreviations — work
 abbr -a auto 'npx autoskills'
 abbr -a ash "autossh -M 0 -q"
 abbr -a cf 'v ~/.config/fish/config.fish'
+abbr -a rf 'source ~/.config/fish/config.fish'
