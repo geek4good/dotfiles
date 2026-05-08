@@ -34,65 +34,51 @@ window-padding-x = 8
 window-padding-y = 8
 macos-titlebar-style = tabs
 
-# Split creation
+# ─── Splits ──────────────────────────────────────────────────────────────────
 keybind = cmd+d=new_split:right
 keybind = cmd+shift+d=new_split:down
 
+# Create splits: ctrl+space + h/j/k/l → left/down/up/right
+keybind = ctrl+space>h=new_split:left
+keybind = ctrl+space>j=new_split:down
+keybind = ctrl+space>k=new_split:up
+keybind = ctrl+space>l=new_split:right
+keybind = ctrl+space>z=toggle_split_zoom
 
-# alt+shift+backspace → fish bigword backward kill (paired with fish bind)
+# Navigate splits: ctrl+h/j/k/l → move to left/down/up/right split
+keybind = ctrl+h=goto_split:left
+keybind = ctrl+j=goto_split:down
+keybind = ctrl+k=goto_split:up
+keybind = ctrl+l=goto_split:right
+keybind = ctrl+shift+l=text:\x0c
+keybind = ctrl+alt+h=previous_tab
+keybind = ctrl+alt+l=next_tab
+
+# ─── Tabs ────────────────────────────────────────────────────────────────────
+keybind = cmd+t=new_tab
+keybind = cmd+w=close_surface
+keybind = ctrl+tab=next_tab
+keybind = ctrl+shift+tab=previous_tab
+keybind = cmd+one=goto_tab:1
+keybind = cmd+two=goto_tab:2
+keybind = cmd+three=goto_tab:3
+keybind = cmd+four=goto_tab:4
+keybind = cmd+five=goto_tab:5
+keybind = cmd+six=goto_tab:6
+keybind = cmd+seven=goto_tab:7
+keybind = cmd+eight=goto_tab:8
+keybind = cmd+nine=goto_tab:9
+
+# ─── Pane zoom ───────────────────────────────────────────────────────────────
+keybind = cmd+z=toggle_split_zoom
+
+# ─── Shell ───────────────────────────────────────────────────────────────────
+# alt+shift+backspace → fish backward-kill-bigword
 keybind = alt+shift+backspace=text:\x1b[127;4u
 
-# ─── tmux integration (prefix: Ctrl-Space = \x00) ────────────────────────────
-# Floax floating terminal (omerxx/tmux-floax — bound to root F12)
-keybind = cmd+o=text:\x1b[24~
+# ─── zmx session picker ──────────────────────────────────────────────────────
+keybind = cmd+k=text:\x1b[107;9u
 
-# tmux copy-mode search (requires mode-keys vi in tmux)
-keybind = cmd+shift+f=text:\x00/
-
-# Git manager (jesseduffield/lazygit — requires `lazygit` in PATH)
-keybind = cmd+g=text:\x00g
-
-# tmux interactive session chooser
-keybind = cmd+k=text:\x00s
-
-# Switch to last tmux session
-keybind = cmd+l=text:\x00L
-
-# Open URLs (tmux-fzf-url plugin)
-keybind = cmd+shift+o=text:\x00u
-
-# Neovim: GoToFile
+# ─── Neovim ──────────────────────────────────────────────────────────────────
 keybind = cmd+p=text::GoToFile\n
-# Neovim: GoToCommand
 keybind = cmd+shift+p=text::GoToCommand\n
-# New tmux window
-keybind = cmd+t=text:\x00c
-
-# Kill current pane
-keybind = cmd+w=text:\x00x
-
-# Toggle zoom
-keybind = cmd+z=text:\x00z
-
-# Next tmux window
-keybind = ctrl+tab=text:\x00n
-
-# Previous tmux window
-keybind = ctrl+shift+tab=text:\x00p
-
-# Rename tmux window
-keybind = cmd+comma=text:\x00,
-
-# tmux command prompt
-keybind = cmd+semicolon=text:\x00:
-
-# Select tmux window 1–9
-keybind = cmd+one=text:\x001
-keybind = cmd+two=text:\x002
-keybind = cmd+three=text:\x003
-keybind = cmd+four=text:\x004
-keybind = cmd+five=text:\x005
-keybind = cmd+six=text:\x006
-keybind = cmd+seven=text:\x007
-keybind = cmd+eight=text:\x008
-keybind = cmd+nine=text:\x009
