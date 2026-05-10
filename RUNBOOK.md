@@ -2,22 +2,44 @@
 
 Infrastructure decisions, service layout, and operational conventions for this setup.
 
-## VPS (silo)
+## Infrastructure — Oracle Cloud (Singapore, Always Free)
 
-Hostname on Tailscale: `silo` (resolves via MagicDNS).
-OS: Ubuntu aarch64.
+All instances run in the Oracle Cloud home region (Singapore).
+Arch: ARM (Ampere A1). Provisioned via Terraform + cloud-init.
 
-### Services
+### Instances
 
-| Service | Role | Runs as | Port | Notes |
+| Instance | OCPU | RAM | Boot disk | Role |
 |---|---|---|---|---|
-| Coolify | PaaS for web apps | Docker | 80/443 | Handles domains, SSL, reverse proxying |
-| Lightpanda | Headless browser for AI agents | systemd | 9222 | CDP WebSocket server, 16× less RAM than Chrome |
-| Tailscale | Private networking | systemd | — | WireGuard-based; `silo` reachable from all tailnet devices |
+| `svc-01` | 2 | 12 GB | 110 GB | Uncloud control, tududi, umami, n8n |
+| `svc-02` | 1 | 6 GB | 45 GB | Lightpanda CDP server |
+| `svc-03` | 1 | 6 GB | 45 GB | Rails Icecast stats sampler |
 
-### Lightpanda
+**Total**: 4 OCPU / 24 GB RAM / 200 GB — within Always Free limits ✓
 
-Installed as a static binary at `/usr/local/bin/lightpanda`, managed by systemd.
+### Networking
+
+Two WireGuard-based meshes, each serving a different purpose:
+
+| Layer | Tool | Connects | Purpose |
+|---|---|---|---|
+| Device → infrastructure | Tailscale | MacBook ↔ all servers | SSH, Lightpanda CDP access from laptop, MagicDNS |
+| Server → server | Uncloud mesh | Server ↔ server | Container networking, service discovery, cross-machine deploys |
+
+**Why both**: Uncloud's mesh handles container-to-container traffic between cluster nodes. Tailscale handles device-to-infrastructure access (your MacBook isn't running Docker or the Uncloud daemon). Resource cost is minimal — ~50 MB RAM for Tailscale, ~150 MB for Uncloud per machine.
+
+### Tailscale
+
+Installed via cloud-init on every instance. Provides MagicDNS so services are reachable by hostname from any tailnet device.
+
+```bash
+curl -fsSL https://tailscale.com/install.sh | sh
+tailscale up --authkey=<key>
+```
+
+### Lightpanda (svc-02)
+
+Headless browser for AI agents. Runs as a systemd service, not through Docker — it's a single binary that doesn't need SSL, domains, or reverse proxying.
 
 ```bash
 # Install
@@ -43,29 +65,43 @@ Environment=LIGHTPANDA_DISABLE_TELEMETRY=true
 WantedBy=multi-user.target
 ```
 
-```bash
-sudo systemctl enable --now lightpanda
-```
+**Firewall**: Binds `0.0.0.0:9222` but access is restricted to Tailscale interface only.
 
-**Why bare metal, not Coolify**: Lightpanda is a single binary exposing a WebSocket. It doesn't need SSL, domains, or reverse proxying — Coolify's strengths. Running it through Docker would add a networking layer for zero benefit.
+**Known issue**: Oracle Cloud ARM instances use 64k page kernels. Lightpanda has an open issue ([#1370](https://github.com/lightpanda-io/browser/issues/1370)) crashing on 64k pages. Verify with `getconf PAGESIZE` after provisioning — may need a custom 4k-page kernel or a Lightpanda fix.
 
-**Firewall**: Binds `0.0.0.0:9222` but access is restricted to Tailscale:
+### Uncloud (svc-01, svc-02, svc-03)
 
-```bash
-sudo ufw allow in on tailscale0 to any port 9222
-sudo ufw deny 9222/tcp
-```
-
-### Tailscale
-
-Installed via the official one-liner (detects architecture automatically):
+[Uncloud](https://uncloud.run/) orchestrates Docker Compose apps across the three instances — zero-downtime deploys, service discovery, and cross-machine container networking via its built-in WireGuard mesh.
 
 ```bash
-curl -fsSL https://tailscale.com/install.sh | sh
-sudo tailscale up
+# On the first machine (becomes cluster seed)
+uc machine init user@svc-01
+
+# Add the other machines
+uc machine add user@svc-02
+uc machine add user@svc-03
 ```
 
-Provides a private network between all joined devices. Services are reached by MagicDNS hostname (e.g. `silo:9222`) — no SSH tunnels, no hardcoded IPs.
+**Why Uncloud over Coolify**: The workload spans 3 machines. Coolify is designed for single-server deployments. Uncloud treats multiple machines as one cluster with decentralized state — no single control plane to maintain.
+
+### Terraform
+
+All infrastructure is defined as code. Machines are cattle, not pets.
+
+```
+infra/
+├── main.tf              # providers (oci, tailscale)
+├── variables.tf         # compartment OCIDs, region, instance specs
+├── oci-networking.tf    # VCN, subnets, gateways
+├── oci-instances.tf     # 3 ARM instances with cloud-init
+├── tailscale.tf         # auth keys, ACLs
+├── cloud-init/
+│   ├── svc-01.yaml      # Uncloud + Docker, tududi, umami, n8n
+│   ├── svc-02.yaml      # Tailscale + Lightpanda
+│   └── svc-03.yaml      # Tailscale + Rails Icecast sampler
+├── terraform.tfvars     # secrets (gitignored)
+└── .gitignore
+```
 
 ---
 
@@ -116,7 +152,7 @@ Pi has two complementary web capabilities — they serve different purposes and 
 | Package | Provides | Mechanism |
 |---|---|---|
 | `pi-web-access` | Search (`web_search`, `code_search`), content extraction (`fetch_content`) | Exa MCP → Gemini API → Gemini Web (fallback chain). Picks up `GEMINI_API_KEY` from env via fnox. |
-| `pi-mcp-adapter` + chrome-devtools-mcp | Interactive browsing (click, fill forms, screenshots, JS execution) | Connects to Lightpanda on `silo:9222` via Tailscale |
+| `pi-mcp-adapter` + chrome-devtools-mcp | Interactive browsing (click, fill forms, screenshots, JS execution) | Connects to Lightpanda on `svc-02:9222` via Tailscale |
 
 **Why both**: pi-web-access is "search and read" (fast, structured, citation-backed). Lightpanda is "browse and interact" (dynamic pages, forms, visual inspection).
 
@@ -174,26 +210,36 @@ Config: `fish/dot-config/fish/`.
 ## Network diagram
 
 ```
-┌─────────────────────────────────────────────────────┐
-│  MacBook (macOS)                                    │
-│                                                     │
-│  Ghostty → fish → zmx sessions                      │
-│  Pi agent ──→ pi-web-access (Exa/Gemini API)        │
-│           └─→ pi-mcp-adapter                        │
-│                └─→ chrome-devtools-mcp               │
-│                     │                                │
-│  Tailscale ─────────┼───────────────────────────    │
-│                     │                                │
-└─────────────────────┼───────────────────────────────┘
-                      │  WireGuard (Tailscale)
-                      │  MagicDNS: silo
-┌─────────────────────┼───────────────────────────────┐
-│  VPS — silo (Ubuntu aarch64)                        │
-│                     │                                │
-│  Tailscale ◄────────┘                               │
-│  UFW: 9222 only on tailscale0                       │
-│                                                     │
-│  Lightpanda :9222 (CDP WebSocket)                   │
-│  Coolify :80/443 (web apps)                         │
-└─────────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────┐
+│  MacBook (macOS, Thailand)                                  │
+│                                                             │
+│  Ghostty → fish → zmx sessions                              │
+│  Pi agent ──→ pi-web-access (Exa/Gemini API)                │
+│           └─→ pi-mcp-adapter                                │
+│                └─→ chrome-devtools-mcp ──→ svc-02:9222      │
+│                                                             │
+│  Tailscale ─────────────────────────────────────────────    │
+│                      WireGuard (Tailscale)                  │
+│                      MagicDNS                               │
+└──────────────────────────┬──────────────────────────────────┘
+                           │
+          ┌────────────────┼────────────────┐
+          │                │                │
+          ▼                ▼                ▼
+┌─────────────────┐ ┌─────────────────┐ ┌─────────────────┐
+│  svc-01         │ │  svc-02         │ │  svc-03         │
+│  2 OCPU / 12 GB │ │  1 OCPU / 6 GB  │ │  1 OCPU / 6 GB  │
+│  110 GB disk    │ │  45 GB disk     │ │  45 GB disk     │
+│                 │ │                 │ │                 │
+│  Tailscale      │ │  Tailscale      │ │  Tailscale      │
+│  Uncloud daemon │ │  Uncloud daemon │ │  Uncloud daemon │
+│  tududi         │ │  Lightpanda :9222│ │  Rails sampler  │
+│  umami          │ │                 │ │                 │
+│  n8n            │ │                 │ │                 │
+└────────┬────────┘ └────────┬────────┘ └────────┬────────┘
+         │                   │                   │
+         └───────────────────┴───────────────────┘
+                 Uncloud WireGuard mesh
+                 (container networking,
+                  service discovery)
 ```
