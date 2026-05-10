@@ -15,6 +15,7 @@ yarn = "latest"
 uv = "latest"
 pi = "latest"
 claude = "latest"
+terraform = "latest"
 
 [settings]
 experimental = true
