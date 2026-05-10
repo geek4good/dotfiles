@@ -1,0 +1,164 @@
+#!/usr/bin/env bash
+# zmx-pick — project-aware zmx session picker
+#
+# Derives a session name from the current git root or directory,
+# presents existing sessions in fzf (current project first),
+# and attaches to the selected or newly-created session.
+#
+# Naming convention: <project-slug>-<N>
+#   e.g. dotfiles-1, dotfiles-2, myapp-1
+#
+# Options:
+#   --name    Print the next session name and exit (no fzf, no attach)
+#   --help    Show this help
+
+set -euo pipefail
+
+# ── helpers ────────────────────────────────────────────────────────────────────
+
+_usage() {
+    sed -n '2,/^$/p' "$0" | sed 's/^# //; s/^#//'
+    exit 0
+}
+
+_project_slug() {
+    local root name
+    root=$(git rev-parse --show-toplevel 2>/dev/null || true)
+    if [[ -n "$root" ]]; then
+        name=$(basename "$root")
+    else
+        name=$(basename "$PWD")
+    fi
+    echo "$name" | tr '[:upper:]' '[:lower:]' | sed 's/[^a-z0-9]/-/g' | sed 's/-\+/-/g' | sed 's/^-//;s/-$//'
+}
+
+_next_session() {
+    local project=$1 n=1
+    while echo "$sessions" | grep -qx "${project}-${n}" 2>/dev/null; do
+        n=$((n + 1))
+    done
+    echo "${project}-${n}"
+}
+
+# ── parse args ─────────────────────────────────────────────────────────────────
+
+print_only=false
+for arg in "$@"; do
+    case "$arg" in
+        --name) print_only=true ;;
+        --help) _usage ;;
+        *)      echo "unknown argument: $arg" >&2; exit 1 ;;
+    esac
+done
+
+# ── main ───────────────────────────────────────────────────────────────────────
+
+project=$(_project_slug)
+sessions=$(zmx list --short 2>/dev/null || true)
+default=$(_next_session "$project")
+
+# --name: just print and exit
+if $print_only; then
+    echo "$default"
+    exit 0
+fi
+
+# No sessions at all → create immediately (skip fzf)
+if [[ -z "$sessions" ]]; then
+    exec zmx attach "$default"
+fi
+
+# Sort: current project sessions first, then others
+current=$(echo "$sessions" | grep "^${project}-" 2>/dev/null || true)
+others=$(echo "$sessions" | grep -v "^${project}-" 2>/dev/null || true)
+if [[ -n "$current" && -n "$others" ]]; then
+    sorted="${current}"$'\n'"${others}"
+elif [[ -n "$current" ]]; then
+    sorted="${current}"
+else
+    sorted="${others}"
+fi
+
+# Prepend default suggestion (dedup in case it already exists)
+list=$({ echo "$default"; echo "$sorted"; } | awk '!seen[$0]++')
+
+# fzf picker
+tmp=$(mktemp)
+trap 'rm -f "$tmp"' EXIT
+
+echo "$list" | fzf \
+    --print-query \
+    --height=80% \
+    --reverse \
+    --prompt="zmx> " \
+    --header="Enter: attach or create · Esc: cancel" \
+    --preview='zmx history {} | tail -50' \
+    --preview-window=right:60%:follow \
+> "$tmp"
+
+rc=$?
+query=$(sed -n '1p' "$tmp")
+selected=$(sed -n '2p' "$tmp")
+
+session=""
+if [[ $rc -eq 0 && -n "$selected" ]]; then
+    session=$selected
+elif [[ -n "$query" && $rc -ne 130 ]]; then
+    session=$query
+else
+    exit 130
+fi
+
+# Check if session name is a path — extract dir and derive proper session name
+explicit_path=""
+if [[ "$session" =~ ^[~/\.] ]]; then
+    explicit_path=$(eval echo "$session")
+    slug=$(basename "$explicit_path" | tr '[:upper:]' '[:lower:]' | sed 's/[^a-z0-9]/-/g' | sed 's/-\+/-/g' | sed 's/^-//;s/-$//')
+    sn=1
+    while echo "$sessions" | grep -qx "${slug}-${sn}" 2>/dev/null; do
+        sn=$((sn + 1))
+    done
+    session="${slug}-${sn}"
+fi
+
+# Resolve project directory from session name
+project_slug=$(echo "$session" | sed 's/-[0-9]*$//')
+project_dir=""
+
+if [[ -n "$explicit_path" ]]; then
+    project_dir="$explicit_path"
+else
+    project_dir=$(find ~/Projects -maxdepth 2 -name "$project_slug" -type d 2>/dev/null | head -1)
+fi
+
+if [[ -z "$project_dir" ]]; then
+    dir_tmp=$(mktemp)
+    find ~/Projects -maxdepth 2 -type d -name '.git' -exec dirname {} \; 2>/dev/null | sort | fzf \
+        --print-query \
+        --height=80% \
+        --reverse \
+        --prompt="dir> " \
+        --header="Pick or type path for '$session' · e.g. myapp or org/repo · Esc: use \$PWD" \
+    > "$dir_tmp"
+    dir_rc=$?
+    dir_query=$(sed -n '1p' "$dir_tmp")
+    dir_selected=$(sed -n '2p' "$dir_tmp")
+    rm -f "$dir_tmp"
+
+    if [[ $dir_rc -ne 130 && -n "$dir_query" ]]; then
+        if [[ "$dir_query" =~ ^[~/\.] ]]; then
+            project_dir=$(eval echo "$dir_query")
+        elif [[ -n "$dir_selected" ]]; then
+            project_dir=$dir_selected
+        else
+            project_dir="$HOME/Projects/$dir_query"
+        fi
+        mkdir -p "$project_dir"
+    fi
+fi
+if [[ -n "$project_dir" ]]; then
+    cd "$project_dir"
+fi
+
+printf '\033[2J\033[H'
+exec zmx attach "$session"

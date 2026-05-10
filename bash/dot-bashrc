@@ -10,7 +10,7 @@ export HOMEBREW_NO_ENV_HINTS="1"
 umask 022
 
 # Start zmx if not already inside a session
-if command -v zmx &>/dev/null && [[ -z $ZMX ]]; then
+if command -v zmx &>/dev/null && [[ -z $ZMX_SESSION ]]; then
   exec zmx
 fi
 

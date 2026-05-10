@@ -1,3 +1,6 @@
-if status is-interactive; and command -q zmx; and test -z "$ZMX"
-    zmx_select
+if status is-interactive; and test -z "$ZMX_SESSION"
+    function __zmx_autostart --on-event fish_prompt
+        functions --erase __zmx_autostart
+        zmx_select
+    end
 end
