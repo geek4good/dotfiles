@@ -55,7 +55,7 @@ function zmx_select --description "project-aware zmx session picker"
         --height=80% \
         --reverse \
         --prompt="zmx> " \
-        --header="Enter: attach or create · type a path to set dir · Esc: cancel" \
+        --header="Enter: attach or create · server.session for remote · Esc: cancel" \
         --preview='zmx history {} | tail -50' \
         --preview-window=right:60%:follow \
     > $tmp
@@ -72,6 +72,17 @@ function zmx_select --description "project-aware zmx session picker"
         set session $query
     else
         return 130
+    end
+
+    # ── remote session (server.session) ───────────────────────────────────────
+
+    if string match -qr '^[a-zA-Z0-9][a-zA-Z0-9-]*\.[a-zA-Z0-9]' "$session"
+        set -l server (string split -m1 '.' $session)[1]
+        set -l ssh_hosts (grep "^Host " ~/.ssh/config | string replace -r '^Host ' '' | string trim | grep -v '\*')
+        if contains "$server" $ssh_hosts
+            printf '\033[2J\033[H'
+            exec autossh -M 0 -q $session
+        end
     end
 
     # ── resolve project directory ─────────────────────────────────────────────

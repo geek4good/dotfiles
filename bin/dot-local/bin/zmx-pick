@@ -91,7 +91,7 @@ echo "$list" | fzf \
     --height=80% \
     --reverse \
     --prompt="zmx> " \
-    --header="Enter: attach or create · Esc: cancel" \
+    --header="Enter: attach or create · server.session for remote · Esc: cancel" \
     --preview='zmx history {} | tail -50' \
     --preview-window=right:60%:follow \
 > "$tmp"
@@ -108,6 +108,19 @@ elif [[ -n "$query" && $rc -ne 130 ]]; then
 else
     exit 130
 fi
+
+# ── remote session (server.session) ──────────────────────────────────────────
+
+if [[ "$session" =~ ^[a-zA-Z0-9][a-zA-Z0-9-]*\.[a-zA-Z0-9] ]]; then
+    server="${session%%.*}"
+    ssh_hosts=$(grep "^Host " ~/.ssh/config | sed 's/^Host //' | sed 's/ //g' | grep -v '\*')
+    if echo "$ssh_hosts" | grep -qx "$server"; then
+        printf '\033[2J\033[H'
+        exec autossh -M 0 -q "$session"
+    fi
+fi
+
+# ── resolve project directory ─────────────────────────────────────────────────
 
 # Check if session name is a path — extract dir and derive proper session name
 explicit_path=""

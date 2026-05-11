@@ -21,7 +21,7 @@ Host silo
   User geek4good
   ForwardAgent yes
 
-Host = s.*
+Host = silo.*
   HostName 168.119.49.221
   User geek4good
   RemoteCommand zmx attach %k
