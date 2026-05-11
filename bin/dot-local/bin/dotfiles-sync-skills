@@ -1,49 +1,97 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Ingest ~/.claude/skills/<name> into the dotfiles repo so newly installed
-# skills (e.g., from `npx skills add`) become version-controlled. Idempotent.
-# stow then re-symlinks them on the next sync run.
+# Ingest skills from home directories into the dotfiles repo so newly
+# installed skills (e.g., from `npx skills add`) become version-controlled.
+# Idempotent.  stow then re-symlinks them on the next sync run.
 
-DOTFILES_DIR="${DOTFILES_DIR:-$HOME/Projects/GEEK4GOOD/dotfiles}"
-REPO_SKILLS="$DOTFILES_DIR/claude/dot-claude/skills"
-HOME_SKILLS="$HOME/.claude/skills"
+DOTFILES_DIR="${DOTFILES_DIR:-$HOME/Projects/dotfiles}"
+TOTAL_INGESTED=0
 
 if [ ! -d "$DOTFILES_DIR" ]; then
     echo "dotfiles-sync-skills: DOTFILES_DIR not found: $DOTFILES_DIR" >&2
     exit 1
 fi
 
-if [ ! -d "$HOME_SKILLS" ]; then
-    exit 0
-fi
+# -------------------------------------------------------------------
+# ingest_skills <home_skills_dir> <repo_skills_dir> <label>
+#
+# For each skill in <home_skills_dir>:
+#   - broken symlink → remove (dangling stow link from deleted repo copy)
+#   - symlink into $DOTFILES_DIR → skip (stow-managed)
+#   - symlink elsewhere → skip (external reference, e.g. shared ~/.agents/skills/)
+#   - directory with broken SKILL.md → clean up (stale stow artifact)
+#   - real directory with SKILL.md → copy into repo, remove original
+#   - already in repo → skip
+# -------------------------------------------------------------------
+ingest_skills() {
+    local home_skills="$1"
+    local repo_skills="$2"
+    local label="$3"
 
-mkdir -p "$REPO_SKILLS"
+    if [ ! -d "$home_skills" ]; then
+        return
+    fi
 
-ingested=0
-shopt -s nullglob
-for entry in "$HOME_SKILLS"/*; do
-    name="$(basename "$entry")"
-    repo_target="$REPO_SKILLS/$name"
+    mkdir -p "$repo_skills"
 
-    if [ -L "$entry" ]; then
-        target="$(readlink -f "$entry" 2>/dev/null || true)"
-        if [ -n "$target" ] && [[ "$target" == "$DOTFILES_DIR"/* ]]; then
+    local ingested=0
+    local entry name repo_target
+
+    for entry in "$home_skills"/*; do
+        [ -e "$entry" ] || [ -L "$entry" ] || continue   # nullglob fallback
+        name="$(basename "$entry")"
+        repo_target="$repo_skills/$name"
+
+        # Broken symlink → clean up (orphaned stow link)
+        if [ -L "$entry" ] && [ ! -e "$entry" ]; then
+            echo "Removing broken symlink: $label/$name"
+            rm "$entry"
             continue
         fi
+
+        # Any symlink (stow-managed or external) → skip
+        if [ -L "$entry" ]; then
+            continue
+        fi
+
+        # Directory with broken SKILL.md symlink → stale stow artifact, clean up
+        if [ -L "$entry/SKILL.md" ] && [ ! -e "$entry/SKILL.md" ]; then
+            echo "Removing stale skill dir with broken symlink: $label/$name"
+            rm -rf "$entry"
+            continue
+        fi
+
+        # Already version-controlled → skip
+        if [ -e "$repo_target" ]; then
+            continue
+        fi
+
+        # Not a valid skill directory → skip
+        if [ ! -f "$entry/SKILL.md" ]; then
+            continue
+        fi
+
+        echo "Ingesting new $label skill: $name"
+        cp -RL "$entry" "$repo_target"
+        rm -rf "$entry"
+        ingested=$((ingested + 1))
+    done
+
+    if [ "$ingested" -gt 0 ]; then
+        echo "Ingested $ingested $label skill(s) into $repo_skills"
     fi
+    TOTAL_INGESTED=$((TOTAL_INGESTED + ingested))
+}
 
-    if [ -e "$repo_target" ]; then
-        continue
-    fi
+ingest_skills "$HOME/.claude/skills" \
+    "$DOTFILES_DIR/claude/dot-claude/skills" \
+    "Claude"
 
-    echo "Ingesting new skill: $name"
-    cp -RL "$entry" "$repo_target"
-    rm -rf "$entry"
-    ingested=$((ingested + 1))
-done
+ingest_skills "$HOME/.pi/agent/skills" \
+    "$DOTFILES_DIR/pi/dot-pi/agent/skills" \
+    "Pi"
 
-if [ "$ingested" -gt 0 ]; then
-    echo "Ingested $ingested skill(s) into $REPO_SKILLS"
+if [ "$TOTAL_INGESTED" -gt 0 ]; then
     echo "Re-run sync to symlink them back to \$HOME."
 fi
