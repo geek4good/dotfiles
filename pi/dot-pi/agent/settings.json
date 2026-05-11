@@ -8,7 +8,7 @@
     "git:github.com/ruizrica/agent-pi"
   ],
   "defaultThinkingLevel": "high",
-  "defaultModelTemperature": 0.0,
+  "defaultModelTemperature": 0,
   "compaction": {
     "enabled": true,
     "reserveTokens": 16384,
@@ -20,6 +20,6 @@
     "baseDelayMs": 2000
   },
   "lastChangelogVersion": "0.74.0",
-  "hideThinkingBlock": true,
+  "hideThinkingBlock": false,
   "theme": "midnight-ocean"
 }
