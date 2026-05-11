@@ -58,6 +58,97 @@
           "maxTokens": 128000
         }
       ]
+    },
+    "opencode-go": {
+      "baseUrl": "https://opencode.ai/zen/go/v1",
+      "api": "openai-completions",
+      "apiKey": "OPENCODE_API_KEY",
+      "models": [
+        {
+          "id": "kimi-k2.6",
+          "name": "Kimi K2.6",
+          "reasoning": true,
+          "contextWindow": 262144,
+          "maxTokens": 65536
+        },
+        {
+          "id": "kimi-k2.5",
+          "name": "Kimi K2.5",
+          "reasoning": true,
+          "contextWindow": 262144,
+          "maxTokens": 65536
+        },
+        {
+          "id": "deepseek-v4-pro",
+          "name": "DeepSeek V4 Pro",
+          "reasoning": true,
+          "contextWindow": 1048576,
+          "maxTokens": 65536
+        },
+        {
+          "id": "deepseek-v4-flash",
+          "name": "DeepSeek V4 Flash",
+          "reasoning": false,
+          "contextWindow": 1048576,
+          "maxTokens": 65536
+        },
+        {
+          "id": "qwen3.6-plus",
+          "name": "Qwen 3.6 Plus",
+          "reasoning": true,
+          "contextWindow": 1048576,
+          "maxTokens": 32768
+        },
+        {
+          "id": "qwen3.5-plus",
+          "name": "Qwen 3.5 Plus",
+          "reasoning": true,
+          "contextWindow": 262144,
+          "maxTokens": 32768
+        },
+        {
+          "id": "minimax-m2.7",
+          "name": "MiniMax M2.7",
+          "reasoning": true,
+          "contextWindow": 196608,
+          "maxTokens": 32768
+        },
+        {
+          "id": "minimax-m2.5",
+          "name": "MiniMax M2.5",
+          "reasoning": true,
+          "contextWindow": 196608,
+          "maxTokens": 32768
+        },
+        {
+          "id": "mimo-v2.5-pro",
+          "name": "MiMo V2.5 Pro",
+          "reasoning": true,
+          "contextWindow": 131072,
+          "maxTokens": 32768
+        }
+      ]
+    },
+    "opencode-go-anthropic": {
+      "baseUrl": "https://opencode.ai/zen/go/v1",
+      "api": "anthropic-messages",
+      "apiKey": "OPENCODE_API_KEY",
+      "models": [
+        {
+          "id": "minimax-m2.7",
+          "name": "MiniMax M2.7 (Anthropic)",
+          "reasoning": true,
+          "contextWindow": 196608,
+          "maxTokens": 32768
+        },
+        {
+          "id": "minimax-m2.5",
+          "name": "MiniMax M2.5 (Anthropic)",
+          "reasoning": true,
+          "contextWindow": 196608,
+          "maxTokens": 32768
+        }
+      ]
     }
   }
 }

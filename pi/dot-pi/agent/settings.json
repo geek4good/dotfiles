@@ -4,9 +4,11 @@
   "defaultModel": "glm-5.1",
   "packages": [
     "npm:pi-web-access",
-    "npm:pi-mcp-adapter"
+    "npm:pi-mcp-adapter",
+    "git:github.com/ruizrica/agent-pi"
   ],
   "defaultThinkingLevel": "high",
+  "defaultModelTemperature": 0.0,
   "compaction": {
     "enabled": true,
     "reserveTokens": 16384,
@@ -18,5 +20,6 @@
     "baseDelayMs": 2000
   },
   "lastChangelogVersion": "0.74.0",
-  "hideThinkingBlock": true
+  "hideThinkingBlock": true,
+  "theme": "midnight-ocean"
 }

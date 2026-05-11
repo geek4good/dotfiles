@@ -1,7 +1,7 @@
 ---
 name: researcher
 description: Knowledge architect for external research using web search, code search, and documentation lookup
-tools: read,grep,find,ls,bash,web_search,code_search,fetch_content
+tools: read,grep,find,ls,bash,web_search,code_search,fetch_content,fetch_rendered
 ---
 
 # Researcher Agent
