@@ -1,15 +1,12 @@
 #!/usr/bin/env bash
 # zmx-pick — project-aware zmx session picker
 #
-# Derives a session name from the current git root or directory,
-# presents existing sessions in fzf (current project first),
-# and attaches to the selected or newly-created session.
-#
-# Naming convention: <project-slug>-<N>
-#   e.g. dotfiles-1, dotfiles-2, myapp-1
+# Session naming: <project>-<program>
+#   e.g. www-pi   → cd ~/Projects/www, run pi
+#        www-term → cd ~/Projects/www, default shell
 #
 # Options:
-#   --name    Print the next session name and exit (no fzf, no attach)
+#   --name    Print the default session name and exit (no fzf, no attach)
 #   --help    Show this help
 
 set -euo pipefail
@@ -32,14 +29,6 @@ _project_slug() {
     echo "$name" | tr '[:upper:]' '[:lower:]' | sed 's/[^a-z0-9]/-/g' | sed 's/-\+/-/g' | sed 's/^-//;s/-$//'
 }
 
-_next_session() {
-    local project=$1 n=1
-    while echo "$sessions" | grep -qx "${project}-${n}" 2>/dev/null; do
-        n=$((n + 1))
-    done
-    echo "${project}-${n}"
-}
-
 # ── parse args ─────────────────────────────────────────────────────────────────
 
 print_only=false
@@ -55,7 +44,7 @@ done
 
 project=$(_project_slug)
 sessions=$(zmx list --short 2>/dev/null || true)
-default=$(_next_session "$project")
+default="${project}-term"
 
 # --name: just print and exit
 if $print_only; then
@@ -79,7 +68,7 @@ else
     sorted="${others}"
 fi
 
-# Prepend default suggestion (dedup in case it already exists)
+# Prepend default suggestion (dedup)
 list=$({ echo "$default"; echo "$sorted"; } | awk '!seen[$0]++')
 
 # fzf picker
@@ -91,7 +80,7 @@ echo "$list" | fzf \
     --height=80% \
     --reverse \
     --prompt="zmx> " \
-    --header="Enter: attach or create · server.session for remote · Esc: cancel" \
+    --header="Enter: attach or create · <project>-<program> · term=shell · Esc: cancel" \
     --preview='zmx history {} | tail -50' \
     --preview-window=right:60%:follow \
 > "$tmp"
@@ -120,29 +109,73 @@ if [[ "$session" =~ ^[a-zA-Z0-9][a-zA-Z0-9-]*\.[a-zA-Z0-9] ]]; then
     fi
 fi
 
-# ── resolve project directory ─────────────────────────────────────────────────
+# ── existing session → attach directly ────────────────────────────────────────
 
-# Check if session name is a path — extract dir and derive proper session name
-explicit_path=""
+if echo "$sessions" | grep -qx "$session" 2>/dev/null; then
+    printf '\033[2J\033[H'
+    exec zmx attach "$session"
+fi
+
+# ── new session: resolve project directory and program ────────────────────────
+
+program="term"
+project_dir=""
+found=false
+
+# Handle explicit path input (e.g. ~/Projects/www)
 if [[ "$session" =~ ^[~/\.] ]]; then
     explicit_path=$(eval echo "$session")
     slug=$(basename "$explicit_path" | tr '[:upper:]' '[:lower:]' | sed 's/[^a-z0-9]/-/g' | sed 's/-\+/-/g' | sed 's/^-//;s/-$//')
-    sn=1
-    while echo "$sessions" | grep -qx "${slug}-${sn}" 2>/dev/null; do
-        sn=$((sn + 1))
-    done
-    session="${slug}-${sn}"
-fi
-
-# Resolve project directory from session name
-project_slug=$(echo "$session" | sed 's/-[0-9]*$//')
-project_dir=""
-
-if [[ -n "$explicit_path" ]]; then
+    session="${slug}-term"
     project_dir="$explicit_path"
-else
-    project_dir=$(find ~/Projects -maxdepth 2 -name "$project_slug" -type d 2>/dev/null | head -1)
+    found=true
 fi
+
+# ── 1. Match current project prefix (most common case) ──────────────────────
+# We know $project from git root / PWD, so use it to extract the program.
+
+if ! $found && [[ "$session" == "${project}-"* ]]; then
+    program="${session#"${project}-"}"
+    root=$(git rev-parse --show-toplevel 2>/dev/null || true)
+    if [[ -n "$root" ]]; then
+        project_dir="$root"
+    else
+        project_dir="$PWD"
+    fi
+    found=true
+fi
+
+# ── 2. Longest-prefix matching in ~/Projects (cross-project) ────────────────
+
+if ! $found; then
+    IFS='-' read -ra parts <<< "$session"
+    num_parts=${#parts[@]}
+
+    # Try full name as project directory
+    dir=$(find ~/Projects -maxdepth 2 -name "$session" -type d 2>/dev/null | head -1)
+    if [[ -n "$dir" ]]; then
+        project_dir="$dir"
+        found=true
+    fi
+
+    # Try progressively shorter prefixes
+    if ! $found && [[ $num_parts -ge 2 ]]; then
+        for (( i=num_parts; i>=2; i-- )); do
+            proj_candidate=$(IFS=-; echo "${parts[*]:0:$((i-1))}")
+            prog_candidate=$(IFS=-; echo "${parts[*]:$((i-1))}")
+
+            dir=$(find ~/Projects -maxdepth 2 -name "$proj_candidate" -type d 2>/dev/null | head -1)
+            if [[ -n "$dir" ]]; then
+                project_dir="$dir"
+                program="$prog_candidate"
+                found=true
+                break
+            fi
+        done
+    fi
+fi
+
+# ── fallback directory picker ─────────────────────────────────────────────────
 
 if [[ -z "$project_dir" ]]; then
     dir_tmp=$(mktemp)
@@ -169,9 +202,16 @@ if [[ -z "$project_dir" ]]; then
         mkdir -p "$project_dir"
     fi
 fi
+
 if [[ -n "$project_dir" ]]; then
     cd "$project_dir"
 fi
 
+# ── create and attach ─────────────────────────────────────────────────────────
+
 printf '\033[2J\033[H'
-exec zmx attach "$session"
+if [[ "$program" != "term" ]]; then
+    exec zmx attach "$session" "$program"
+else
+    exec zmx attach "$session"
+fi

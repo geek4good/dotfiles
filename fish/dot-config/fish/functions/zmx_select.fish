@@ -10,14 +10,10 @@ function zmx_select --description "project-aware zmx session picker"
     end
     set -l project (string lower "$name" | string replace -ra '[^a-z0-9]' '-' | string replace -ra '\-+' '-' | string trim -c '-')
 
-    # ── next session number ───────────────────────────────────────────────────
+    # ── sessions ──────────────────────────────────────────────────────────────
 
     set -l sessions (zmx list --short 2>/dev/null; or true)
-    set -l n 1
-    while contains "$project-$n" $sessions
-        set n (math $n + 1)
-    end
-    set -l default "$project-$n"
+    set -l default "$project-term"
 
     # ── args ──────────────────────────────────────────────────────────────────
 
@@ -55,7 +51,7 @@ function zmx_select --description "project-aware zmx session picker"
         --height=80% \
         --reverse \
         --prompt="zmx> " \
-        --header="Enter: attach or create · server.session for remote · Esc: cancel" \
+        --header="Enter: attach or create · <project>-<program> · term=shell · Esc: cancel" \
         --preview='zmx history {} | tail -50' \
         --preview-window=right:60%:follow \
     > $tmp
@@ -85,34 +81,82 @@ function zmx_select --description "project-aware zmx session picker"
         end
     end
 
-    # ── resolve project directory ─────────────────────────────────────────────
+    # ── existing session → attach directly ────────────────────────────────────
 
-    set -l explicit_path
+    if contains "$session" $sessions
+        printf '\033[2J\033[H'
+        exec zmx attach $session
+    end
 
-    # Check if the session name itself is a path (typed in the picker)
+    # ── new session: resolve project directory and program ────────────────────
+
+    set -l program "term"
+    set -l project_dir ""
+    set -l found false
+
+    # Handle explicit path input (e.g. ~/Projects/www)
     if string match -qr '^[~/\.]' "$session"
-        set explicit_path (eval echo "$session")
-        # Derive session name from the last path component
+        set -l explicit_path (eval echo "$session")
         set -l slug (basename "$explicit_path" | string lower | string replace -ra '[^a-z0-9]' '-' | string replace -ra '\-+' '-' | string trim -c '-')
-        set -l sn 1
-        while contains "$slug-$sn" $sessions
-            set sn (math $sn + 1)
-        end
-        set session "$slug-$sn"
-    end
-
-    # Try to match slug against ~/Projects
-    set -l project_slug (string replace -r '\-\d+$' '' $session)
-    set -l project_dir
-
-    if test -n "$explicit_path"
+        set session "$slug-term"
         set project_dir "$explicit_path"
-    else
-        set project_dir (find ~/Projects -maxdepth 2 -name "$project_slug" -type d 2>/dev/null | head -1; or true)
+        set found true
     end
+
+    # ── 1. Match current project prefix (most common case) ───────────────────
+    # We know $project from git root / PWD, so use it to extract the program.
+
+    if not $found; and string match -q "$project-*" "$session"
+        set program (string replace -- "$project-" "" "$session")
+        if test -n "$root"
+            set project_dir "$root"
+        else
+            set project_dir "$PWD"
+        end
+        set found true
+    end
+
+    # ── 2. Longest-prefix matching in ~/Projects (cross-project) ─────────────
+
+    if not $found
+        set -l dash_parts (string split '-' $session)
+        set -l num_parts (count $dash_parts)
+
+        # Try full name as project directory
+        set -l dir (find ~/Projects -maxdepth 2 -name "$session" -type d 2>/dev/null | head -1; or true)
+        if test -n "$dir"
+            set project_dir "$dir"
+            set found true
+        end
+
+        # Try progressively shorter prefixes
+        if not $found; and test $num_parts -ge 2
+            for i in (seq $num_parts -1 2)
+                set -l proj_parts
+                set -l prog_parts
+                for j in (seq 1 (math $i - 1))
+                    set -a proj_parts $dash_parts[$j]
+                end
+                for j in (seq $i $num_parts)
+                    set -a prog_parts $dash_parts[$j]
+                end
+                set -l proj_candidate (string join '-' $proj_parts)
+                set -l prog_candidate (string join '-' $prog_parts)
+
+                set dir (find ~/Projects -maxdepth 2 -name "$proj_candidate" -type d 2>/dev/null | head -1; or true)
+                if test -n "$dir"
+                    set project_dir "$dir"
+                    set program "$prog_candidate"
+                    set found true
+                    break
+                end
+            end
+        end
+    end
+
+    # ── fallback directory picker ─────────────────────────────────────────────
 
     if test -z "$project_dir"
-        # No match — pick or type a path
         set -l dir_tmp (mktemp)
         find ~/Projects -maxdepth 2 -type d -name '.git' -exec dirname {} \; 2>/dev/null | sort | fzf \
             --print-query \
@@ -142,6 +186,12 @@ function zmx_select --description "project-aware zmx session picker"
         cd "$project_dir"
     end
 
+    # ── create and attach ─────────────────────────────────────────────────────
+
     printf '\033[2J\033[H'
-    exec zmx attach $session
+    if test "$program" != "term"
+        exec zmx attach $session $program
+    else
+        exec zmx attach $session
+    end
 end
