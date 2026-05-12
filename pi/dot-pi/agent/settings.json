@@ -1,6 +1,6 @@
 {
   "quietStartup": true,
-  "defaultProvider": "zai",
+  "defaultProvider": "zai-coding-plan",
   "defaultModel": "glm-5.1",
   "packages": [
     "npm:pi-web-access",
