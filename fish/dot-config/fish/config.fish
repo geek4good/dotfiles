@@ -89,6 +89,7 @@ abbr -a gco 'git checkout'
 abbr -a gsw 'git switch'
 abbr -a gt 'git tag'
 abbr -a gf 'git fetch'
+abbr -a grv 'git remote -v'
 abbr -a gclean 'git clean -fd'
 
 # Abbreviations — zmx
