@@ -1,6 +1,6 @@
 [tools]
 # Runtimes & languages (multi-version per project)
-node = "25"
+node = "26"
 bun = "latest"
 python = "latest"
 ruby = "latest"
