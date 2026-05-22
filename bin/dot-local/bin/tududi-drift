@@ -1,0 +1,253 @@
+#!/usr/bin/env bash
+# tududi-drift — Detect drift between ~/Projects directories and Tududi projects
+#
+# Usage:
+#   tududi-drift              # Show full drift report
+#   tududi-drift --missing    # Only show dirs missing from Tududi
+#   tududi-drift --stale      # Only show Tududi projects with no matching dir
+#   tududi-drift --json       # Machine-readable output
+#
+# Setup:
+#   1. Generate an API token at https://todo.geek4good.com (Profile → API Tokens)
+#   2. Export it: export TUDUDI_TOKEN="tt_your_token_here"
+#      Or save it to ~/.config/tududi/config (preferred)
+
+set -euo pipefail
+
+TUDUDI_URL="${TUDUDI_URL:-https://todo.geek4good.com}"
+PROJECTS_DIR="${PROJECTS_DIR:-$HOME/Projects}"
+
+# ── Config ───────────────────────────────────────────────────────────────
+load_token() {
+  if [ -n "${TUDUDI_TOKEN:-}" ]; then
+    echo "$TUDUDI_TOKEN"
+    return
+  fi
+
+  echo "ERROR: TUDUDI_TOKEN is not set." >&2
+  echo "" >&2
+  echo "  Add it as an encrypted secret in fnox (~/Projects/dotfiles/fnox/dot-config/fnox/config.toml):" >&2
+  echo "  Generate a token at: ${TUDUDI_URL} (Profile → API Tokens)" >&2
+  exit 1
+}
+
+# ── API ───────────────────────────────────────────────────────────────────
+fetch_tududi_projects() {
+  local token="$1"
+  local response
+
+  response=$(curl -sf -H "Authorization: Bearer ${token}" \
+    "${TUDUDI_URL}/api/projects" 2>/dev/null) || {
+    echo "ERROR: Failed to reach Tududi at ${TUDUDI_URL}" >&2
+    echo "       Check your URL and network connection." >&2
+    exit 1
+  }
+
+  echo "$response"
+}
+
+# ── Local projects ────────────────────────────────────────────────────────
+list_local_projects() {
+  local dir="$1"
+  # Only top-level directories, skip _archive, _forks, dot-dirs, README
+  find "$dir" -maxdepth 1 -mindepth 1 -type d \
+    ! -name '_*' \
+    ! -name '.*' \
+    | sort \
+    | while read -r d; do
+        basename "$d"
+      done
+}
+
+# ── Matching logic ───────────────────────────────────────────────────────
+# Normalize a name for fuzzy matching
+normalize() {
+  echo "$1" | tr '[:upper:]' '[:lower:]' | tr -cs 'a-z0-9' '-' | sed 's/^-\|-$//g'
+}
+
+find_match() {
+  local needle="$1"
+  shift
+  local haystack=("$@")
+
+  local norm_needle
+  norm_needle=$(normalize "$needle")
+
+  for candidate in "${haystack[@]}"; do
+    local norm_candidate
+    norm_candidate=$(normalize "$candidate")
+    if [ "$norm_needle" = "$norm_candidate" ]; then
+      echo "$candidate"
+      return 0
+    fi
+  done
+
+  # Try substring match (e.g., "colour-your-english" ≈ "Colour Your English")
+  for candidate in "${haystack[@]}"; do
+    local norm_candidate
+    norm_candidate=$(normalize "$candidate")
+    if echo "$norm_needle" | grep -q "$norm_candidate" || \
+       echo "$norm_candidate" | grep -q "$norm_needle"; then
+      echo "$candidate"
+      return 0
+    fi
+  done
+
+  return 1
+}
+
+# ── Output ────────────────────────────────────────────────────────────────
+BOLD='\033[1m'
+DIM='\033[2m'
+RED='\033[31m'
+GREEN='\033[32m'
+YELLOW='\033[33m'
+BLUE='\033[34m'
+CYAN='\033[36m'
+RESET='\033[0m'
+
+print_header() {
+  echo ""
+  echo -e "${BOLD}$1${RESET}"
+  echo -e "${DIM}$(printf '─%.0s' {1..50})${RESET}"
+}
+
+# ── Main ──────────────────────────────────────────────────────────────────
+main() {
+  local mode="full"
+  local json_output=false
+
+  while [ $# -gt 0 ]; do
+    case "$1" in
+      --missing) mode="missing" ;;
+      --stale)   mode="stale" ;;
+      --json)    json_output=true ;;
+      --help|-h)
+        echo "tududi-drift — Detect drift between ~/Projects and Tududi"
+        echo ""
+        echo "Usage: tududi-drift [--missing|--stale|--json]"
+        echo ""
+        echo "Options:"
+        echo "  --missing   Only show local dirs not tracked in Tududi"
+        echo "  --stale     Only show Tududi projects with no matching local dir"
+        echo "  --json      Machine-readable JSON output"
+        echo "  -h, --help  Show this help"
+        exit 0
+        ;;
+      *) echo "Unknown option: $1" >&2; exit 1 ;;
+    esac
+    shift
+  done
+
+  local token
+  token=$(load_token)
+
+  # Fetch Tududi projects
+  local tududi_json
+  tududi_json=$(fetch_tududi_projects "$token")
+
+  # Parse Tududi project names (requires jq)
+  if ! command -v jq &>/dev/null; then
+    echo "ERROR: jq is required. Install with: brew install jq" >&2
+    exit 1
+  fi
+
+  local tududi_names
+  mapfile -t tududi_names < <(echo "$tududi_json" | jq -r 'if .projects then .projects[] else .[]? end | .name // empty' 2>/dev/null)
+
+  if [ ${#tududi_names[@]} -eq 0 ]; then
+    echo "WARNING: No projects found in Tududi. Check your token and try:" >&2
+    echo "  curl -sf -H 'Authorization: Bearer TOKEN' ${TUDUDI_URL}/api/projects | jq" >&2
+    exit 1
+  fi
+
+  # Get local project names
+  local local_names
+  mapfile -t local_names < <(list_local_projects "$PROJECTS_DIR")
+
+  # ── JSON output ──
+  if $json_output; then
+    local missing_arr="[]"
+    local stale_arr="[]"
+    local matched_arr="[]"
+
+    for local_name in "${local_names[@]}"; do
+      if ! find_match "$local_name" "${tududi_names[@]}" &>/dev/null; then
+        missing_arr=$(echo "$missing_arr" | jq --arg n "$local_name" '. + [$n]')
+      else
+        matched_arr=$(echo "$matched_arr" | jq --arg n "$local_name" '. + [$n]')
+      fi
+    done
+
+    for tududi_name in "${tududi_names[@]}"; do
+      if ! find_match "$tududi_name" "${local_names[@]}" &>/dev/null; then
+        stale_arr=$(echo "$stale_arr" | jq --arg n "$tududi_name" '. + [$n]')
+      fi
+    done
+
+    jq -n \
+      --argjson missing "$missing_arr" \
+      --argjson stale "$stale_arr" \
+      --argjson matched "$matched_arr" \
+      '{missing_from_tududi: $missing, stale_in_tududi: $stale, matched: $matched}'
+    exit 0
+  fi
+
+  # ── Human output ──
+  local matched=()
+  local missing=()
+  local stale=()
+
+  for local_name in "${local_names[@]}"; do
+    local match
+    if match=$(find_match "$local_name" "${tududi_names[@]}"); then
+      matched+=("$local_name → $match")
+    else
+      missing+=("$local_name")
+    fi
+  done
+
+  for tududi_name in "${tududi_names[@]}"; do
+    if ! find_match "$tududi_name" "${local_names[@]}" &>/dev/null; then
+      stale+=("$tududi_name")
+    fi
+  done
+
+  # Print based on mode
+  if [ "$mode" = "missing" ] || [ "$mode" = "full" ]; then
+    print_header "📂 Not in Tududi (${#missing[@]})"
+    if [ ${#missing[@]} -eq 0 ]; then
+      echo -e "  ${GREEN}All local projects are tracked${RESET}"
+    else
+      for name in "${missing[@]}"; do
+        echo -e "  ${RED}✗${RESET} $name"
+      done
+    fi
+  fi
+
+  if [ "$mode" = "stale" ] || [ "$mode" = "full" ]; then
+    print_header "ghost 👻 No matching directory (${#stale[@]})"
+    if [ ${#stale[@]} -eq 0 ]; then
+      echo -e "  ${GREEN}All Tududi projects have a local dir${RESET}"
+    else
+      for name in "${stale[@]}"; do
+        echo -e "  ${YELLOW}✗${RESET} $name"
+      done
+    fi
+  fi
+
+  if [ "$mode" = "full" ]; then
+    print_header "✓ Synced (${#matched[@]})"
+    if [ ${#matched[@]} -eq 0 ]; then
+      echo -e "  ${DIM}No matches found${RESET}"
+    else
+      for entry in "${matched[@]}"; do
+        echo -e "  ${GREEN}✓${RESET} $entry"
+      done
+    fi
+  fi
+
+  echo ""
+}
+
+main "$@"
