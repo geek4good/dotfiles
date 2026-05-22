@@ -50,4 +50,9 @@ if [[ -d "$_plugins_target" && ! -e "$_plugins_link" ]]; then
     echo "Restored $_plugins_link"
 fi
 
+# Re-apply Pi theme overrides if patch exists
+if [ -f "$HOME/.pi/agent/post-update.sh" ]; then
+    "$HOME/.pi/agent/post-update.sh"
+fi
+
 echo "Done!"
