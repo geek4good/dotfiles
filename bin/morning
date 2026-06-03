@@ -1,92 +1,175 @@
 #!/usr/bin/env bash
 # morning — daily startup ritual for your AI-powered dev environment
-# Usage: morning            (interactive Pi session with briefing)
-#        morning -q         (quick: just checks, no Pi)
-set -eo pipefail  # removed -u to avoid unbound variable issues
+# Usage: morning              (full launch with Pi)
+#        morning -q           (quick health check only)
+#        morning -p <project> (launch Pi in specific project directory)
+#        morning -f           (focus: open most recently active project)
+set -eo pipefail
 
 BOLD="\033[1m"
 GREEN="\033[32m"
 YELLOW="\033[33m"
 BLUE="\033[34m"
+RED="\033[31m"
 DIM="\033[2m"
+CYAN="\033[36m"
 RESET="\033[0m"
 
-echo -e "${BOLD}🌅 Good morning.${RESET}"
+# ── Header ────────────────────────────────────────────────────────────
+clear 2>/dev/null || true
+echo ""
+echo -e "         ▄▄   "
+echo -e "█████▄ ▄████▄ ▄████▄ █████▄ ▄██▄▄▄"
+echo -e "▄▄▄▄██ ██  ██ ██▄▄██ ██  ██ ▀██▀▀▀"
+echo -e "██▄▄██ ██▄▄██ ██▄▄▄▄ ██  ██  ██▄▄▄"
+echo -e " ▀▀▀▀▀  ▀▀▀██  ▀▀▀▀▀ ▀▀  ▀▀   ▀▀▀▀"
+echo -e "        ████▀"
+echo ""
+echo -e "${BOLD}🌅 $(date '+%A, %B %-d')${RESET}"
 echo ""
 
-# ── 1. System updates ────────────────────────────────────────────────
-echo -e "${DIM}Checking for updates...${RESET}"
+# ── 0. Cleanup deprecated Pi directories ──────────────────────────────
+cleaned=0
+for d in commands scripts templates .backup; do
+  if [ -d "$HOME/.pi/agent/$d" ]; then
+    /bin/rm -rf "$HOME/.pi/agent/$d" 2>/dev/null && ((cleaned++)) || true
+  fi
+done
+[ "$cleaned" -gt 0 ] && echo -e "  ${GREEN}✓${RESET} Cleaned $cleaned deprecated director$( [ "$cleaned" -gt 1 ] && echo "ies" || echo "y" )"
+
+# ── 1. System updates ─────────────────────────────────────────────────
+echo -e "${DIM}Checking environment...${RESET}"
 
 # Homebrew
 brew_outdated=$(brew outdated --quiet 2>/dev/null | wc -l | tr -d ' ') || brew_outdated=0
 if [ "$brew_outdated" -gt 0 ] 2>/dev/null; then
-  echo -e "  🍺 ${YELLOW}${brew_outdated} brew updates${RESET} (brew upgrade)"
+  echo -e "  🍺 ${YELLOW}${brew_outdated} brew update${brew_outdated:+s}${RESET} (brew upgrade)"
 fi
 
 # mise
 mise_outdated=$(mise outdated 2>/dev/null | wc -l | tr -d ' ') || mise_outdated=0
 if [ "$mise_outdated" -gt 0 ] 2>/dev/null; then
-  echo -e "  📦 ${YELLOW}mise: ${mise_outdated} tools behind${RESET} (mise upgrade)"
+  echo -e "  📦 ${YELLOW}mise: ${mise_outdated} tool${mise_outdated:+s} behind${RESET} (mise upgrade)"
 fi
 
-# Pi version
+# Pi + packages
 pi_current=$(pi --version 2>/dev/null | head -1) || pi_current="unknown"
 echo -e "  ${GREEN}✓${RESET} Pi ${pi_current}"
 
-# ── 2. Chrome for MCP ─────────────────────────────────────────────────
-if curl -s --max-time 2 http://localhost:9222/json/version >/dev/null 2>&1; then
-  browser_name=$(curl -s http://localhost:9222/json/version 2>/dev/null | python3 -c "import json,sys; print(json.load(sys.stdin).get('Browser','running'))" 2>/dev/null || echo "running")
-  echo -e "  ${GREEN}✓${RESET} Browser DevTools: ${browser_name:-running} on :9222"
+# Pi packages check (silent, cache result)
+pi_update_needed=$(pi update 2>&1 | grep -c "Updated" || true)
+[ "$pi_update_needed" -gt 0 ] && echo -e "  📦 ${YELLOW}Pi packages updated${RESET}"
+
+# ── 2. Browser for MCP ────────────────────────────────────────────────
+browser_info=$(curl -s --max-time 2 http://localhost:9222/json/version 2>/dev/null || true)
+if [ -n "$browser_info" ]; then
+  browser_name=$(echo "$browser_info" | python3 -c "import json,sys; print(json.load(sys.stdin).get('Browser','unknown'))" 2>/dev/null || echo "running")
+  if [[ "$browser_name" == *"Lightpanda"* ]]; then
+    echo -e "  🟡 Browser: Lightpanda — limited DevTools (use Chrome for full power)"
+  else
+    echo -e "  ${GREEN}✓${RESET} Browser: ${browser_name} on :9222"
+  fi
 elif [ -d "/Applications/Google Chrome.app" ]; then
   echo -e "  🟡 Starting Chrome..."
   open -a "Google Chrome" --args --remote-debugging-port=9222 2>/dev/null
   sleep 2
   if curl -s --max-time 2 http://localhost:9222/json/version >/dev/null 2>&1; then
-    echo -e "  ${GREEN}✓${RESET} Chrome started"
+    echo -e "  ${GREEN}✓${RESET} Chrome started on :9222"
   else
-    echo -e "  ${YELLOW}⚠ Chrome launched but DevTools not ready yet${RESET}"
+    echo -e "  ${YELLOW}⚠ Chrome launched but DevTools not responding${RESET}"
   fi
 else
-  echo -e "  ${YELLOW}⚠ No browser on :9222, Chrome not found${RESET}"
+  echo -e "  ${YELLOW}⚠ No browser on :9222${RESET}"
 fi
 
 # ── 3. Memory ─────────────────────────────────────────────────────────
 if command -v agent-memory &>/dev/null; then
   mem_chunks=$(agent-memory status 2>/dev/null | grep "Chunks:" | cut -d: -f2 | tr -d ' ') || mem_chunks="?"
-  echo -e "  ${GREEN}✓${RESET} Memory: ${mem_chunks} chunks"
+  mem_files=$(agent-memory status 2>/dev/null | grep "Files:" | cut -d: -f2 | tr -d ' ') || mem_files="?"
+  last_idx=$(agent-memory status 2>/dev/null | grep "Last indexed:" | cut -d: -f2- | xargs) || last_idx="never"
+  echo -e "  ${GREEN}✓${RESET} Memory: ${mem_chunks} chunks / ${mem_files} files"
+  # Warn if never indexed or very stale (>7 days)
+  if [[ "$last_idx" == "never" ]]; then
+    echo -e "     ${YELLOW}⚠ Never indexed — run: agent-memory index${RESET}"
+  fi
 fi
 
-# ── 4. Yesterday recap ────────────────────────────────────────────────
-echo ""
-echo -e "${BOLD}📋 Recent Pi sessions:${RESET}"
+# ── 4. Dotfiles git status ────────────────────────────────────────────
+cd "$HOME/Projects/dotfiles" 2>/dev/null
+dirty=$(git status --porcelain 2>/dev/null | wc -l | tr -d ' ')
+unpushed=$(git log @{u}.. 2>/dev/null | wc -l | tr -d ' ')
+if [ "$dirty" -gt 0 ] 2>/dev/null; then
+  echo -e "  ${YELLOW}⚠ Dotfiles: ${dirty} uncommitted change${dirty:+s}${RESET}"
+fi
+[ "$unpushed" -gt 0 ] 2>/dev/null && echo -e "  ${YELLOW}⚠ Dotfiles: ${unpushed} unpushed commit${unpushed:+s}${RESET}"
 
-find ~/.pi/agent/sessions -name "*.jsonl" -maxdepth 3 -mtime -3 2>/dev/null | \
+# ── 5. Recent sessions recap ──────────────────────────────────────────
+echo ""
+echo -e "${BOLD}📋 Recent activity${RESET}"
+
+session_data=$(find ~/.pi/agent/sessions -name "*.jsonl" -maxdepth 3 -mtime -3 2>/dev/null | \
   while read f; do
     dir=$(basename "$(dirname "$f")")
     proj=$(echo "$dir" | sed 's/^--Users-geek4good-Projects-//' | sed 's/--/\//g' | sed 's/-/ /g')
     msgs=$(wc -l < "$f" 2>/dev/null | tr -d ' ')
     date=$(basename "$f" | cut -d_ -f1 | cut -dT -f1)
-    printf "  ${DIM}%-28s${RESET} %s  ${DIM}%4s msgs${RESET}\n" "$proj" "$date" "$msgs"
-  done | sort -t'2' -k2 -r | head -8
+    # Get session age in hours
+    file_time=$(stat -f %m "$f" 2>/dev/null || stat -c %Y "$f" 2>/dev/null || echo 0)
+    now=$(date +%s)
+    hours_ago=$(( (now - file_time) / 3600 ))
+    printf "%s|%s|%s|%s\n" "$proj" "$date" "$msgs" "$hours_ago"
+  done | sort -t'|' -k2 -r | head -8)
+
+if [ -z "$session_data" ]; then
+  echo -e "  ${DIM}No sessions in the last 3 days${RESET}"
+else
+  echo "$session_data" | while IFS='|' read proj date msgs hours_ago; do
+    ago_str=""
+    [ "$hours_ago" -lt 1 ] && ago_str="${DIM}(just now)${RESET}"
+    [ "$hours_ago" -ge 1 ] && [ "$hours_ago" -lt 24 ] && ago_str="${DIM}(${hours_ago}h ago)${RESET}"
+    [ "$hours_ago" -ge 24 ] && ago_str="${DIM}($(( hours_ago / 24 ))d ago)${RESET}"
+    printf "  ${CYAN}%-28s${RESET} %s  ${DIM}%4s msgs${RESET} %s\n" "$proj" "$date" "$msgs" "$ago_str"
+  done
+fi
+
+# Find most recently active project (for focus mode)
+recent_project=$(echo "$session_data" | head -1 | cut -d'|' -f1)
+recent_dir=$(echo "$recent_project" | sed 's/ /-/g' | xargs -I{} echo "$HOME/Projects/{}")
 
 echo ""
 
-# ── 5. Launch Pi ─────────────────────────────────────────────────────
+# ── 6. Launch ─────────────────────────────────────────────────────────
 if [[ "${1:-}" == "-q" ]]; then
-  echo -e "${DIM}Ready. Run 'morning' (without -q) to start Pi.${RESET}"
+  echo -e "${DIM}All clear. Run 'morning' to start Pi.${RESET}"
+  [ -n "$recent_project" ] && echo -e "${DIM}Tip: 'morning -f' opens Pi in $recent_project${RESET}"
   exit 0
 fi
 
-echo -e "${BLUE}▶ Starting Pi...${RESET}"
+# Determine target directory
+target_dir="$HOME/Projects/dotfiles"
+session_name="morning-$(date +%Y-%m-%d)"
 
-# Use cd and then exec — but exec only works if we're in an interactive shell
-# If this script was sourced, use 'pi' directly instead of exec
+if [[ "${1:-}" == "-f" ]]; then
+  if [ -d "$recent_dir" ]; then
+    target_dir="$recent_dir"
+    session_name="$(basename "$recent_dir")-$(date +%Y-%m-%d)"
+    echo -e "${BLUE}▶ Focusing on ${recent_project}...${RESET}"
+  else
+    echo -e "${YELLOW}⚠ Recent project directory not found, using dotfiles${RESET}"
+  fi
+elif [[ "${1:-}" == "-p" && -n "${2:-}" ]]; then
+  target_dir="$HOME/Projects/$2"
+  [ ! -d "$target_dir" ] && target_dir="$HOME/Projects/$2"
+  session_name="$(basename "$target_dir")-$(date +%Y-%m-%d)"
+  echo -e "${BLUE}▶ Opening ${2}...${RESET}"
+fi
+
+cd "$target_dir" 2>/dev/null || cd "$HOME"
+echo -e "  ${DIM}Session: ${session_name}  •  Model: opencode/claude-sonnet-4-6${RESET}"
+echo ""
+
 if [[ "${BASH_SOURCE[0]}" != "${0}" ]]; then
-  # Script was sourced — just run pi in foreground
-  cd ~/Projects/dotfiles || cd ~
-  pi --name "morning-$(date +%Y-%m-%d)"
+  pi --name "$session_name"
 else
-  # Script was executed directly — replace shell with pi
-  cd ~/Projects/dotfiles || cd ~
-  exec pi --name "morning-$(date +%Y-%m-%d)"
+  exec pi --name "$session_name"
 fi
