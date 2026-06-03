@@ -3,7 +3,7 @@
     "zai-coding-plan": {
       "baseUrl": "https://api.z.ai/api/coding/paas/v4",
       "api": "openai-completions",
-      "apiKey": "ZAI_API_KEY",
+      "apiKey": "$ZAI_API_KEY",
       "compat": {
         "thinkingFormat": "zai"
       },
@@ -62,7 +62,7 @@
     "opencode-go": {
       "baseUrl": "https://opencode.ai/zen/go/v1",
       "api": "openai-completions",
-      "apiKey": "OPENCODE_API_KEY",
+      "apiKey": "$OPENCODE_API_KEY",
       "models": [
         {
           "id": "kimi-k2.6",
@@ -132,7 +132,7 @@
     "opencode-go-anthropic": {
       "baseUrl": "https://opencode.ai/zen/go/v1",
       "api": "anthropic-messages",
-      "apiKey": "OPENCODE_API_KEY",
+      "apiKey": "$OPENCODE_API_KEY",
       "models": [
         {
           "id": "minimax-m2.7",

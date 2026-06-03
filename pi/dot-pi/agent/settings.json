@@ -1,7 +1,7 @@
 {
   "quietStartup": true,
-  "defaultProvider": "zai-coding-plan",
-  "defaultModel": "glm-5.1",
+  "defaultProvider": "opencode",
+  "defaultModel": "claude-sonnet-4-6",
   "packages": [
     "npm:pi-web-access",
     "npm:pi-mcp-adapter",
@@ -19,7 +19,7 @@
     "maxRetries": 3,
     "baseDelayMs": 2000
   },
-  "lastChangelogVersion": "0.75.4",
+  "lastChangelogVersion": "0.78.0",
   "hideThinkingBlock": false,
   "theme": "midnight-ocean"
 }
