@@ -8,6 +8,11 @@
       "command": "uc",
       "args": ["exec", "-T", "lightpanda", "lightpanda", "mcp"],
       "lifecycle": "lazy"
+    },
+    "chrome-devtools": {
+      "command": "bunx",
+      "args": ["chrome-devtools-mcp@latest"],
+      "lifecycle": "lazy"
     }
   }
 }

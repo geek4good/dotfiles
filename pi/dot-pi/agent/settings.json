@@ -6,7 +6,8 @@
     "npm:pi-web-access",
     "npm:pi-mcp-adapter",
     "npm:pi-subagents",
-    "git:github.com/ruizrica/agent-pi"
+    "npm:pi-intercom",
+    "git:github.com/geek4good/pi-setup"
   ],
   "defaultThinkingLevel": "high",
   "defaultModelTemperature": 0,
