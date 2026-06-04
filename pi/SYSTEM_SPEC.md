@@ -109,7 +109,6 @@ Skills are located in `~/.pi/agent/skills/` (symlinked to dotfiles).
 | `codebase-to-course` | Documentation generation |
 | `context-mode` | Context mode documentation |
 | `copywriting` | UX copy guidelines |
-| `dex` / `dex-plan` | Design exploration |
 | `frontend-design` | UI/UX patterns |
 | `receiving-code-review` | Code review process |
 | `skill-creator` | Meta — skill creation |
