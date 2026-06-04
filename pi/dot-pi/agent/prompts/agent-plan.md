@@ -1,12 +1,12 @@
 ---
-description: "Interactive plan builder: gather details via Q&A, review via agent-viewer, then execute on approval"
+description: "Interactive plan builder: gather details via Q&A, review in TUI, then execute on approval"
 argument-hint: "[plan topic] [--name NAME] [--agent inline|haiku|sonnet|opus]"
 allowed-tools: ["Task", "Read", "Write", "Glob", "Grep", "Bash", "AskUserQuestion", "Edit"]
 ---
 
 # Agent Plan — Interactive Round-Trip Plan
 
-You are orchestrating the interactive plan workflow. This is the single-document sibling of `/agent-spec`: gather requirements via Q&A, assemble a maximally robust plan, gate on `agent-viewer plan` approval, then execute immediately in the same session.
+You are orchestrating the interactive plan workflow: gather requirements via Q&A, assemble a robust plan, present it for TUI review, then execute on approval.
 
 ## User's Plan Topic
 
@@ -18,25 +18,25 @@ The workflow has **5 phases**:
 
 1. **Context** — scan the repo for related code / docs / conventions
 2. **Interactive Q&A** — AskUserQuestion to gather goal, scope, constraints, approach, phases, verification, risks
-3. **Assemble** — write the plan markdown to `.context/plans/<plan_name>.md` with every section the viewer renders
-4. **Viewer gate** — `agent-viewer plan --file <path> --json`; loop on decline, proceed on approved/edited
-5. **Execute + completion report** — run the approved phases inline (or via `/haiku --model <tier>`), then open an `agent-viewer completion` round-trip at the end
+3. **Assemble** — write the plan markdown to `.context/plans/<plan_name>.md`
+4. **Review gate** — present via `show_plan` in the TUI; loop on decline, proceed on approval
+5. **Execute + completion report** — run the approved phases, then present completion via `show_report`
 
 ## Mandatory Plan Review Rule
 
-Before moving from the generated plan to execution, present it through `agent-viewer` and treat the result as binding.
+Before moving from the generated plan to execution, present it through `show_plan` and treat the result as binding.
 
-Full rules live in `skills/agent-viewer.md`. In short:
+Call `show_plan` with:
+- `file_path`: `.context/plans/<plan_name>.md`
+- `title`: `"Plan: {topic}"`
+- `mode`: `"plan"`
 
-```bash
-agent-viewer plan --file .context/plans/<plan_name>.md --title "..." --json
-```
+Parse the result:
+- **approved** → proceed to Phase 5 with current file contents
+- **edited + approved** → file has been written back to disk; re-read it, then proceed
+- **declined** → STOP. Show any comments, ask what to revise. Loop back to Phase 3
 
-- `approved` — continue
-- `edited` — user modified and approved (file already written back to disk by the viewer); continue using the edited version
-- `declined` — do not continue; show comments, re-enter Phase 3 with revisions
-
-Do not proceed to implementation until the plan viewer returns `approved` or `edited`. If `agent-viewer` is not installed, run `bash plugins/toolkit/scripts/install-agent-viewer.sh` (or `/setup`) first.
+Do not proceed to implementation until `show_plan` returns approval.
 
 ## Parse Arguments
 
@@ -51,7 +51,7 @@ Project-local — all artifacts live under the git root (or CWD if not a git rep
 
 ```
 .context/plans/
-├── <plan_name>.md          # the plan itself (reviewed by agent-viewer plan)
+├── <plan_name>.md          # the plan itself
 ├── <plan_name>.qa.md       # Q&A log from Phase 2
 └── <plan_name>.completion.json  # completion payload from Phase 5 (retained for audit)
 ```
@@ -105,7 +105,7 @@ Log every Q&A exchange to `.context/plans/<plan_name>.qa.md` (append-only, ISO t
 
 ## PHASE 3: Assemble the Plan
 
-Write `.context/plans/<plan_name>.md` with the full rich structure below. Fill every section — if an answer is "N/A", say so explicitly rather than omitting the section. This maximizes what `agent-viewer plan` can render (Phase collapsibles, Mermaid diagrams, tables).
+Write `.context/plans/<plan_name>.md` with the full rich structure below. Fill every section — if an answer is "N/A", say so explicitly rather than omitting the section.
 
 ```markdown
 # Plan: {topic}
@@ -172,28 +172,21 @@ flowchart LR
 - …
 ```
 
-Build the `agent-viewer plan` payload using **every** field the CLI renders:
-- `title` — "Plan: {topic}"
-- `filePath` — the absolute path to `.context/plans/<plan_name>.md` (enables round-trip edit write-back)
-- `markdown` — the full document body above, including Mermaid fences under `## Phase` headings
-
 ---
 
-## PHASE 4: Viewer Gate (Mandatory)
+## PHASE 4: Plan Review (TUI — Mandatory)
 
-Self-heal first: if `agent-viewer` is not on PATH, run `bash plugins/toolkit/scripts/install-agent-viewer.sh`.
+Present the plan for review using Pi's built-in TUI viewer:
 
-Then:
+Call `show_plan` with:
+- `file_path`: `.context/plans/<plan_name>.md`
+- `title`: `"Plan: {topic}"`
+- `mode`: `"plan"`
 
-```bash
-agent-viewer plan --file .context/plans/<plan_name>.md --title "Plan: {topic}" --json
-```
-
-Parse the stdout JSON (`{action, reviewId, modified, filePath, markdown, comments}`):
-
-- **`action: "approved"`** → proceed to Phase 5 with the current file contents.
-- **`action: "edited"`** → proceed to Phase 5. The viewer has already written the edited markdown back to disk at `filePath`; re-read it.
-- **`action: "declined"`** → STOP execution. Print the `comments[]` array verbatim, then AskUserQuestion asking what to revise. Loop back to Phase 3 to update the markdown, then re-run the viewer. Never execute a declined plan.
+Parse the result:
+- **approved** → proceed to Phase 5 with current file contents
+- **edited + approved** → file has been written back to disk; re-read it, then proceed
+- **declined** → STOP. Show any comments, ask what to revise. Loop back to Phase 3 to update the markdown, then re-present. Never execute a declined plan.
 
 ---
 
@@ -211,33 +204,13 @@ Branch on `agent_mode`:
 
 - **`haiku` / `sonnet` / `opus`** — invoke `/haiku --model <tier> "Execute the approved plan at .context/plans/<plan_name>.md. Follow the phases in order."`. Wait for the team to return.
 
-### Step 5.3 — Build completion payload
+### Step 5.3 — Show completion report
 
-After execution, assemble `.context/plans/<plan_name>.completion.json` with the canonical shape (see `templates/agent-viewer/completion-payload.json`):
+After execution, present a completion report using `show_report`:
 
-```json
-{
-  "title": "Completion: {topic}",
-  "summary": "## What shipped\n\n{1-2 paragraphs}\n\n```mermaid\nflowchart LR\n  before[Before] --> after[After]\n```",
-  "baseRef": "HEAD~{n}",
-  "totalAdditions": 0,
-  "totalDeletions": 0,
-  "taskMarkdown": "- [x] Phase 1: …\n- [x] Phase 2: …",
-  "files": [
-    { "path": "path/to/file.ext", "status": "modified|added|deleted", "additions": 0, "deletions": 0, "diff": "unified-diff-string" }
-  ]
-}
-```
-
-Populate `files[]` from `git diff --numstat HEAD -- <plan's files touched>` and `git diff HEAD -- <path>` for the unified-diff body. Populate `taskMarkdown` from the updated Phase checklists.
-
-### Step 5.4 — Show completion report
-
-```bash
-cat .context/plans/<plan_name>.completion.json | agent-viewer completion --stdin --json
-```
-
-This closes the round-trip loop. The report is informational (no gate) — Ricardo can read, annotate, and close.
+- `title`: `"Completion: {topic}"`
+- `summary`: What was done, which phases completed, any issues encountered
+- `base_ref`: `"HEAD~{n}"` or `"HEAD"` as appropriate
 
 ---
 
@@ -254,8 +227,8 @@ This closes the round-trip loop. The report is informational (no gate) — Ricar
 **CRITICAL RULES:**
 
 1. **EVERY SECTION GETS FILLED** — plans are robust. Use "N/A — reason" rather than skip.
-2. **NEVER EXECUTE A DECLINED PLAN** — viewer gate is binding.
-3. **RE-READ AFTER EDIT** — if `action === "edited"`, pull the file from disk before executing.
+2. **NEVER EXECUTE A DECLINED PLAN** — review gate is binding.
+3. **RE-READ AFTER EDIT** — if the plan was edited during review, pull the file from disk before executing.
 4. **APPEND-ONLY Q&A LOG** — never overwrite `<plan_name>.qa.md`.
 5. **INLINE IS DEFAULT** — only spawn `/haiku --model ...` when `--agent` is explicitly set.
 6. **ALWAYS CLOSE THE LOOP** — completion report is not optional; it's how the round-trip contract ends.
