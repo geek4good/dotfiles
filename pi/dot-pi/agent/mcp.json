@@ -4,9 +4,9 @@
     "idleTimeout": 10
   },
   "mcpServers": {
-    "chrome-devtools": {
-      "command": "npx",
-      "args": ["-y", "chrome-devtools-mcp@latest", "--browserUrl", "http://see:9222"],
+    "lightpanda": {
+      "command": "uc",
+      "args": ["exec", "-T", "lightpanda", "lightpanda", "mcp"],
       "lifecycle": "lazy"
     }
   }
