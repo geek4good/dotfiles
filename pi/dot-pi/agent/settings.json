@@ -1,10 +1,11 @@
 {
   "quietStartup": true,
-  "defaultProvider": "opencode",
-  "defaultModel": "claude-sonnet-4-6",
+  "defaultProvider": "zai-coding-plan",
+  "defaultModel": "glm-5.1",
   "packages": [
     "npm:pi-web-access",
     "npm:pi-mcp-adapter",
+    "npm:pi-subagents",
     "git:github.com/ruizrica/agent-pi"
   ],
   "defaultThinkingLevel": "high",

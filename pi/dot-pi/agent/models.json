@@ -128,27 +128,6 @@
           "maxTokens": 32768
         }
       ]
-    },
-    "opencode-go-anthropic": {
-      "baseUrl": "https://opencode.ai/zen/go/v1",
-      "api": "anthropic-messages",
-      "apiKey": "$OPENCODE_API_KEY",
-      "models": [
-        {
-          "id": "minimax-m2.7",
-          "name": "MiniMax M2.7 (Anthropic)",
-          "reasoning": true,
-          "contextWindow": 196608,
-          "maxTokens": 32768
-        },
-        {
-          "id": "minimax-m2.5",
-          "name": "MiniMax M2.5 (Anthropic)",
-          "reasoning": true,
-          "contextWindow": 196608,
-          "maxTokens": 32768
-        }
-      ]
     }
   }
 }
