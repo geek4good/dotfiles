@@ -5,25 +5,45 @@ Host *
   ForwardAgent no
   KeepAlive yes
   IdentityFile ~/.ssh/id_ed25519
-
-Host geek
-  HostName geek4good.com
-  User lucas
-  ForwardAgent yes
-
-Host mbiwe
-  HostName mbiwe.com
-  User lucas
-  ForwardAgent yes
+  SendEnv LANG
+  SetEnv LC_ALL=
 
 Host silo
-  HostName 168.119.49.221
-  User geek4good
+  HostName 100.82.129.33
+  User ubuntu
   ForwardAgent yes
 
 Host = silo.*
-  HostName 168.119.49.221
-  User geek4good
+  HostName 100.82.129.33
+  User ubuntu
+  RemoteCommand zmx attach %k
+  RequestTTY yes
+  ControlPath ~/.ssh/cm-%r@%h:%p
+  ControlMaster auto
+  ControlPersist 10m
+
+Host see
+  HostName 100.89.153.102
+  User ubuntu
+  ForwardAgent yes
+
+Host = see.*
+  HostName 100.89.153.102
+  User ubuntu
+  RemoteCommand zmx attach %k
+  RequestTTY yes
+  ControlPath ~/.ssh/cm-%r@%h:%p
+  ControlMaster auto
+  ControlPersist 10m
+
+Host tracker
+  HostName 100.111.222.102
+  User ubuntu
+  ForwardAgent yes
+
+Host = tracker.*
+  HostName 100.111.222.102
+  User ubuntu
   RemoteCommand zmx attach %k
   RequestTTY yes
   ControlPath ~/.ssh/cm-%r@%h:%p
