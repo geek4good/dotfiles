@@ -22,6 +22,6 @@
     "baseDelayMs": 2000
   },
   "lastChangelogVersion": "0.78.0",
-  "hideThinkingBlock": false,
+  "hideThinkingBlock": true,
   "theme": "midnight-ocean"
 }

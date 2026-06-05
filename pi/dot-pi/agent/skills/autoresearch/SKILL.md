@@ -1,5 +1,7 @@
-ABOUTME: Autonomous Goal-directed Iteration skill. Apply Karpathy's autoresearch principles to ANY task.
-ABOUTME: Loops autonomously — modify, verify, keep/discard, repeat — with git as memory and mechanical metrics as the decision function.
+---
+name: autoresearch
+description: "Autonomous goal-directed iteration. Use when the user wants to work hands-off on a measurable goal — iterate until a metric improves, keep what works, discard what doesn't. Inspired by Karpathy's autoresearch: modify, verify, keep/discard, repeat with git as memory."
+---
 
 ## Overview
 

@@ -7,3 +7,7 @@ wireguard/*.conf
 zed/.tmp*
 zed/prompts/*.mdb
 fnox.toml
+
+# Session artifacts
+research.md
+.lighthouseci/
