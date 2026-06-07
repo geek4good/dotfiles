@@ -75,6 +75,10 @@ alias vimdiff="nvim -d"
 alias docker="docker.lima"
 alias oc="ocx oc -p ws"
 
+# Session attach shortcuts
+alias ha="herdr"
+alias za="zmx attach"
+
 # Functions
 v() { nvim "${@:-.}"; }
 
