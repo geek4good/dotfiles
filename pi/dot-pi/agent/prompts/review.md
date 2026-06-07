@@ -1,18 +1,16 @@
-Perform a code review. Load the `code-review` skill first.
+---
+description: "Code review via reviewer agent"
+argument-hint: "[scope: staged | recent | file/path]"
+---
 
-**Scope:** {{scope}}
+Delegate a code review to the `reviewer` agent.
 
-If no scope provided, review staged changes using `git diff --cached`.
-If scope is "recent", review changes since last commit using `git diff HEAD~1`.
-Otherwise, review the specified file(s) or directory.
+**Scope:** $ARGUMENTS
 
-Apply the 4 Review Layers:
-1. **Correctness** — logic errors, edge cases, type safety
-2. **Security** — secrets, injection, auth, input validation
-3. **Performance** — N+1 queries, caching, re-renders, complexity
-4. **Style** — conventions, DRY, complexity, test coverage
+If no arguments: review staged changes via `git diff --cached`.
+If "recent": review changes since last commit via `git diff HEAD~1`.
+Otherwise: review the specified file(s) or directory.
 
-Classify findings by severity (Critical, Major, Minor, Nitpick).
-Only report findings with >=80% confidence.
-Include positive observations.
-Provide Philosophy Compliance checklist results.
+Capture the relevant diff first, then delegate to the `reviewer` agent with `context: "fork"`.
+Pass the scope and diff. The reviewer will check correctness, security, performance, style, and DRY compliance.
+Return the reviewer's findings to the user.
