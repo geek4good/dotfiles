@@ -9,12 +9,11 @@ Host *
   SetEnv LC_ALL=
 
 Host silo
-  HostName 100.82.129.33
   User ubuntu
   ForwardAgent yes
 
 Host = silo.*
-  HostName 100.82.129.33
+  HostName silo
   User ubuntu
   RemoteCommand zmx attach %k
   RequestTTY yes
@@ -22,27 +21,12 @@ Host = silo.*
   ControlMaster auto
   ControlPersist 10m
 
-Host see
-  HostName 100.89.153.102
+Host severance
   User ubuntu
   ForwardAgent yes
 
-Host = see.*
-  HostName 100.89.153.102
-  User ubuntu
-  RemoteCommand zmx attach %k
-  RequestTTY yes
-  ControlPath ~/.ssh/cm-%r@%h:%p
-  ControlMaster auto
-  ControlPersist 10m
-
-Host tracker
-  HostName 100.111.222.102
-  User ubuntu
-  ForwardAgent yes
-
-Host = tracker.*
-  HostName 100.111.222.102
+Host = severance.*
+  HostName severance
   User ubuntu
   RemoteCommand zmx attach %k
   RequestTTY yes
