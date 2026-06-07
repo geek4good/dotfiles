@@ -1,0 +1,126 @@
+# herdr configuration
+# Stow-managed: herdr/dot-config/herdr/config → ~/.config/herdr/config
+#
+# Design:
+#   - Prefix: ctrl+space (matches Ghostty split-creation prefix)
+#   - ctrl+h/j/k/l: handled by Ghostty at the terminal level for
+#     cross-session navigation (Herdr ↔ zmx ↔ other Ghostty tabs)
+#   - prefix + h/j/k/l: Herdr-internal pane focus
+#   - Agents resume into their native sessions after Herdr restart
+
+onboarding = false
+
+[theme]
+name = "terminal"
+
+[terminal]
+shell_mode = "auto"
+
+[update]
+channel = "stable"
+
+[keys]
+# ─── Prefix ───────────────────────────────────────────────────────────────
+# Matches Ghostty's ctrl+space prefix for split creation.
+# ctrl+h/j/k/l is intercepted by Ghostty first (top-level navigation),
+# so Herdr-internal pane movement uses prefix + h/j/k/l.
+prefix = "ctrl+space"
+
+# ─── Pane focus (within Herdr) ───────────────────────────────────────────
+focus_pane_left = "prefix+h"
+focus_pane_down = "prefix+j"
+focus_pane_up = "prefix+k"
+focus_pane_right = "prefix+l"
+
+# ─── Pane splitting ──────────────────────────────────────────────────────
+split_vertical = "prefix+v"
+split_horizontal = "prefix+minus"
+
+# ─── Pane lifecycle ──────────────────────────────────────────────────────
+close_pane = "prefix+x"
+zoom = "prefix+z"
+resize_mode = "prefix+r"
+rename_pane = "prefix+shift+p"
+
+# ─── Tabs ────────────────────────────────────────────────────────────────
+new_tab = "prefix+c"
+next_tab = "prefix+n"
+previous_tab = "prefix+p"
+switch_tab = "prefix+1..9"
+rename_tab = "prefix+shift+t"
+close_tab = "prefix+shift+x"
+
+# ─── Workspaces ──────────────────────────────────────────────────────────
+workspace_picker = "prefix+w"
+new_workspace = "prefix+shift+n"
+rename_workspace = "prefix+shift+w"
+close_workspace = "prefix+shift+d"
+
+# ─── Navigation mode (within sidebar/pane list) ─────────────────────────
+navigate_workspace_up = "up"
+navigate_workspace_down = "down"
+navigate_pane_left = "h"
+navigate_pane_down = "j"
+navigate_pane_up = "k"
+navigate_pane_right = "l"
+
+# ─── Session ─────────────────────────────────────────────────────────────
+detach = "prefix+q"
+
+# ─── UI ──────────────────────────────────────────────────────────────────
+toggle_sidebar = "prefix+b"
+goto = "prefix+g"
+help = "prefix+?"
+
+# ─── Navigate-mode cycling ───────────────────────────────────────────────
+cycle_pane_next = "prefix+tab"
+cycle_pane_previous = "prefix+shift+tab"
+
+# ─── Settings / reload ──────────────────────────────────────────────────
+settings = "prefix+s"
+reload_config = "prefix+shift+r"
+
+# ─── Notifications ──────────────────────────────────────────────────────
+open_notification_target = "prefix+o"
+
+# ─── Copy mode ──────────────────────────────────────────────────────────
+copy_mode = "prefix+["
+
+# ─── Scrollback ─────────────────────────────────────────────────────────
+edit_scrollback = "prefix+e"
+
+# ─── Worktrees ──────────────────────────────────────────────────────────
+new_worktree = "prefix+shift+g"
+
+[worktrees]
+directory = "~/.herdr/worktrees"
+
+[ui]
+sidebar_width = 26
+mouse_capture = true
+confirm_close = true
+prompt_new_tab_name = true
+show_agent_labels_on_pane_borders = true
+accent = "cyan"
+
+[ui.toast]
+# Show in-app toasts when agents finish or need input in background tabs.
+delivery = "herdr"
+
+[ui.sound]
+enabled = true
+
+[session]
+# Resume agent conversations (Pi, Claude Code, etc.) after Herdr restart.
+resume_agents_on_restore = true
+
+[remote]
+manage_ssh_config = true
+
+[experimental]
+pane_history = false
+allow_nested = false
+kitty_graphics = false
+
+[advanced]
+scrollback_limit_bytes = 10485760
