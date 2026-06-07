@@ -97,7 +97,6 @@ abbr -a grv 'git remote -v'
 abbr -a gclean 'git clean -fd'
 
 # Abbreviations — zmx
-abbr -a za 'zmx attach'
 abbr -a zk 'zmx kill'
 abbr -a zl 'zmx list'
 abbr -a zr 'zmx run'
