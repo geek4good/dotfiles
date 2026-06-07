@@ -56,6 +56,10 @@ abbr -a bubu 'brew update && brew outdated && brew update && brew outdated --cas
 # Abbreviations — mise
 abbr -a ml 'mise latest'
 
+# Abbreviations — session attach
+abbr -a ha herdr
+abbr -a za 'zmx attach'
+
 # Abbreviations — docker (via Lima)
 abbr -a d docker.lima
 abbr -a dc 'docker.lima compose'
