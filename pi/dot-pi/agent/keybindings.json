@@ -1,0 +1,8 @@
+{
+  "app.thinking.cycle": [],
+  "app.models.clearAll": [],
+  "tui.editor.cursorUp": ["up", "ctrl+p"],
+  "tui.editor.cursorDown": ["down", "ctrl+n"],
+  "app.model.cycleForward": "ctrl+.",
+  "app.model.cycleBackward": "ctrl+shift+."
+}

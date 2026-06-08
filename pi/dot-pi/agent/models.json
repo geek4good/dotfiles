@@ -1,9 +1,9 @@
 {
   "providers": {
-    "zai-coding-plan": {
+    "glm-coding-plan": {
       "baseUrl": "https://api.z.ai/api/coding/paas/v4",
       "api": "openai-completions",
-      "apiKey": "$ZAI_API_KEY",
+      "apiKey": "$GLM_CODING_PLAN",
       "compat": {
         "thinkingFormat": "zai"
       },

@@ -1,6 +1,6 @@
 {
   "quietStartup": true,
-  "defaultProvider": "zai-coding-plan",
+  "defaultProvider": "glm-coding-plan",
   "defaultModel": "glm-5.1",
   "packages": [
     "npm:pi-web-access",
@@ -27,12 +27,12 @@
     "baseDelayMs": 2000
   },
   "lastChangelogVersion": "0.78.1",
-  "hideThinkingBlock": true,
+  "hideThinkingBlock": false,
   "theme": "midnight-ocean",
   "subagents": {
     "agentOverrides": {
       "scout": {
-        "model": "zai-coding-plan/glm-5-turbo"
+        "model": "glm-coding-plan/glm-5-turbo"
       },
       "researcher": {
         "model": "opencode-go/kimi-k2.6"
