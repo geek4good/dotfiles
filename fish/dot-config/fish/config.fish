@@ -106,6 +106,3 @@ abbr -a auto 'npx autoskills'
 abbr -a ash "autossh -M 0 -q"
 abbr -a cf 'v ~/.config/fish/config.fish'
 abbr -a rf 'source ~/.config/fish/config.fish'
-
-# dex completions
-dex completion fish | source
