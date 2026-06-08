@@ -38,21 +38,19 @@ macos-titlebar-style = tabs
 keybind = cmd+d=new_split:right
 keybind = cmd+shift+d=new_split:down
 
-# Create splits: ctrl+space + h/j/k/l → left/down/up/right
-keybind = ctrl+space>h=new_split:left
-keybind = ctrl+space>j=new_split:down
-keybind = ctrl+space>k=new_split:up
-keybind = ctrl+space>l=new_split:right
-keybind = ctrl+space>z=toggle_split_zoom
+# Split creation: cmd+d / cmd+shift+d only
+# (ctrl+space>h/j/k/l/z disabled — conflicts with Herdr prefix bindings)
+# keybind = ctrl+space>z=toggle_split_zoom
 
-# Navigate splits: ctrl+h/j/k/l → move to left/down/up/right split
-keybind = ctrl+h=goto_split:left
-keybind = ctrl+j=goto_split:down
-keybind = ctrl+k=goto_split:up
-keybind = ctrl+l=goto_split:right
+# ─── Split navigation (disabled — Herdr handles this) ────────────────────────
+# keybind = ctrl+h=goto_split:left
+# keybind = ctrl+j=goto_split:down
+# keybind = ctrl+k=goto_split:up
+# keybind = ctrl+l=goto_split:right
 keybind = ctrl+shift+l=text:\x0c
-keybind = ctrl+alt+h=previous_tab
-keybind = ctrl+alt+l=next_tab
+# Disabled — ctrl+alt+h/l now handled by Herdr for tab cycling
+# keybind = ctrl+alt+h=previous_tab
+# keybind = ctrl+alt+l=next_tab
 
 # ─── Tabs ────────────────────────────────────────────────────────────────────
 keybind = cmd+t=new_tab

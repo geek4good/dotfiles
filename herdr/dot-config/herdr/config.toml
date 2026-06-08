@@ -3,9 +3,10 @@
 #
 # Design:
 #   - Prefix: ctrl+space (matches Ghostty split-creation prefix)
-#   - ctrl+h/j/k/l: handled by Ghostty at the terminal level for
-#     cross-session navigation (Herdr ↔ zmx ↔ other Ghostty tabs)
+#   - ctrl+alt+j/k: cycle workspaces (spaces) directly
+#   - ctrl+alt+h/l: cycle tabs directly
 #   - prefix + h/j/k/l: Herdr-internal pane focus
+#   - Ghostty passes these through (no competing Ghostty bindings)
 #   - Agents resume into their native sessions after Herdr restart
 
 onboarding = false
@@ -43,9 +44,9 @@ resize_mode = "prefix+r"
 rename_pane = "prefix+shift+p"
 
 # ─── Tabs ────────────────────────────────────────────────────────────────
-new_tab = "prefix+c"
-next_tab = "prefix+n"
-previous_tab = "prefix+p"
+new_tab = "prefix+t"
+next_tab = ["prefix+n", "ctrl+alt+l"]
+previous_tab = ["prefix+p", "ctrl+alt+h"]
 switch_tab = "prefix+1..9"
 rename_tab = "prefix+shift+t"
 close_tab = "prefix+shift+x"
@@ -55,6 +56,11 @@ workspace_picker = "prefix+w"
 new_workspace = "prefix+shift+n"
 rename_workspace = "prefix+shift+w"
 close_workspace = "prefix+shift+d"
+
+# Direct shortcuts — cycle/select workspaces without prefix
+next_workspace = "ctrl+alt+j"
+previous_workspace = "ctrl+alt+k"
+switch_workspace = "ctrl+alt+1..9"
 
 # ─── Navigation mode (within sidebar/pane list) ─────────────────────────
 navigate_workspace_up = "up"
@@ -75,6 +81,7 @@ help = "prefix+?"
 # ─── Navigate-mode cycling ───────────────────────────────────────────────
 cycle_pane_next = "prefix+tab"
 cycle_pane_previous = "prefix+shift+tab"
+last_pane = "prefix+backtick"
 
 # ─── Settings / reload ──────────────────────────────────────────────────
 settings = "prefix+s"
@@ -108,7 +115,7 @@ accent = "cyan"
 delivery = "herdr"
 
 [ui.sound]
-enabled = true
+enabled = false
 
 [session]
 # Resume agent conversations (Pi, Claude Code, etc.) after Herdr restart.
