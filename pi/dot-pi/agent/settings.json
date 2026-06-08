@@ -28,5 +28,27 @@
   },
   "lastChangelogVersion": "0.78.1",
   "hideThinkingBlock": true,
-  "theme": "midnight-ocean"
+  "theme": "midnight-ocean",
+  "subagents": {
+    "agentOverrides": {
+      "scout": {
+        "model": "zai-coding-plan/glm-5-turbo"
+      },
+      "researcher": {
+        "model": "opencode-go/kimi-k2.6"
+      },
+      "worker": {
+        "model": "opencode-go/deepseek-v4-pro"
+      },
+      "reviewer": {
+        "model": "opencode-go/kimi-k2.6"
+      },
+      "oracle": {
+        "model": "opencode-go/kimi-k2.6"
+      },
+      "bodyguard": {
+        "model": "opencode-go/deepseek-v4-pro"
+      }
+    }
+  }
 }
