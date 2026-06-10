@@ -8,7 +8,6 @@
     "npm:pi-subagents",
     "npm:pi-intercom",
     "npm:@juanibiapina/pi-extension-settings",
-    "npm:@juanibiapina/pi-powerbar",
     "npm:@tintinweb/pi-tasks",
     "npm:pi-slopchop",
     "npm:@tmustier/pi-raw-paste",
@@ -26,8 +25,8 @@
     "maxRetries": 3,
     "baseDelayMs": 2000
   },
-  "lastChangelogVersion": "0.78.1",
-  "hideThinkingBlock": false,
+  "lastChangelogVersion": "0.79.0",
+  "hideThinkingBlock": true,
   "theme": "midnight-ocean",
   "subagents": {
     "agentOverrides": {
