@@ -23,15 +23,14 @@ channel = "stable"
 [keys]
 # ─── Prefix ───────────────────────────────────────────────────────────────
 # Matches Ghostty's ctrl+space prefix for split creation.
-# ctrl+h/j/k/l is intercepted by Ghostty first (top-level navigation),
-# so Herdr-internal pane movement uses prefix + h/j/k/l.
+# Direct pane navigation: ctrl+h/j/k/l (no prefix needed).
 prefix = "ctrl+space"
 
 # ─── Pane focus (within Herdr) ───────────────────────────────────────────
-focus_pane_left = "prefix+h"
-focus_pane_down = "prefix+j"
-focus_pane_up = "prefix+k"
-focus_pane_right = "prefix+l"
+focus_pane_left = "ctrl+h"
+focus_pane_down = "ctrl+j"
+focus_pane_up = "ctrl+k"
+focus_pane_right = "ctrl+l"
 
 # ─── Pane splitting ──────────────────────────────────────────────────────
 split_vertical = "prefix+v"
