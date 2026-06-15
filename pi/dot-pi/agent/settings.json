@@ -1,7 +1,7 @@
 {
   "quietStartup": true,
   "defaultProvider": "glm-coding-plan",
-  "defaultModel": "glm-5.1",
+  "defaultModel": "glm-5.2",
   "packages": [
     "npm:pi-web-access",
     "npm:pi-mcp-adapter",
@@ -25,7 +25,7 @@
     "maxRetries": 3,
     "baseDelayMs": 2000
   },
-  "lastChangelogVersion": "0.79.1",
+  "lastChangelogVersion": "0.79.3",
   "hideThinkingBlock": true,
   "theme": "midnight-ocean",
   "subagents": {
@@ -37,10 +37,10 @@
         "model": "opencode-go/kimi-k2.6"
       },
       "worker": {
-        "model": "opencode-go/deepseek-v4-pro"
+        "model": "glm-coding-plan/glm-5.2"
       },
       "reviewer": {
-        "model": "opencode-go/kimi-k2.6"
+        "model": "opencode-go/qwen3.7-max"
       },
       "oracle": {
         "model": "opencode-go/kimi-k2.6"

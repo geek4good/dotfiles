@@ -9,6 +9,13 @@
       },
       "models": [
         {
+          "id": "glm-5.2",
+          "name": "GLM 5.2",
+          "reasoning": true,
+          "contextWindow": 1000000,
+          "maxTokens": 131072
+        },
+        {
           "id": "glm-5.1",
           "name": "GLM 5.1",
           "reasoning": true,
@@ -65,6 +72,13 @@
       "apiKey": "$OPENCODE_API_KEY",
       "models": [
         {
+          "id": "kimi-k2.7-code",
+          "name": "Kimi K2.7 Code",
+          "reasoning": true,
+          "contextWindow": 262144,
+          "maxTokens": 65536
+        },
+        {
           "id": "kimi-k2.6",
           "name": "Kimi K2.6",
           "reasoning": true,
@@ -93,6 +107,20 @@
           "maxTokens": 65536
         },
         {
+          "id": "qwen3.7-max",
+          "name": "Qwen 3.7 Max",
+          "reasoning": true,
+          "contextWindow": 1000000,
+          "maxTokens": 65536
+        },
+        {
+          "id": "qwen3.7-plus",
+          "name": "Qwen 3.7 Plus",
+          "reasoning": true,
+          "contextWindow": 1000000,
+          "maxTokens": 65536
+        },
+        {
           "id": "qwen3.6-plus",
           "name": "Qwen 3.6 Plus",
           "reasoning": true,
@@ -104,6 +132,13 @@
           "name": "Qwen 3.5 Plus",
           "reasoning": true,
           "contextWindow": 262144,
+          "maxTokens": 32768
+        },
+        {
+          "id": "minimax-m3",
+          "name": "MiniMax M3",
+          "reasoning": true,
+          "contextWindow": 1000000,
           "maxTokens": 32768
         },
         {
@@ -121,10 +156,38 @@
           "maxTokens": 32768
         },
         {
+          "id": "mimo-v2-pro",
+          "name": "MiMo V2 Pro",
+          "reasoning": true,
+          "contextWindow": 1000000,
+          "maxTokens": 32768
+        },
+        {
+          "id": "mimo-v2-omni",
+          "name": "MiMo V2 Omni",
+          "reasoning": true,
+          "contextWindow": 262144,
+          "maxTokens": 32768
+        },
+        {
           "id": "mimo-v2.5-pro",
           "name": "MiMo V2.5 Pro",
           "reasoning": true,
           "contextWindow": 131072,
+          "maxTokens": 32768
+        },
+        {
+          "id": "mimo-v2.5",
+          "name": "MiMo V2.5",
+          "reasoning": true,
+          "contextWindow": 131072,
+          "maxTokens": 32768
+        },
+        {
+          "id": "hy3-preview",
+          "name": "Hunyuan HY3 Preview",
+          "reasoning": true,
+          "contextWindow": 262144,
           "maxTokens": 32768
         }
       ]
