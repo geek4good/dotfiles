@@ -33,8 +33,8 @@ focus_pane_up = "ctrl+k"
 focus_pane_right = "ctrl+l"
 
 # ─── Pane splitting ──────────────────────────────────────────────────────
-split_vertical = "prefix+v"
-split_horizontal = "prefix+minus"
+split_vertical = "prefix+l"
+split_horizontal = "prefix+j"
 
 # ─── Pane lifecycle ──────────────────────────────────────────────────────
 close_pane = "prefix+x"
@@ -88,6 +88,14 @@ reload_config = "prefix+shift+r"
 
 # ─── Notifications ──────────────────────────────────────────────────────
 open_notification_target = "prefix+o"
+
+# ─── Clear screen ─────────────────────────────────────────────────────────
+# ctrl+shift+l sends ctrl+l (clear) to the focused pane via send-keys,
+# bypassing Herdr's ctrl+l=focus_pane_right interception.
+[[keys.command]]
+key = "ctrl+shift+l"
+type = "shell"
+command = "herdr pane send-keys $(herdr pane list | jq -r '.result.panes[] | select(.focused==true).pane_id') ctrl+l"
 
 # ─── Copy mode ──────────────────────────────────────────────────────────
 copy_mode = "prefix+["

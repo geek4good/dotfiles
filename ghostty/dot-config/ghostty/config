@@ -35,28 +35,37 @@ window-padding-y = 8
 macos-titlebar-style = tabs
 
 # ─── Splits ──────────────────────────────────────────────────────────────────
+# Defaults + Herdr-style prefix chords (ctrl+space)
 keybind = cmd+d=new_split:right
 keybind = cmd+shift+d=new_split:down
+keybind = ctrl+space>l=new_split:right
+keybind = ctrl+space>j=new_split:down
 
-# Split creation: cmd+d / cmd+shift+d only
-# (ctrl+space>h/j/k/l/z disabled — conflicts with Herdr prefix bindings)
-# keybind = ctrl+space>z=toggle_split_zoom
-
-# ─── Split navigation (disabled — Herdr handles this) ────────────────────────
-# keybind = ctrl+h=goto_split:left
-# keybind = ctrl+j=goto_split:down
-# keybind = ctrl+k=goto_split:up
-# keybind = ctrl+l=goto_split:right
+# ─── Split navigation ────────────────────────────────────────────────────────
+# ctrl+h/j/k/l for directional focus (matches Herdr focus_pane_* bindings)
+keybind = ctrl+h=goto_split:left
+keybind = ctrl+j=goto_split:down
+keybind = ctrl+k=goto_split:up
+keybind = ctrl+l=goto_split:right
+# ctrl+l is bound to goto_split:right, so ctrl+shift+l sends form feed (clear)
 keybind = ctrl+shift+l=text:\x0c
-# Disabled — ctrl+alt+h/l now handled by Herdr for tab cycling
-# keybind = ctrl+alt+h=previous_tab
-# keybind = ctrl+alt+l=next_tab
 
 # ─── Tabs ────────────────────────────────────────────────────────────────────
+# Defaults + Herdr-style prefix chords + Herdr direct shortcuts
 keybind = cmd+t=new_tab
+keybind = ctrl+space>t=new_tab
+
 keybind = cmd+w=close_surface
+keybind = ctrl+space>x=close_surface
+
 keybind = ctrl+tab=next_tab
+keybind = ctrl+space>n=next_tab
+keybind = ctrl+alt+l=next_tab
+
 keybind = ctrl+shift+tab=previous_tab
+keybind = ctrl+space>p=previous_tab
+keybind = ctrl+alt+h=previous_tab
+
 keybind = cmd+one=goto_tab:1
 keybind = cmd+two=goto_tab:2
 keybind = cmd+three=goto_tab:3
@@ -66,9 +75,19 @@ keybind = cmd+six=goto_tab:6
 keybind = cmd+seven=goto_tab:7
 keybind = cmd+eight=goto_tab:8
 keybind = cmd+nine=goto_tab:9
+keybind = ctrl+space>one=goto_tab:1
+keybind = ctrl+space>two=goto_tab:2
+keybind = ctrl+space>three=goto_tab:3
+keybind = ctrl+space>four=goto_tab:4
+keybind = ctrl+space>five=goto_tab:5
+keybind = ctrl+space>six=goto_tab:6
+keybind = ctrl+space>seven=goto_tab:7
+keybind = ctrl+space>eight=goto_tab:8
+keybind = ctrl+space>nine=goto_tab:9
 
 # ─── Pane zoom ───────────────────────────────────────────────────────────────
 keybind = cmd+z=toggle_split_zoom
+keybind = ctrl+space>z=toggle_split_zoom
 
 # ─── Shell ───────────────────────────────────────────────────────────────────
 # alt+shift+backspace → fish backward-kill-bigword
