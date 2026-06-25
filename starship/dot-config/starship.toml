@@ -1,5 +1,5 @@
 format = """
-${env_var.ZMX_SESSION}\
+${custom.ZMX_SESSION}\
 $username\
 $directory\
 $git_branch\
@@ -7,10 +7,12 @@ $git_status\
 $line_break\
 $status$character"""
 
-[env_var.ZMX_SESSION]
+[custom.ZMX_SESSION]
+command = "printf '%s' \"$ZMX_SESSION\" | cut -c1-13"
+when = "test -n \"$ZMX_SESSION\""
 symbol = " "
-format = "[$symbol$env_value]($style) in "
-description = "zmx session name"
+format = "[$symbol$output]($style) in "
+description = "zmx session name (shortened)"
 style = "bold blue"
 
 [username]
