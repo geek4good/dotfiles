@@ -3,9 +3,11 @@ tap "neurosnap/tap"
 tap "nikitabobko/tap"
 tap "psviderski/tap"
 tap "sst/tap"
+tap "koekeishiya/formulae"
 
 # Core system tools
 brew "stow"
+brew "skhd"
 brew "git"
 brew "nushell"
 brew "gnupg"

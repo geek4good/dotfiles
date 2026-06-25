@@ -1,0 +1,7 @@
+# skhd — simple hotkey daemon for macOS
+# Config: ~/.config/skhd/skhdrc (XDG)
+
+# ─── Global shortcuts ────────────────────────────────────────────────────────
+# Focus Supacode from anywhere (matches Ghostty ctrl+grave local binding)
+# 0x32 = kVK_ANSI_Grave (backtick/grave accent key)
+ctrl - 0x32 : /usr/local/bin/supacode open
