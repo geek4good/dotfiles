@@ -13,7 +13,6 @@ pnpm = "latest"
 pipx = "latest"
 yarn = "latest"
 uv = "latest"
-pi = "latest"
 claude = "latest"
 terraform = "latest"
 

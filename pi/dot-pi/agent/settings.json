@@ -25,7 +25,7 @@
     "maxRetries": 3,
     "baseDelayMs": 2000
   },
-  "lastChangelogVersion": "0.79.3",
+  "lastChangelogVersion": "0.80.2",
   "hideThinkingBlock": true,
   "theme": "midnight-ocean",
   "subagents": {
