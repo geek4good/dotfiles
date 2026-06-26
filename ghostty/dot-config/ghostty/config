@@ -35,14 +35,14 @@ window-padding-y = 8
 macos-titlebar-style = tabs
 
 # ─── Splits ──────────────────────────────────────────────────────────────────
-# Defaults + Herdr-style prefix chords (ctrl+space)
+# Defaults + ctrl+space prefix chords
 keybind = cmd+d=new_split:right
 keybind = cmd+shift+d=new_split:down
 keybind = ctrl+space>l=new_split:right
 keybind = ctrl+space>j=new_split:down
 
 # ─── Split navigation ────────────────────────────────────────────────────────
-# ctrl+h/j/k/l for directional focus (matches Herdr focus_pane_* bindings)
+# ctrl+h/j/k/l for directional focus
 keybind = ctrl+h=goto_split:left
 keybind = ctrl+j=goto_split:down
 keybind = ctrl+k=goto_split:up
@@ -51,7 +51,7 @@ keybind = ctrl+l=goto_split:right
 keybind = ctrl+shift+l=text:\x0c
 
 # ─── Tabs ────────────────────────────────────────────────────────────────────
-# Defaults + Herdr-style prefix chords + Herdr direct shortcuts
+# Defaults + ctrl+space prefix chords + direct shortcuts
 keybind = cmd+t=new_tab
 keybind = ctrl+space>t=new_tab
 
