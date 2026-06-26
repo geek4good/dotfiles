@@ -7,8 +7,8 @@
 -- vim.keymap.del("n", "<leader>gs")
 vim.keymap.set("n", "<leader>fs", "<cmd>write<CR>", { desc = "Save File" })
 
-vim.keymap.set("n", "<C-h>", "<cmd>TmuxNavigateLeft<CR>", { desc = "Navigate Left (tmux)" })
-vim.keymap.set("n", "<C-j>", "<cmd>TmuxNavigateDown<CR>", { desc = "Navigate Down (tmux)" })
-vim.keymap.set("n", "<C-k>", "<cmd>TmuxNavigateUp<CR>", { desc = "Navigate Up (tmux)" })
-vim.keymap.set("n", "<C-l>", "<cmd>TmuxNavigateRight<CR>", { desc = "Navigate Right (tmux)" })
-vim.keymap.set("n", "<C-\\>", "<cmd>TmuxNavigatePrevious<CR>", { desc = "Navigate Previous (tmux)" })
+-- Window navigation: C-h/j/k/l moves between nvim splits
+vim.keymap.set("n", "<C-h>", "<cmd>wincmd h<CR>", { desc = "Navigate Left" })
+vim.keymap.set("n", "<C-j>", "<cmd>wincmd j<CR>", { desc = "Navigate Down" })
+vim.keymap.set("n", "<C-k>", "<cmd>wincmd k<CR>", { desc = "Navigate Up" })
+vim.keymap.set("n", "<C-l>", "<cmd>wincmd l<CR>", { desc = "Navigate Right" })
