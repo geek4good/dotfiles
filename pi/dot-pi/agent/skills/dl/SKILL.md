@@ -85,7 +85,29 @@ The Apple Music account is registered in **Thailand (TH)**. gamdl always downloa
 6. If a TH track ID is found, download with `https://music.apple.com/th/song/{trackId}`
 7. If only a US track ID is found, it will likely 404 on gamdl (TH account) — note this to the user
 
+**If the artist-lookup approach fails, also try a broader search.** Explicit tracks can appear on compilation albums that aren't in the artist's own catalog (e.g., DMX - Party Up explicit was found on a "2000s Retro Gamer" compilation). Search by track title:
+```
+https://itunes.apple.com/search?term={artist}+{title}&entity=song&limit=50&country=TH
+```
+Filter results to `trackExplicitness == "explicit"` and verify the artist name matches.
+
 If no explicit version exists in either storefront, download the clean version and note it to the user.
+
+### Intake precedence: explicit over clean
+
+When processing `.inbox/` files into `.library/`, the intake dedup uses fingerprinting to catch duplicates. But **explicit versions take precedence over clean versions** — a new file that's a fingerprint match for an existing library file should still **replace** it if:
+
+1. The new file is explicit (`rating` tag = 1) and the existing is clean (`rating` = 2)
+2. The new file has a higher bitrate than the existing
+3. The new file is rated and the existing is unrated
+
+Apple Music embeds a `rating` tag in downloaded m4a files:
+- `rating: 1` = explicit
+- `rating: 2` = clean (censored)
+- `rating: 0` = not explicit (no profanity)
+- no tag = unknown
+
+Always check this tag when deciding whether to replace or discard a duplicate.
 
 ### Quality
 
