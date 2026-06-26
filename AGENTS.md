@@ -45,7 +45,6 @@ stow -t ~ <package>
 
 - **bash/** — shell config (`.bashrc`, `.bash_profile`)
 - **claude/** — Claude Code config → `~/.claude/` (skills) and `~/.config/claude-plugins/` (local plugin marketplace)
-- **crush/** — Crush AI assistant config → `~/.config/crush/`
 - **fnox/** — fnox secrets config → `~/.config/fnox/`
 - **gh/** — GitHub CLI config → `~/.config/gh/`
 - **git/** — git config and ignores → `~/.config/git/`
@@ -92,14 +91,14 @@ The local marketplace at `claude/dot-config/claude-plugins/` has a `.claude-plug
 ### Rules
 
 - **Shared skills** live only under `claude/dot-claude/skills/`. Never duplicate into agent-specific directories.
-- **Agent-specific configs** (model settings, role definitions, themes) stay in their own stow packages (`pi/`, `opencode/`, `crush/`).
+- **Agent-specific configs** (model settings, role definitions, themes) stay in their own stow packages (`pi/`, `opencode/`).
 - **Plugin commands and sub-agents** belong inside their plugin directory under `claude/dot-config/claude-plugins/`, not in `claude/dot-claude/commands/` or `claude/dot-claude/agents/`, so they stay namespaced (`/ghpm:create-prd` rather than `/create-prd`).
 
 ## Git conventions
 
 - Default branch: `main`
 - All commits GPG-signed
-- Commit style: `type(scope): description` (e.g., `feat(crush):`, `refactor(aerospace):`)
+- Commit style: `type(scope): description` (e.g., `feat(pi):`, `refactor(aerospace):`)
 - `./sync` runs stow (including the skills sync); full-machine bootstrap lives in `bin/dot-local/bin/_bootstrap`
 
 ## What not to do
