@@ -1,5 +1,5 @@
 {
-  "app.thinking.cycle": [],
+  "app.thinking.cycle": "shift+tab",
   "app.models.clearAll": [],
   "tui.editor.cursorUp": ["up", "ctrl+p"],
   "tui.editor.cursorDown": ["down", "ctrl+n"],
