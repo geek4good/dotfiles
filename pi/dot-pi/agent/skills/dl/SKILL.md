@@ -1,11 +1,11 @@
 ---
 name: dl
-description: Download music from Apple Music, SoundCloud, or YouTube Music into the Kratos DJ library inbox. Use when the user says "/dl", "download this", shares any music URL (Apple Music, SoundCloud, YouTube Music), or asks to add/get/save a track or playlist. Trigger whenever the user pastes a music.apple.com, soundcloud.com, on.soundcloud.com, or music.youtube.com URL and wants it downloaded. Also trigger for requests like "get the explicit version", "download this album", or "add these tracks".
+description: Download music from Apple Music, SoundCloud, YouTube Music, or Spotify into the Kratos DJ library inbox. Use when the user says "/dl", "download this", shares any music URL (Apple Music, SoundCloud, YouTube Music, Spotify), or asks to add/get/save a track or playlist. Trigger whenever the user pastes a music.apple.com, soundcloud.com, on.soundcloud.com, music.youtube.com, or open.spotify.com URL and wants it downloaded. Also trigger for requests like "get the explicit version", "download this album", or "add these tracks".
 ---
 
 # /dl — Download Music to Library
 
-Download from Apple Music, SoundCloud, or YouTube Music into the Kratos library inbox (`~/Music/Kratos/.inbox/`), flattened to `Artist - Title.ext`, logged to `downloads.csv`.
+Download from Apple Music, SoundCloud, YouTube Music, or Spotify into the Kratos library inbox (`~/Music/Kratos/.inbox/`), flattened to `Artist - Title.ext`, logged to `downloads.csv`.
 
 ## Routing
 
@@ -18,6 +18,31 @@ Detect the source from the URL:
 | `music.apple.com/.../playlist/` | Apple Music (playlist) | gamdl | same |
 | `soundcloud.com/...` or `on.soundcloud.com/...` | SoundCloud | yt-dlp | none |
 | `music.youtube.com/...` | YouTube Music | yt-dlp | `~/Music/Kratos/.arc_yt_cookies.txt` |
+| `open.spotify.com/...` | Spotify | zotify | Spotify auth |
+
+## Source priority
+
+**Apple Music is the preferred source.** It serves 256kbps AAC in M4A containers — the native format for djay Pro, fully taggable, no transcoding needed.
+
+Fallback order when a track is not on Apple Music:
+1. **Apple Music** (primary — native AAC, best djay Pro compatibility)
+2. **SoundCloud** (native AAC/MP3, no transcoding)
+3. **Spotify** (320kbps Ogg Vorbis — transcode to AAC, see below)
+4. **YouTube Music** (256kbps AAC via Premium — last resort, unreliable search)
+
+### Spotify downloads and transcoding
+
+Spotify serves **Ogg Vorbis** files (320kbps for Premium). OGG is not reliably supported in djay Pro (playback errors, database issues with large collections). Always **transcode to AAC** after downloading:
+
+```bash
+# Download with zotify
+zotify download --output-format ogg "{SPOTIFY_URL}"
+
+# Transcode OGG → AAC (256kbps, M4A container)
+ffmpeg -i "input.ogg" -c:a aac -b:a 256k -map_metadata 0 "output.m4a"
+```
+
+The transcode loss (Ogg → AAC) is negligible for DJ use (~5-10% perceptual, inaudible through speakers at these bitrates). Do NOT convert to FLAC — it would preserve the already-degraded OGG quality at 3x the file size with no benefit.
 
 ## Naming convention
 
@@ -235,7 +260,7 @@ Tell the user:
 - **Inbox**: `~/Music/Kratos/.inbox/`
 - **Download log**: `~/Music/Kratos/downloads.csv`
 - **Apple Music cookies**: `~/Music/Kratos/.arc_cookies.txt`
-- **YouTube Music cookies**: `~/Music/Kratos/.arc_yt_cookies.txt`
+- **Spotify**: requires zotify and Premium account auth
 
 ## Cookie extraction (when cookies expire)
 
@@ -273,4 +298,5 @@ Note: yt-dlp's `--cookies-from-browser` may ignore the custom path and use the d
 - **Wrong track from AM search**: Always verify artist/title from embedded metadata after download, not from the URL or search result.
 - **Non-English titles**: Keep original characters. Don't transliterate.
 - **WAV sources**: Convert to FLAC for taggable format. Only convert genuine lossless WAV → FLAC. Never transcode lossy → lossy.
+- **Spotify OGG → AAC**: Always transcode Spotify downloads to AAC/M4A for djay Pro compatibility. See Source priority section.
 - **Playlist modifications**: Cannot remove tracks from Apple Music playlists programmatically (no write API). User must do it manually.
