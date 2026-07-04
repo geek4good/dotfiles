@@ -15,6 +15,7 @@ yarn = "latest"
 uv = "latest"
 claude = "latest"
 terraform = "latest"
+rust = "stable"
 
 [settings]
 experimental = true
