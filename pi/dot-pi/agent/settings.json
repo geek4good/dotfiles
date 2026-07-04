@@ -13,7 +13,7 @@
     "npm:@tmustier/pi-raw-paste",
     "git:github.com/geek4good/pi-setup"
   ],
-  "defaultThinkingLevel": "high",
+  "defaultThinkingLevel": "xhigh",
   "defaultModelTemperature": 0,
   "compaction": {
     "enabled": true,
@@ -25,7 +25,7 @@
     "maxRetries": 3,
     "baseDelayMs": 2000
   },
-  "lastChangelogVersion": "0.80.2",
+  "lastChangelogVersion": "0.80.3",
   "hideThinkingBlock": true,
   "theme": "midnight-ocean",
   "subagents": {
