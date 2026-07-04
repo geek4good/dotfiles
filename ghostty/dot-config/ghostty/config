@@ -38,15 +38,21 @@ macos-titlebar-style = tabs
 # Defaults + ctrl+space prefix chords
 keybind = cmd+d=new_split:right
 keybind = cmd+shift+d=new_split:down
-keybind = ctrl+space>l=new_split:right
+keybind = ctrl+space>h=new_split:left
 keybind = ctrl+space>j=new_split:down
+keybind = ctrl+space>k=new_split:up
+keybind = ctrl+space>l=new_split:right
 
 # ─── Split navigation ────────────────────────────────────────────────────────
-# ctrl+h/j/k/l for directional focus
-keybind = ctrl+h=goto_split:left
-keybind = ctrl+j=goto_split:down
-keybind = ctrl+k=goto_split:up
-keybind = ctrl+l=goto_split:right
+# performable: = only intercept if a Ghostty split exists in that direction.
+# Otherwise the key falls through to Neovim (see keymaps.lua <C-h/j/k/l>),
+# giving seamless pane/split navigation across Ghostty AND Nvim.
+# Note: when both a Ghostty pane AND an Nvim split exist in the same direction,
+# Ghostty (the terminal) takes priority and moves panes.
+keybind = performable:ctrl+h=goto_split:left
+keybind = performable:ctrl+j=goto_split:down
+keybind = performable:ctrl+k=goto_split:up
+keybind = performable:ctrl+l=goto_split:right
 # ctrl+l is bound to goto_split:right, so ctrl+shift+l sends form feed (clear)
 keybind = ctrl+shift+l=text:\x0c
 
