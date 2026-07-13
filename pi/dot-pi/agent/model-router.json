@@ -1,0 +1,50 @@
+{
+  "debug": false,
+  "classifierModel": "flash",
+  "models": {
+    "glm52": {
+      "model": "glm-coding-plan/glm-5.2",
+      "contextWindow": 1000000,
+      "maxTokens": 131072,
+      "reasoning": true,
+      "thinkingLevels": ["xhigh", "high", "medium", "low"]
+    },
+    "glm51": {
+      "model": "glm-coding-plan/glm-5.1",
+      "contextWindow": 200000,
+      "maxTokens": 128000,
+      "reasoning": true,
+      "thinkingLevels": ["high", "medium", "low"]
+    },
+    "flash": {
+      "model": "glm-coding-plan/glm-4.7-flash",
+      "contextWindow": 200000,
+      "maxTokens": 128000,
+      "reasoning": false
+    }
+  },
+  "rules": [
+    {
+      "matches": ["deploy", "production", "release", "migration", "drop"],
+      "tier": "high",
+      "reason": "Safety-critical changes get the flagship"
+    },
+    {
+      "matches": ["refactor", "architecture", "design", "plan"],
+      "tier": "high",
+      "reason": "Complex reasoning benefits from the flagship"
+    }
+  ],
+  "profiles": {
+    "auto": {
+      "high":   { "model": "glm52", "thinking": "xhigh", "fallbacks": ["glm51"] },
+      "medium": { "model": "glm51", "thinking": "medium" },
+      "low":    { "model": "flash", "thinking": "off" }
+    },
+    "max": {
+      "high":   { "model": "glm52", "thinking": "xhigh" },
+      "medium": { "model": "glm52", "thinking": "high" },
+      "low":    { "model": "glm51", "thinking": "medium" }
+    }
+  }
+}

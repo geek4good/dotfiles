@@ -11,7 +11,8 @@
     "npm:@tintinweb/pi-tasks",
     "npm:pi-slopchop",
     "npm:@tmustier/pi-raw-paste",
-    "git:github.com/geek4good/pi-setup"
+    "git:github.com/geek4good/pi-setup",
+    "npm:@yeliu84/pi-model-router"
   ],
   "defaultThinkingLevel": "xhigh",
   "defaultModelTemperature": 0,
@@ -25,7 +26,7 @@
     "maxRetries": 3,
     "baseDelayMs": 2000
   },
-  "lastChangelogVersion": "0.80.3",
+  "lastChangelogVersion": "0.80.6",
   "hideThinkingBlock": true,
   "theme": "midnight-ocean",
   "subagents": {
