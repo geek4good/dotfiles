@@ -1,14 +1,16 @@
-current_context: default-2
+current_context: default
 contexts:
   default:
-    connections: []
-  default-1:
-    connections:
-      - ssh: ubuntu@silo
-        machine_id: 73aaca40d1aaa859ad81ce6e8fc5718e
-  default-2:
     connections:
       - ssh: ubuntu@silo
         machine_id: d6691bc237a3544942f641a984ec2891
       - ssh: ubuntu@severance
         machine_id: b9453e78170f8f699b436008c1dd9f05
+  severance:
+    connections:
+      - ssh: ubuntu@severance
+        machine_id: b9453e78170f8f699b436008c1dd9f05
+  silo:
+    connections:
+      - ssh: ubuntu@silo
+        machine_id: d6691bc237a3544942f641a984ec2891
