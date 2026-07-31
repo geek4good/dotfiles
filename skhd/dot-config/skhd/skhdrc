@@ -2,6 +2,10 @@
 # Config: ~/.config/skhd/skhdrc (XDG)
 
 # ─── Global shortcuts ────────────────────────────────────────────────────────
-# Focus Supacode from anywhere (matches Ghostty ctrl+grave local binding)
+# Ctrl+` toggles SupaCode (visor-style): raise+focus when hidden/unfocused,
+# hide when already focused. Logic lives in bin/dot-local/bin/supacode-toggle,
+# which drives focus via an Apple Event `activate` — `supacode open` alone can't
+# steal focus from a background daemon (macOS suppresses NSApplication
+# activation by non-GUI processes).
 # 0x32 = kVK_ANSI_Grave (backtick/grave accent key)
-ctrl - 0x32 : /usr/local/bin/supacode open
+ctrl - 0x32 : $HOME/.local/bin/supacode-toggle

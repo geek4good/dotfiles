@@ -1,0 +1,25 @@
+#!/usr/bin/env bash
+# supacode-toggle — Ctrl+` visor toggle for SupaCode.
+#   • SupaCode not focused / hidden → raise & focus it
+#   • SupaCode focused             → hide it (like ⌘H)
+#
+# Why this exists: `supacode open` alone can't steal focus when fired from a
+# background daemon (skhd) — macOS blocks NSApplication activation initiated by
+# non-GUI processes. So focus is driven through an Apple Event `activate`.
+# Toggling requires a frontmost check first. Bound in skhd/skhdrc.
+set -euo pipefail
+
+APP_ID="app.supabit.supacode"   # bundle id (robust to display-name changes)
+PROC="supacode"                 # System Events process name
+SUPACODE="/usr/local/bin/supacode"
+
+# Is SupaCode currently frontmost? Fails closed (→ show) if not running.
+if frontmost="$(osascript -e "tell application \"System Events\" to get frontmost of process \"$PROC\"" 2>/dev/null)" \
+   && [ "$frontmost" = "true" ]; then
+  # Focused → hide the app
+  osascript -e "tell application \"System Events\" to set visible of process \"$PROC\" to false"
+else
+  # Not focused → raise it (IPC open for app state, then force-activate)
+  "$SUPACODE" open 2>/dev/null || true
+  osascript -e "tell application id \"$APP_ID\" to activate"
+fi

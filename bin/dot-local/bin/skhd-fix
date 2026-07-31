@@ -1,0 +1,57 @@
+#!/usr/bin/env bash
+# skhd-fix — recover skhd global hotkeys when they silently stop working on macOS.
+#
+# Root cause: skhd.zig is self-signed (not an Apple Developer ID), so on macOS
+# 15+/26 the Accessibility grant is pinned to the binary's cdHash and goes stale
+# (notably after updates, or when skhd v0.1.2+ auto-runs `tccutil reset` on a
+# transient event-tap failure — e.g. secure-input field, sleep/wake). Symptom:
+# bindings like Ctrl+` stop firing "after a while".
+#
+# This clears the stale grants, restarts the daemon, and opens the Accessibility
+# pane so you can re-toggle skhd ON. Run it whenever hotkeys die.
+#
+# Note: targets the jackielii/skhd.zig build (bundle id com.jackielii.skhd).
+set -euo pipefail
+
+BUNDLE="com.jackielii.skhd"
+DOMAIN="gui/$(id -u)/${BUNDLE}"
+SKHD_APP="/Applications/skhd.app/Contents/MacOS/skhd"
+
+echo "→ Resetting stale TCC grants for ${BUNDLE} ..."
+if tccutil reset ListenEvent "${BUNDLE}" >/dev/null 2>&1; then
+  echo "  cleared ListenEvent (Input Monitoring)"
+else
+  echo "  ListenEvent: nothing to reset"
+fi
+if tccutil reset Accessibility "${BUNDLE}" >/dev/null 2>&1; then
+  echo "  cleared Accessibility"
+else
+  echo "  Accessibility: nothing to reset"
+fi
+
+echo "→ Restarting skhd daemon ..."
+if launchctl print "${DOMAIN}" >/dev/null 2>&1; then
+  if launchctl kickstart -k "${DOMAIN}" 2>/dev/null; then
+    echo "  restarted via launchd (kickstart)"
+  else
+    echo "  WARN: kickstart failed — try logging out and back in"
+  fi
+else
+  if [ -x "${SKHD_APP}" ] && "${SKHD_APP}" --start-service >/dev/null 2>&1; then
+    echo "  (re)registered via skhd --start-service"
+  else
+    echo "  WARN: could not restart skhd (is ${SKHD_APP} present?)"
+  fi
+fi
+
+echo "→ Opening Privacy & Security → Accessibility ..."
+open "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility" >/dev/null 2>&1 \
+  && echo "  opened" || echo "  (open it manually: System Settings → Privacy & Security → Accessibility)"
+
+cat <<'EOF'
+
+  ➜  In the Accessibility list, toggle skhd OFF then ON
+     (or remove it and re-add /Applications/skhd.app).
+  Then press your hotkey (Ctrl+`) to confirm it fires.
+
+EOF
