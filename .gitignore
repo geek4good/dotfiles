@@ -11,3 +11,6 @@ fnox.toml
 # Session artifacts
 research.md
 .lighthouseci/
+
+# pi-subagents runtime transcripts
+.pi-subagents/
