@@ -16,6 +16,7 @@ uv = "latest"
 claude = "latest"
 terraform = "latest"
 rust = "stable"
+gh = "latest"
 
 [settings]
 experimental = true
