@@ -1,57 +1,144 @@
 #!/usr/bin/env bash
-# skhd-fix — recover skhd global hotkeys when they silently stop working on macOS.
+# skhd-fix — recover skhd global hotkeys when they stop firing on macOS.
 #
-# Root cause: skhd.zig is self-signed (not an Apple Developer ID), so on macOS
-# 15+/26 the Accessibility grant is pinned to the binary's cdHash and goes stale
-# (notably after updates, or when skhd v0.1.2+ auto-runs `tccutil reset` on a
-# transient event-tap failure — e.g. secure-input field, sleep/wake). Symptom:
-# bindings like Ctrl+` stop firing "after a while".
+# Why hotkeys die:
+#   macOS TCC pins Accessibility/Input Monitoring grants to the binary's code
+#   identity. When the grant goes stale (or skhd v0.1.2+'s auto-reset drops
+#   it), skhd ends up with NO entry in System Settings at all. `tccutil
+#   reset` only ever REMOVES grants — the only way to re-add is the system
+#   prompt or the "+" picker. On macOS 26 the daemon's AX prompt is broken
+#   (never appears, even after reset), and grants are stored in the SYSTEM
+#   TCC db, which no user process can write. So the script cannot flip the
+#   switch itself: it clears the stale state, restarts the daemon, walks you
+#   through the one consent step, and then VERIFIES that the grant actually
+#   landed (and re-checks on every run).
 #
-# This clears the stale grants, restarts the daemon, and opens the Accessibility
-# pane so you can re-toggle skhd ON. Run it whenever hotkeys die.
-#
-# Note: targets the jackielii/skhd.zig build (bundle id com.jackielii.skhd).
+# Target: jackielii/skhd.zig (bundle id com.jackielii.skhd).
 set -euo pipefail
 
 BUNDLE="com.jackielii.skhd"
-DOMAIN="gui/$(id -u)/${BUNDLE}"
-SKHD_APP="/Applications/skhd.app/Contents/MacOS/skhd"
+SKHD_BIN="${SKHD_BIN:-/opt/homebrew/bin/skhd}"
+SKHD_APP="/Applications/skhd.app"
+SYS_TCC_DB="/Library/Application Support/com.apple.TCC/TCC.db"
 
-echo "→ Resetting stale TCC grants for ${BUNDLE} ..."
-if tccutil reset ListenEvent "${BUNDLE}" >/dev/null 2>&1; then
-  echo "  cleared ListenEvent (Input Monitoring)"
-else
-  echo "  ListenEvent: nothing to reset"
-fi
-if tccutil reset Accessibility "${BUNDLE}" >/dev/null 2>&1; then
-  echo "  cleared Accessibility"
-else
-  echo "  Accessibility: nothing to reset"
-fi
+say()  { printf '\033[1;36m%s\033[0m\n' "$*"; }
+ok()   { printf '\033[1;32m  ok %s\033[0m\n' "$*"; }
+warn() { printf '\033[1;33m  !! %s\033[0m\n' "$*"; }
+err()  { printf '\033[1;31m  xx %s\033[0m\n' "$*"; }
 
-echo "→ Restarting skhd daemon ..."
-if launchctl print "${DOMAIN}" >/dev/null 2>&1; then
-  if launchctl kickstart -k "${DOMAIN}" 2>/dev/null; then
-    echo "  restarted via launchd (kickstart)"
-  else
-    echo "  WARN: kickstart failed — try logging out and back in"
-  fi
-else
-  if [ -x "${SKHD_APP}" ] && "${SKHD_APP}" --start-service >/dev/null 2>&1; then
-    echo "  (re)registered via skhd --start-service"
-  else
-    echo "  WARN: could not restart skhd (is ${SKHD_APP} present?)"
-  fi
+# Grants on macOS 26 live in the system TCC db; older macOS used the user db.
+sys_grant() { # $1=service -> "1" if granted (auth_value=2)
+  sqlite3 "$SYS_TCC_DB" \
+    "SELECT count(*) FROM access WHERE client='$BUNDLE' AND service='$1' AND auth_value=2;" \
+    2>/dev/null || echo "0"
+}
+
+if [ ! -x "$SKHD_BIN" ]; then
+  err "skhd CLI not found at $SKHD_BIN — set SKHD_BIN or reinstall skhd-zig"
+  exit 1
 fi
 
-echo "→ Opening Privacy & Security → Accessibility ..."
-open "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility" >/dev/null 2>&1 \
-  && echo "  opened" || echo "  (open it manually: System Settings → Privacy & Security → Accessibility)"
+say "== skhd-fix: re-grant Accessibility + Input Monitoring for ${BUNDLE}"
 
-cat <<'EOF'
+# ---- 1. Diagnose ------------------------------------------------------------
+echo; say "Diagnosis"
+DR="$(codesign -d -r- "$SKHD_APP" 2>/dev/null | grep -i designated || true)"
+case "$DR" in
+  *cdhash*) warn "signing anchor: cdhash (ad-hoc) — the grant WILL break again on" \
+             "every skhd update; reinstall via brew (release builds use skhd-cert)" ;;
+  *certificate*) ok "signing anchor: certificate root — grants survive skhd updates" ;;
+  *) warn "could not read designated requirement" ;;
+esac
+AX="$(sys_grant kTCCServiceAccessibility)"
+IM="$(sys_grant kTCCServiceListenEvent)"
+echo "  grants (system TCC db): Accessibility=${AX:-0}  InputMonitoring=${IM:-0} (want 1/1)"
+"$SKHD_BIN" --status 2>&1 | grep -E "Daemon running|Input Monitoring|Hotkeys functional" | sed 's/^/  /' || true
 
-  ➜  In the Accessibility list, toggle skhd OFF then ON
-     (or remove it and re-add /Applications/skhd.app).
-  Then press your hotkey (Ctrl+`) to confirm it fires.
+# Already fully granted? Just make sure the daemon is up.
+if [ "${AX:-0}" = "1" ] && [ "${IM:-0}" = "1" ]; then
+  echo; ok "both grants present — nothing to fix"
+  "$SKHD_BIN" --restart-service >/dev/null 2>&1 || true
+  "$SKHD_BIN" --status 2>&1 | grep -E "Daemon running|Hotkeys functional" | sed 's/^/  /'
+  exit 0
+fi
 
+# ---- 2. Clear stale grants (removes; the picker step re-adds) ----------------
+echo; say "Clearing stale grants so a fresh one can be stored"
+tccutil reset ListenEvent "$BUNDLE" >/dev/null 2>&1 && ok "cleared Input Monitoring" || true
+tccutil reset Accessibility "$BUNDLE" >/dev/null 2>&1 && ok "cleared Accessibility" || true
+launchctl kickstart -k "gui/$(id -u)/com.apple.tccd" >/dev/null 2>&1 \
+  && ok "restarted tccd (fresh prompt state)" || true
+
+# ---- 3. Restart the daemon (also attempts the system AX prompt) --------------
+echo; say "Restarting skhd service"
+"$SKHD_BIN" --restart-service >/dev/null 2>&1 || "$SKHD_BIN" --start-service >/dev/null 2>&1 || \
+  warn "could not restart skhd (see ~/Library/Logs/skhd.log)"
+sleep 5
+
+# ---- 4. Guided consent + verification ----------------------------------------
+# Poll helper: waits up to $1 seconds for grant $2 (service name) to appear.
+poll_grant() {
+  local i
+  for i in $(seq 1 "$1"); do
+    [ $((i % 10)) -eq 0 ] && echo "  ... still waiting (${i}/$1 s) — looking for your click"
+    if [ "$(sys_grant "$2")" = "1" ]; then
+      return 0
+    fi
+    sleep 1
+  done
+  return 1
+}
+
+add_hint() { # $1 = pane name ("Accessibility"/"Input Monitoring")
+  cat <<EOF
+  >>> ONE manual step (skhd-fix cannot click for you — macOS requires
+      explicit user consent; the system prompt is broken on macOS 26):
+      1. In System Settings → Privacy & Security → $1, click the '+'  button
+      2. In the picker, press  Cmd+Shift+G  and type:
+             ${SKHD_APP}
+         then press Return twice
+         (alternative: drag ${SKHD_APP} from a Finder window into the picker)
+      The entry appears as 'skhd' and is granted immediately.
 EOF
+}
+
+if [ "$(sys_grant kTCCServiceAccessibility)" != "1" ]; then
+  echo
+  say "Step A — Accessibility grant"
+  open "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility" >/dev/null 2>&1 || true
+  open /Applications >/dev/null 2>&1 || true
+  add_hint "Accessibility"
+  echo "  Waiting up to 120s for you to add skhd..."
+  if ! poll_grant 120 kTCCServiceAccessibility; then
+    err "Accessibility still not granted. Do the '+' step above, then re-run: skhd-fix"
+    exit 1
+  fi
+  ok "Accessibility granted"
+fi
+
+if [ "$(sys_grant kTCCServiceListenEvent)" != "1" ]; then
+  echo
+  say "Step B — Input Monitoring grant"
+  open "x-apple.systempreferences:com.apple.preference.security?Privacy_ListenEvent" >/dev/null 2>&1 || true
+  add_hint "Input Monitoring"
+  echo "  Waiting up to 120s for you to add skhd..."
+  if ! poll_grant 120 kTCCServiceListenEvent; then
+    err "Input Monitoring still not granted. Do the '+' step above, then re-run: skhd-fix"
+    exit 1
+  fi
+  ok "Input Monitoring granted"
+fi
+
+# ---- 5. Final check -----------------------------------------------------------
+echo; say "Final state"
+"$SKHD_BIN" --restart-service >/dev/null 2>&1 || true
+sleep 2
+"$SKHD_BIN" --status 2>&1 | grep -E "Daemon running|Input Monitoring|Hotkeys functional" | sed 's/^/  /'
+echo "  grants: Accessibility=$(sys_grant kTCCServiceAccessibility)  InputMonitoring=$(sys_grant kTCCServiceListenEvent)"
+
+if "$SKHD_BIN" --status 2>&1 | grep -q "Input Monitoring: *Granted"; then
+  ok "skhd is fully granted and running — hotkeys should fire now."
+else
+  warn "grants are in place but the daemon hasn't reported granted yet —"
+  warn "wait a few seconds (launchd respawn) and run: skhd-fix"
+fi
