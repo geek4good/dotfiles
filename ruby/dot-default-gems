@@ -1,0 +1,6 @@
+# Auto-installed by mise for every Ruby version
+# Prevents "bad interpreter" errors when Ruby updates break hardcoded Mason shebangs
+ruby-lsp
+standard
+erb-formatter
+erb_lint
