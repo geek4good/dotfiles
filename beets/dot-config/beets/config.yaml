@@ -1,0 +1,27 @@
+directory: ~/Music/Kratos/.library
+
+import:
+    copy: no
+    move: no
+    write: no
+    autotag: no
+    duplicate_action: skip
+    quiet_fallback: skip
+
+plugins:
+    - zero
+    - fromfilename
+
+zero:
+    fields: [comments]
+    update_database: true
+
+paths:
+    default: $artist - $title
+    singleton: $artist - $title
+
+replace:
+    '[\\/]': ''
+    '^\.': '_.'
+    '^\s+': ''
+    '\s+$': ''
