@@ -40,6 +40,22 @@ fi
 
 say "== skhd-fix: re-grant Accessibility + Input Monitoring for ${BUNDLE}"
 
+# After --restart-service the daemon's AX check can race tccd at startup and
+# the event tap takes a few seconds to attach (log shows a burst of
+# "Event tap creation failed" that then resolves silently). "Hotkeys
+# functional: Yes" comes from CGGetEventTapList (WindowServer truth, not a
+# TCC check), so it is safe to poll — even from a terminal that lacks
+# Accessibility itself.
+wait_tap() { # $1=seconds to wait; 0 if the tap attached in time
+  for _ in $(seq 1 "$1"); do
+    if "$SKHD_BIN" --status 2>&1 | grep -q "Hotkeys functional: *Yes"; then
+      return 0
+    fi
+    sleep 1
+  done
+  return 1
+}
+
 # ---- 1. Diagnose ------------------------------------------------------------
 echo; say "Diagnosis"
 DR="$(codesign -d -r- "$SKHD_APP" 2>/dev/null | grep -i designated || true)"
@@ -58,7 +74,12 @@ echo "  grants (system TCC db): Accessibility=${AX:-0}  InputMonitoring=${IM:-0}
 if [ "${AX:-0}" = "1" ] && [ "${IM:-0}" = "1" ]; then
   echo; ok "both grants present — nothing to fix"
   "$SKHD_BIN" --restart-service >/dev/null 2>&1 || true
-  "$SKHD_BIN" --status 2>&1 | grep -E "Daemon running|Hotkeys functional" | sed 's/^/  /'
+  if wait_tap 30; then
+    "$SKHD_BIN" --status 2>&1 | grep -E "Daemon running|Hotkeys functional" | sed 's/^/  /'
+  else
+    warn "daemon restarted but the event tap hasn't attached after 30s"
+    warn "(check ~/Library/Logs/skhd.log; re-run: skhd-fix)"
+  fi
   exit 0
 fi
 
@@ -132,13 +153,13 @@ fi
 # ---- 5. Final check -----------------------------------------------------------
 echo; say "Final state"
 "$SKHD_BIN" --restart-service >/dev/null 2>&1 || true
-sleep 2
-"$SKHD_BIN" --status 2>&1 | grep -E "Daemon running|Input Monitoring|Hotkeys functional" | sed 's/^/  /'
-echo "  grants: Accessibility=$(sys_grant kTCCServiceAccessibility)  InputMonitoring=$(sys_grant kTCCServiceListenEvent)"
-
-if "$SKHD_BIN" --status 2>&1 | grep -q "Input Monitoring: *Granted"; then
+if wait_tap 30; then
+  "$SKHD_BIN" --status 2>&1 | grep -E "Daemon running|Hotkeys functional" | sed 's/^/  /'
+  echo "  grants: Accessibility=$(sys_grant kTCCServiceAccessibility)  InputMonitoring=$(sys_grant kTCCServiceListenEvent)"
   ok "skhd is fully granted and running — hotkeys should fire now."
 else
-  warn "grants are in place but the daemon hasn't reported granted yet —"
+  "$SKHD_BIN" --status 2>&1 | grep -E "Daemon running|Input Monitoring|Hotkeys functional" | sed 's/^/  /'
+  echo "  grants: Accessibility=$(sys_grant kTCCServiceAccessibility)  InputMonitoring=$(sys_grant kTCCServiceListenEvent)"
+  warn "grants are in place but the daemon hasn't attached its event tap yet —"
   warn "wait a few seconds (launchd respawn) and run: skhd-fix"
 fi
