@@ -7,7 +7,7 @@ return {
     opts = function(_, opts)
       opts.ensure_installed = opts.ensure_installed or {}
       opts.ensure_installed = vim.tbl_filter(function(pkg)
-        return not vim.list_contains({ "erb-formatter", "erb-lint", "standardrb", "ruby-lsp" }, pkg)
+        return not vim.list_contains({ "erb-formatter", "erb-lint", "standardrb", "ruby-lsp", "rubocop" }, pkg)
       end, opts.ensure_installed)
     end,
   },
@@ -16,7 +16,12 @@ return {
     opts = {
       servers = {
         ruby_lsp = { mason = false },
-        standardrb = { mason = false },
+        -- ruby_lsp natively runs the project's linter (RuboCop/Standard)
+        -- using its own config (e.g. rubocop-rails-omakase), so the extra
+        -- standardrb/rubocop LSP servers are disabled to avoid duplicate or
+        -- conflicting hints. Formatting is handled per-project by conform.
+        standardrb = { mason = false, enabled = false },
+        rubocop = { mason = false, enabled = false },
       },
     },
   },
