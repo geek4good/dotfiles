@@ -17,6 +17,7 @@ claude = "latest"
 terraform = "latest"
 rust = "stable"
 gh = "latest"
+tree-sitter = "latest"
 
 [settings]
 experimental = true
