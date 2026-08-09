@@ -1,12 +1,13 @@
 #!/usr/bin/env bash
-# supacode-toggle — Ctrl+` visor toggle for SupaCode.
+# supacode-toggle — visor toggle for SupaCode (formerly bound to Ctrl+` via skhd).
 #   • SupaCode not focused / hidden → raise & focus it
-#   • SupaCode focused             → hide it (like ⌘H)
+#   • SupaCode focused               → hide it (like ⌘H)
 #
 # Why this exists: `supacode open` alone can't steal focus when fired from a
-# background daemon (skhd) — macOS blocks NSApplication activation initiated by
+# background daemon — macOS blocks NSApplication activation initiated by
 # non-GUI processes. So focus is driven through an Apple Event `activate`.
-# Toggling requires a frontmost check first. Bound in skhd/skhdrc.
+# Toggling requires a frontmost check first. Run directly or bind to your
+# own shortcut (aerospace, karabiner, etc.).
 set -euo pipefail
 
 APP_ID="app.supabit.supacode"   # bundle id (robust to display-name changes)

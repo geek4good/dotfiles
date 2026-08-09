@@ -1,5 +1,3 @@
-tap "asmvik/formulae", "https://github.com/asmvik/homebrew-formulae.git", trusted: { formulae: ["skhd"] }
-tap "jackielii/tap"
 tap "neurosnap/tap"
 tap "psviderski/tap"
 
@@ -196,7 +194,6 @@ cask "private-internet-access"
 cask "raspberry-pi-imager"
 cask "repobar"
 cask "sizeup"
-cask "jackielii/tap/skhd-zig", trusted: true
 cask "slack"
 cask "spotify"
 cask "steam"
