@@ -33,8 +33,9 @@ focus_pane_up = "ctrl+k"
 focus_pane_right = "ctrl+l"
 
 # ─── Pane splitting ──────────────────────────────────────────────────────
-split_vertical = "prefix+l"
-split_horizontal = "prefix+j"
+# split_vertical uses the 0.8 default: prefix+v
+# split_horizontal: default prefix+- plus explicit prefix+s
+split_horizontal = ["prefix+minus", "prefix+s"]
 
 # ─── Pane lifecycle ──────────────────────────────────────────────────────
 close_pane = "prefix+x"
@@ -83,7 +84,7 @@ cycle_pane_previous = "prefix+shift+tab"
 last_pane = "prefix+backtick"
 
 # ─── Settings / reload ──────────────────────────────────────────────────
-settings = "prefix+s"
+settings = "prefix+shift+s"
 reload_config = "prefix+shift+r"
 
 # ─── Notifications ──────────────────────────────────────────────────────
