@@ -66,11 +66,9 @@ keybind = ctrl+space>x=close_surface
 
 keybind = ctrl+tab=next_tab
 keybind = ctrl+space>n=next_tab
-keybind = ctrl+alt+l=next_tab
 
 keybind = ctrl+shift+tab=previous_tab
 keybind = ctrl+space>p=previous_tab
-keybind = ctrl+alt+h=previous_tab
 
 keybind = cmd+one=goto_tab:1
 keybind = cmd+two=goto_tab:2
