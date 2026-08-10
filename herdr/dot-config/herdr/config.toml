@@ -46,7 +46,6 @@ rename_pane = "prefix+shift+p"
 new_tab = "prefix+c"
 next_tab = "ctrl+alt+l"
 previous_tab = "ctrl+alt+h"
-switch_tab = "prefix+1..9"
 rename_tab = "prefix+shift+t"
 close_tab = "prefix+shift+x"
 
