@@ -27,10 +27,9 @@ channel = "stable"
 prefix = "ctrl+space"
 
 # ─── Pane focus (within Herdr) ───────────────────────────────────────────
-focus_pane_left = "ctrl+h"
-focus_pane_down = "ctrl+j"
-focus_pane_up = "ctrl+k"
-focus_pane_right = "ctrl+l"
+# ctrl+h/j/k/l now route through the vim-herdr-navigation plugin (see
+# [[keys.command]] below): forwards to Neovim when it's focused, else moves
+# Herdr focus. Plugin: `herdr plugin install paulbkim-dev/vim-herdr-navigation`.
 
 # ─── Pane splitting ──────────────────────────────────────────────────────
 # split_vertical uses the 0.8 default: prefix+v
@@ -44,9 +43,9 @@ resize_mode = "prefix+r"
 rename_pane = "prefix+shift+p"
 
 # ─── Tabs ────────────────────────────────────────────────────────────────
-new_tab = "prefix+t"
-next_tab = ["prefix+n", "ctrl+alt+l"]
-previous_tab = ["prefix+p", "ctrl+alt+h"]
+new_tab = "prefix+c"
+next_tab = "ctrl+alt+l"
+previous_tab = "ctrl+alt+h"
 switch_tab = "prefix+1..9"
 rename_tab = "prefix+shift+t"
 close_tab = "prefix+shift+x"
@@ -100,12 +99,41 @@ edit_scrollback = "prefix+e"
 new_worktree = "prefix+shift+g"
 
 # ─── Clear screen ─────────────────────────────────────────────────────────
-# ctrl+shift+l sends ctrl+l (clear) to the focused pane via send-keys,
-# bypassing Herdr's ctrl+l=focus_pane_right interception.
+# prefix+shift+l (ctrl+space, then L) sends ctrl+l (clear) to the focused pane
+# via send-keys, bypassing Herdr's ctrl+l=focus_pane_right interception.
+# Single-chord ctrl+shift+l is unusable: Ghostty converts it to \x0c before
+# Herdr sees it, and Herdr reads \x0c as ctrl+l (focus_pane_right).
 [[keys.command]]
-key = "ctrl+shift+l"
+key = "prefix+shift+l"
 type = "shell"
-command = "herdr pane send-keys $(herdr pane list | jq -r '.result.panes[] | select(.focused==true).pane_id') ctrl+l"
+command = "herdr pane send-keys \"$HERDR_ACTIVE_PANE_ID\" ctrl+l"
+
+# ─── Vim/Herdr pane navigation (ctrl+h/j/k/l) ───────────────────────────
+# Forwards the chord to Neovim when it's the focused process (so splits move),
+# otherwise moves Herdr's pane focus. Neovim hands back to Herdr at split edges.
+[[keys.command]]
+key = "ctrl+h"
+type = "plugin_action"
+command = "vim-herdr-navigation.left"
+description = "navigate left (vim/herdr)"
+
+[[keys.command]]
+key = "ctrl+j"
+type = "plugin_action"
+command = "vim-herdr-navigation.down"
+description = "navigate down (vim/herdr)"
+
+[[keys.command]]
+key = "ctrl+k"
+type = "plugin_action"
+command = "vim-herdr-navigation.up"
+description = "navigate up (vim/herdr)"
+
+[[keys.command]]
+key = "ctrl+l"
+type = "plugin_action"
+command = "vim-herdr-navigation.right"
+description = "navigate right (vim/herdr)"
 
 [worktrees]
 directory = "~/.herdr/worktrees"
