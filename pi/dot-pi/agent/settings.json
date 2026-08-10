@@ -1,7 +1,7 @@
 {
   "quietStartup": true,
-  "defaultProvider": "opencode",
-  "defaultModel": "deepseek-v4-flash-free",
+  "defaultProvider": "glm-coding-plan",
+  "defaultModel": "glm-5.2",
   "packages": [
     "npm:pi-web-access",
     "npm:pi-mcp-adapter",
@@ -14,7 +14,7 @@
     "git:github.com/geek4good/pi-setup",
     "npm:@yeliu84/pi-model-router"
   ],
-  "defaultThinkingLevel": "high",
+  "defaultThinkingLevel": "xhigh",
   "defaultModelTemperature": 0,
   "compaction": {
     "enabled": true,
@@ -26,7 +26,7 @@
     "maxRetries": 3,
     "baseDelayMs": 2000
   },
-  "lastChangelogVersion": "0.83.0",
+  "lastChangelogVersion": "0.84.1",
   "hideThinkingBlock": true,
   "theme": "midnight-ocean",
   "subagents": {
