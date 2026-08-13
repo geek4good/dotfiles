@@ -11,6 +11,7 @@
 -- normal identifier completion in other languages.
 return {
   "saghen/blink.cmp",
+  version = "*", -- stable tags: prebuilt binary, no Rust build, less breakage than main
   opts = function(_, opts)
     opts.sources = opts.sources or {}
     opts.sources.providers = opts.sources.providers or {}
