@@ -62,16 +62,7 @@ Only `git commit --amend` when ALL of these are true:
 
 Never amend if the last commit is from another author or a merge commit.
 
-## Phase 5: Dex Integration (Optional)
-
-If there is an active dex task in the current project:
-1. Run `dex status` to check for active tasks
-2. If the commit relates to a dex task, link it:
-   - Root task → include `Fixes #<issue>` in the body
-   - Subtask → include `Refs #<issue>` in the body
-3. After committing, run `dex complete <id> --commit <sha>`
-
-## Phase 6: Summary
+## Phase 5: Summary
 
 After all commits, show:
 ```
