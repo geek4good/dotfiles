@@ -9,6 +9,20 @@
       },
       "models": [
         {
+          "id": "glm-5.3",
+          "name": "GLM 5.3",
+          "reasoning": true,
+          "contextWindow": 1000000,
+          "maxTokens": 131072,
+          "thinkingLevelMap": {
+            "minimal": null,
+            "low": null,
+            "medium": null,
+            "high": "high",
+            "xhigh": "max"
+          }
+        },
+        {
           "id": "glm-5.2",
           "name": "GLM 5.2",
           "reasoning": true,
@@ -86,6 +100,13 @@
           "maxTokens": 65536
         },
         {
+          "id": "kimi-k3",
+          "name": "Kimi K3",
+          "reasoning": true,
+          "contextWindow": 262144,
+          "maxTokens": 65536
+        },
+        {
           "id": "kimi-k2.6",
           "name": "Kimi K2.6",
           "reasoning": true,
@@ -111,6 +132,13 @@
           "name": "DeepSeek V4 Flash",
           "reasoning": false,
           "contextWindow": 1048576,
+          "maxTokens": 65536
+        },
+        {
+          "id": "qwen3.8-max",
+          "name": "Qwen 3.8 Max",
+          "reasoning": true,
+          "contextWindow": 1000000,
           "maxTokens": 65536
         },
         {

@@ -2,6 +2,13 @@
   "debug": false,
   "classifierModel": "flash",
   "models": {
+    "glm53": {
+      "model": "glm-coding-plan/glm-5.3",
+      "contextWindow": 1000000,
+      "maxTokens": 131072,
+      "reasoning": true,
+      "thinkingLevels": ["xhigh", "high", "medium", "low"]
+    },
     "glm52": {
       "model": "glm-coding-plan/glm-5.2",
       "contextWindow": 1000000,
@@ -37,14 +44,14 @@
   ],
   "profiles": {
     "auto": {
-      "high":   { "model": "glm52", "thinking": "xhigh", "fallbacks": ["glm51"] },
-      "medium": { "model": "glm51", "thinking": "medium" },
+      "high":   { "model": "glm53", "thinking": "xhigh", "fallbacks": ["glm52"] },
+      "medium": { "model": "glm52", "thinking": "high" },
       "low":    { "model": "flash", "thinking": "off" }
     },
     "max": {
-      "high":   { "model": "glm52", "thinking": "xhigh" },
-      "medium": { "model": "glm52", "thinking": "high" },
-      "low":    { "model": "glm51", "thinking": "medium" }
+      "high":   { "model": "glm53", "thinking": "xhigh" },
+      "medium": { "model": "glm53", "thinking": "high" },
+      "low":    { "model": "glm52", "thinking": "medium" }
     }
   }
 }

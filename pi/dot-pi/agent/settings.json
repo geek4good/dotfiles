@@ -1,7 +1,7 @@
 {
   "quietStartup": true,
   "defaultProvider": "glm-coding-plan",
-  "defaultModel": "glm-5.2",
+  "defaultModel": "glm-5.3",
   "packages": [
     "npm:pi-web-access",
     "npm:pi-mcp-adapter",
@@ -38,7 +38,7 @@
         "model": "opencode-go/kimi-k2.6"
       },
       "worker": {
-        "model": "glm-coding-plan/glm-5.2"
+        "model": "glm-coding-plan/glm-5.3"
       },
       "reviewer": {
         "model": "opencode-go/qwen3.7-max"
