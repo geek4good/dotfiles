@@ -41,10 +41,10 @@
         "model": "glm-coding-plan/glm-5.3"
       },
       "reviewer": {
-        "model": "opencode-go/qwen3.7-max"
+        "model": "opencode-go/qwen3.8-max"
       },
       "oracle": {
-        "model": "opencode-go/kimi-k2.6"
+        "model": "opencode-go/kimi-k3"
       },
       "bodyguard": {
         "model": "opencode-go/deepseek-v4-pro"
