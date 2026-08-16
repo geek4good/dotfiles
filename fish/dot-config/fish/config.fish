@@ -55,6 +55,7 @@ abbr -a bubu 'brew update && brew outdated && brew update && brew outdated --cas
 
 # Abbreviations — mise
 abbr -a ml 'mise latest'
+abbr -a momu 'mise outdated && mise upgrade -y'
 
 # Abbreviations — session attach
 abbr -a za 'zmx attach'
