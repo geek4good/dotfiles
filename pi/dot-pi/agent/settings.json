@@ -14,7 +14,7 @@
     "git:github.com/geek4good/pi-setup",
     "npm:@yeliu84/pi-model-router"
   ],
-  "defaultThinkingLevel": "xhigh",
+  "defaultThinkingLevel": "high",
   "defaultModelTemperature": 0,
   "compaction": {
     "enabled": true,
@@ -26,13 +26,13 @@
     "maxRetries": 3,
     "baseDelayMs": 2000
   },
-  "lastChangelogVersion": "0.84.2",
+  "lastChangelogVersion": "0.87.1",
   "hideThinkingBlock": true,
   "theme": "midnight-ocean",
   "subagents": {
     "agentOverrides": {
       "scout": {
-        "model": "glm-coding-plan/glm-5-turbo"
+        "model": "glm-coding-plan/glm-5.3-flash"
       },
       "researcher": {
         "model": "opencode-go/kimi-k2.6"
