@@ -31,6 +31,13 @@ return {
                 if not text then
                   return
                 end
+                -- Wayback numbers from the newest ([1/N] = newest, since `next`
+                -- counts down to 1); show chronological order instead, where
+                -- 1 = oldest revision and N = current file state.
+                local idx, total, tail = text:match("^%[(%d+)%/(%d+)%](.*)$")
+                if idx then
+                  text = ("[%d/%d]%s"):format(tonumber(total) - tonumber(idx) + 1, tonumber(total), tail)
+                end
                 text = text:gsub("%%", "%%%%") -- winbar strings interpret %X sequences
                 for _, w in ipairs(vim.fn.win_findbuf(b)) do
                   saved_winbar[w] = saved_winbar[w] or vim.wo[w].winbar
