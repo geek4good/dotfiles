@@ -1,5 +1,6 @@
 {
   "quietStartup": true,
+  "shellCommandPrefix": "export EDITOR=true VISUAL=true GIT_EDITOR=true PAGER=cat GIT_PAGER=cat",
   "defaultProvider": "glm-coding-plan",
   "defaultModel": "glm-5.3",
   "packages": [
