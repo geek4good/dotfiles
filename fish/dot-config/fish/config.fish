@@ -10,7 +10,8 @@ fish_add_path $HOME/.local/share/mise/shims
 fish_add_path $HOME/Applications
 fish_add_path $HOME/.bun/bin
 fish_add_path $HOME/.local/bin
-fish_add_path /Users/geek4good/Library/pnpm
+fish_add_path $HOME/Library/pnpm
+fish_add_path $HOME/govuk/govuk-docker/exe
 
 # Homebrew
 eval "$(/opt/homebrew/bin/brew shellenv)"
@@ -107,5 +108,5 @@ abbr -a auto 'npx autoskills'
 abbr -a ash "autossh -M 0 -q"
 abbr -a cf 'v ~/.config/fish/config.fish'
 abbr -a psql-icecast 'ssh -t ubuntu@severance \'docker exec -it $(docker ps -q --filter "name=severance-db") psql -U postgres -d icecast_stats\''
-abbr -a pua 'pi update --all'
+abbr -a pua 'pi update --all && ~/.pi/agent/post-update.sh'
 abbr -a rf 'source ~/.config/fish/config.fish'
