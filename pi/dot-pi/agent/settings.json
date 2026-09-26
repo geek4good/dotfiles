@@ -15,6 +15,9 @@
     "npm:@yeliu84/pi-model-router"
   ],
   "defaultThinkingLevel": "high",
+  "modelThinkingLevels": {
+    "glm-coding-plan/glm-5.3": "xhigh"
+  },
   "defaultModelTemperature": 0,
   "compaction": {
     "enabled": true,
