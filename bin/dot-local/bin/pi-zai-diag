@@ -1,0 +1,71 @@
+#!/usr/bin/env node
+// Diagnose glm-coding-plan (Z.ai) connection errors and surface the FULL error.
+//
+// Pi collapses connection-level failures to the generic "Connection error.":
+// its OpenAI SDK wraps network errors as APIConnectionError whose `.message`
+// is "Connection error." and stores the real error in `.cause` — but Pi only
+// reads `.message`, dropping the useful detail. This script prints `.cause`.
+//
+// Usage:
+//   pi-zai-diag                  # 3 attempts against glm-5.3
+//   DIAG_MODEL=glm-5.3-flash pi-zai-diag
+//   DIAG_TRIES=10 pi-zai-diag
+//
+// Run it when you're seeing errors to capture the underlying cause
+// (ECONNRESET / ETIMEDOUT / ConnectTimeoutError / 429 body, etc.).
+
+const KEY = process.env.GLM_CODING_PLAN;
+if (!KEY) { console.error("GLM_CODING_PLAN not set"); process.exit(2); }
+
+const BASE = "https://api.z.ai/api/coding/paas/v4";
+const MODEL = process.env.DIAG_MODEL || "glm-5.3";
+const N = parseInt(process.env.DIAG_TRIES || "3", 10);
+
+let ok = 0, failed = 0;
+
+function dumpCause(e) {
+  console.log(`    name:    ${e?.name}`);
+  console.log(`    message: ${e?.message}`);
+  let c = e?.cause, depth = 0;
+  while (c && depth < 5) {
+    console.log(`      ↳ cause[${depth}]: ${c.name} | ${c.message} | code=${c.code || "—"}`);
+    c = c.cause;
+    depth++;
+  }
+}
+
+async function oneAttempt(i) {
+  const t0 = Date.now();
+  try {
+    const res = await fetch(`${BASE}/chat/completions`, {
+      method: "POST",
+      headers: { "Authorization": `Bearer ${KEY}`, "Content-Type": "application/json" },
+      body: JSON.stringify({
+        model: MODEL,
+        messages: [{ role: "user", content: "Say 'ok' in one word." }],
+        stream: true,
+        thinking: { type: "enabled" },
+      }),
+      signal: AbortSignal.timeout(90_000),
+    });
+    if (!res.ok) {
+      failed++;
+      const body = await res.text().catch(() => "<no body>");
+      console.log(`[${i}] HTTP ${res.status} in ${Date.now() - t0}ms → ${body.slice(0, 400)}`);
+      return;
+    }
+    const reader = res.body.getReader();
+    let chunks = 0;
+    for (;;) { const { done } = await reader.read(); if (done) break; chunks++; }
+    ok++;
+    console.log(`[${i}] OK: HTTP ${res.status}, ${chunks} chunks in ${Date.now() - t0}ms`);
+  } catch (e) {
+    failed++;
+    console.log(`[${i}] FAILED in ${Date.now() - t0}ms`);
+    dumpCause(e);
+  }
+}
+
+for (let i = 1; i <= N; i++) await oneAttempt(i);
+console.log(`\nResult: ${ok} ok, ${failed} failed (${N} attempts, model=${MODEL})`);
+process.exit(failed ? 1 : 0);

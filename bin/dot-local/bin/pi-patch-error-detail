@@ -1,0 +1,98 @@
+#!/usr/bin/env node
+// Re-apply the "surface real provider error" patch to the installed pi bundle.
+//
+// Pi collapses network-level failures (DNS, TLS, timeout) to the SDK's generic
+// "Connection error." because normalizeProviderError() only reads error.message
+// and never unwraps the .cause chain where the real error lives (ENOTFOUND,
+// ConnectTimeoutError, ECONNRESET ...). This patch makes normalizeProviderError
+// append the cause chain for network errors (no HTTP status), e.g.:
+//
+//   Connection error. [fetch failed -> ENOTFOUND: getaddrinfo ENOTFOUND api.z.ai]
+//
+// The patch is applied to content-hashed chunk files, so on every `pi update`
+// the file may be renamed and reset. Run this script again after any update.
+// Idempotent: skips files that already carry the marker.
+//
+// Usage:
+//   pi-patch-error-detail            # detect install + patch
+//   PI_PKG_DIR=/path/to/pi node pi-patch-error-detail   # override install path
+
+import { readFileSync, writeFileSync, readdirSync, existsSync, realpathSync } from "node:fs";
+import { dirname, join, resolve, basename } from "node:path";
+
+const MARKER = "unwrapConnectionCause";
+
+// Old normalizeProviderError: returns the SDK error message verbatim.
+const OLD =
+  "function normalizeProviderError(error){if(!(error instanceof Error))return{message:safeJsonStringify(error),messageCarriesBody:!1};let sdkError=error,status=extractStatus(sdkError),body=extractBody(sdkError),messageCarriesBody=body===void 0||error.message.includes(body);return{status,body,message:error.message,messageCarriesBody}}";
+
+// New: for network-level errors (no HTTP status), append the cause chain.
+const NEW =
+  "function unwrapConnectionCause(error){let parts=[],c=error.cause,d=0;while(c&&d<5){let code=c.code?`${c.code}: `:\"\",msg=c.message||String(c);if(msg&&!parts.includes(`${code}${msg}`))parts.push(`${code}${msg}`);c=c.cause;d++}return parts.join(\" -> \")}function normalizeProviderError(error){if(!(error instanceof Error))return{message:safeJsonStringify(error),messageCarriesBody:!1};let sdkError=error,status=extractStatus(sdkError),body=extractBody(sdkError),message=error.message,messageCarriesBody=body===void 0||message.includes(body);if(status===void 0){let causeChain=unwrapConnectionCause(error);if(causeChain)message=`${message} [${causeChain}]`}return{status,body,message,messageCarriesBody}}";
+
+function resolveBin(dir, name) {
+  const p = join(dir, name);
+  try { return existsSync(p) ? realpathSync(p) : null; } catch { return null; }
+}
+
+function findPkgDir() {
+  if (process.env.PI_PKG_DIR) return resolve(process.env.PI_PKG_DIR);
+  // 1) Resolve the `pi` binary through PATH and walk up to the package root.
+  for (const dir of (process.env.PATH ?? "").split(":")) {
+    const bin = dir && resolveBin(dir, "pi");
+    if (!bin) continue;
+    const seg = "@earendil-works/pi-coding-agent";
+    const at = bin.lastIndexOf(seg);
+    if (at >= 0) {
+      // bin is .../<seg>/dist/bundle/cli.js → package root is .../<seg>
+      return bin.slice(0, at + seg.length);
+    }
+  }
+  // 2) Fall back to common mise/global node_modules layouts
+  const roots = [
+    join(process.env.HOME ?? "", ".local/share/mise/installs"),
+    join(process.env.HOME ?? "", ".local/lib/node_modules"),
+    "/usr/local/lib/node_modules",
+  ];
+  for (const root of roots) {
+    for (const nodeDir of [join(root, "node"), root]) {
+      const probe = join(nodeDir, "lib", "node_modules", "@earendil-works", "pi-coding-agent");
+      if (existsSync(probe)) return probe;
+    }
+  }
+  throw new Error("Could not locate the pi install. Set PI_PKG_DIR to the pi-coding-agent package dir.");
+}
+
+const pkgDir = findPkgDir();
+const chunksDir = join(pkgDir, "dist", "bundle", "chunks");
+if (!existsSync(chunksDir)) throw new Error(`No chunks dir at ${chunksDir}`);
+
+const targets = readdirSync(chunksDir)
+  .filter((f) => f.startsWith("chunk-") && f.endsWith(".js"))
+  .filter((f) => {
+    try {
+      return readFileSync(join(chunksDir, f), "utf8").includes("function normalizeProviderError");
+    } catch { return false; }
+  });
+
+if (targets.length === 0) {
+  console.error("No chunk with normalizeProviderError found. Is this the right pi version?");
+  process.exit(1);
+}
+
+let patched = 0, skipped = 0;
+for (const file of targets) {
+  const path = join(chunksDir, file);
+  const src = readFileSync(path, "utf8");
+  if (src.includes(MARKER)) { skipped++; console.log(`✓ ${file} already patched`); continue; }
+  if (!src.includes(OLD)) {
+    console.error(`✗ ${file} contains normalizeProviderError but does not match the known shape (pi version changed?). Manual review needed.`);
+    continue;
+  }
+  writeFileSync(path, src.replace(OLD, NEW), "utf8");
+  patched++;
+  console.log(`✓ ${file} patched`);
+}
+
+console.log(`\nResult: ${patched} patched, ${skipped} already patched, ${targets.length} candidate(s) total.`);
+if (patched === 0 && skipped === 0) process.exit(1);
