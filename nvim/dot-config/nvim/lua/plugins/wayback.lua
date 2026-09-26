@@ -13,8 +13,8 @@ return {
     opts = {
       picker = "snacks", -- deterministic; matches LazyVim's native picker (telescope is only here as a neogit dep)
       timelapse = {
-        next = "<leader>j", -- newer version (was ]v)
-        prev = "<leader>k", -- older version (was [v)
+        next = "<C-n>", -- newer version (was ]v)
+        prev = "<C-p>", -- older version (was [v)
       },
     },
   },
