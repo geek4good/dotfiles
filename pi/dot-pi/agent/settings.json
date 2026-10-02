@@ -8,12 +8,9 @@
     "npm:pi-mcp-adapter",
     "npm:pi-subagents",
     "npm:pi-intercom",
-    "npm:@juanibiapina/pi-extension-settings",
     "npm:@tintinweb/pi-tasks",
-    "npm:pi-slopchop",
     "npm:@tmustier/pi-raw-paste",
-    "git:github.com/geek4good/pi-setup",
-    "npm:@yeliu84/pi-model-router"
+    "git:github.com/geek4good/pi-setup"
   ],
   "defaultThinkingLevel": "high",
   "modelThinkingLevels": {
@@ -30,7 +27,7 @@
     "maxRetries": 3,
     "baseDelayMs": 2000
   },
-  "lastChangelogVersion": "0.87.1",
+  "lastChangelogVersion": "1.0.0",
   "hideThinkingBlock": true,
   "theme": "midnight-ocean",
   "subagents": {
@@ -38,21 +35,15 @@
       "scout": {
         "model": "glm-coding-plan/glm-5.3-flash"
       },
-      "researcher": {
-        "model": "opencode-go/kimi-k2.6"
-      },
       "worker": {
         "model": "glm-coding-plan/glm-5.3"
       },
       "reviewer": {
         "model": "opencode-go/qwen3.8-max"
-      },
-      "oracle": {
-        "model": "opencode-go/kimi-k3"
-      },
-      "bodyguard": {
-        "model": "opencode-go/deepseek-v4-pro"
       }
     }
-  }
+  },
+  "extensions": [
+    "-builtin:mcp"
+  ]
 }
