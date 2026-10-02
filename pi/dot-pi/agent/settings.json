@@ -35,11 +35,20 @@
       "scout": {
         "model": "glm-coding-plan/glm-5.3-flash"
       },
+      "researcher": {
+        "model": "opencode-go/kimi-k2.6"
+      },
       "worker": {
         "model": "glm-coding-plan/glm-5.3"
       },
       "reviewer": {
         "model": "opencode-go/qwen3.8-max"
+      },
+      "oracle": {
+        "model": "opencode-go/deepseek-v4-pro"
+      },
+      "evidence-auditor": {
+        "model": "opencode-go/deepseek-v4-flash"
       }
     }
   },

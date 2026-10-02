@@ -47,6 +47,14 @@ When you need to run `find`, `grep`, `rg`, or `fd` to locate files or patterns:
 
 For simple, targeted lookups (one file, one exact pattern in a known location), do it directly.
 
+## Web Access Routing
+
+When you need content from the web, use the cheapest tool that can do the job:
+
+1. **`fetch_content`** — first choice for static pages (no browser involved)
+2. **Lightpanda MCP** — for JS-rendered public internet pages, structured extraction, and form interaction. It runs remotely, so prefer it over the local Chrome instance whenever the page is publicly reachable
+3. **Chrome DevTools MCP** — only when you need a localhost/dev-server page (Lightpanda cannot reach local ports), JavaScript evaluation for debugging, console output, or performance traces (Core Web Vitals, Lighthouse)
+
 ## Code Review Standard
 
 All code reviews (via `reviewer` agent or inline) must include a DRY pass:
