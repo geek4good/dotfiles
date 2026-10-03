@@ -1,0 +1,122 @@
+#!/bin/bash
+# pr-worktree-clean — remove local git worktrees whose PRs have merged,
+# closing any open Herdr workspace attached to them.
+#
+# Scans every linked worktree of every git repo directly under ~/Projects
+# (plus repos referenced by open Herdr workspaces). For each worktree:
+#   - dirty worktrees are skipped (unless --force)
+#   - the branch's PR is looked up with gh from inside the worktree
+#   - if (and only if) the PR state is MERGED: close the Herdr workspace,
+#     remove the worktree, delete the local branch
+#
+# Usage: pr-worktree-clean [--dry-run] [--quiet] [--force]
+#   --dry-run  show what would happen, change nothing
+#   --quiet    only report actions and errors (skips are silent)
+#   --force    also remove dirty worktrees (git worktree remove --force)
+set -u
+
+# launchd runs with a minimal PATH; make brew tools (gh, herdr, jq) visible
+export PATH="/opt/homebrew/bin:/usr/local/bin:$PATH"
+
+DRY_RUN=0; QUIET=0; FORCE=0
+for arg in "$@"; do
+    case "$arg" in
+        --dry-run) DRY_RUN=1 ;;
+        --quiet)   QUIET=1 ;;
+        --force)   FORCE=1 ;;
+        -h|--help) sed -n '2,15p' "$0"; exit 0 ;;
+        *) echo "unknown option: $arg (see --help)" >&2; exit 2 ;;
+    esac
+done
+
+info() { [ "$QUIET" -eq 1 ] || echo "  $*"; }
+out()  { echo "$*"; }
+run()  {
+    if [ "$DRY_RUN" -eq 1 ]; then
+        echo "    [dry-run] $*"
+    else
+        "$@" || echo "    ! command failed (continuing): $*" >&2
+    fi
+}
+
+TMPDIR_LOCAL=$(mktemp -d)
+trap 'rm -rf "$TMPDIR_LOCAL"' EXIT
+REPOS="$TMPDIR_LOCAL/repos"
+WS_TSV="$TMPDIR_LOCAL/ws"
+: > "$REPOS"; : > "$WS_TSV"
+
+# --- repo discovery ---------------------------------------------------------
+WS_JSON=$(herdr workspace list 2>/dev/null || true)
+if [ -n "$WS_JSON" ]; then
+    printf '%s' "$WS_JSON" \
+        | jq -r '.result.workspaces[]?.worktree?.repo_root // empty' \
+        >> "$REPOS"
+    printf '%s' "$WS_JSON" \
+        | jq -r '.result.workspaces[] | select(.worktree?.is_linked_worktree == true)
+                 | [.worktree.checkout_path, .workspace_id] | @tsv' \
+        >> "$WS_TSV"
+fi
+for d in "$HOME"/Projects/*/; do
+    [ -d "${d}.git" ] && printf '%s\n' "${d%/}" >> "$REPOS"
+done
+sort -u "$REPOS" -o "$REPOS"
+
+ws_for_path() { awk -F'\t' -v p="$1" '$1 == p {print $2; exit}' "$WS_TSV"; }
+
+# --- scan --------------------------------------------------------------------
+while IFS= read -r repo; do
+    [ -n "$repo" ] || continue
+    git -C "$repo" worktree list --porcelain 2>/dev/null \
+        | awk -v repo="$repo" '
+            function flush() { if (path != "" && branch != "" && path != repo)
+                                   print path "\t" branch "\t" locked }
+            /^worktree / { flush(); path = $2; branch = ""; locked = 0 }
+            /^branch /   { sub(/^refs\/heads\//, "", $2); branch = $2 }
+            /^locked/    { locked = 1 }
+            END          { flush() }
+        ' \
+    | while IFS=$'\t' read -r wt_path wt_branch wt_locked; do
+        [ -d "$wt_path" ] || continue
+
+        if [ "$wt_locked" = "1" ] && [ "$FORCE" -eq 0 ]; then
+            info "skip (locked by another tool): $wt_branch  [$wt_path]"
+            continue
+        fi
+
+        if [ -n "$(git -C "$wt_path" status --porcelain 2>/dev/null)" ] && [ "$FORCE" -eq 0 ]; then
+            info "skip (dirty): $wt_branch  [$wt_path]"
+            continue
+        fi
+
+        pr_state=$( (cd "$wt_path" && gh pr view "$wt_branch" --json state 2>/dev/null) \
+                    | jq -r '.state // empty' 2>/dev/null )
+        if [ "$pr_state" != "MERGED" ]; then
+            info "skip (${pr_state:-no PR}): $wt_branch  [$wt_path]"
+            continue
+        fi
+
+        out "▸ merged: $wt_branch  [$wt_path]"
+        ws_id=$(ws_for_path "$wt_path")
+        if [ -n "$ws_id" ]; then
+            run herdr workspace close "$ws_id"
+        fi
+        if [ "$FORCE" -eq 1 ]; then
+            run git -C "$repo" worktree remove --force --force "$wt_path"
+        else
+            run git -C "$repo" worktree remove "$wt_path"
+        fi
+        if [ "$DRY_RUN" -eq 0 ]; then
+            git -C "$repo" branch -d "$wt_branch" 2>/dev/null \
+                || git -C "$repo" branch -D "$wt_branch" 2>/dev/null \
+                || echo "    ! could not delete branch $wt_branch" >&2
+        else
+            echo "    [dry-run] git -C $repo branch -d $wt_branch"
+        fi
+        # tidy now-empty parent (tideloom-style sibling dirs, ~/.herdr/worktrees/<repo>/)
+        parent=$(dirname "$wt_path")
+        [ "$parent" = "$HOME/Projects" ] || rmdir "$parent" 2>/dev/null
+    done
+done < "$REPOS"
+
+[ "$QUIET" -eq 1 ] || echo "done."
+exit 0

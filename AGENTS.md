@@ -49,6 +49,7 @@ stow -t ~ <package>
 - **gh/** — GitHub CLI config → `~/.config/gh/`
 - **git/** — git config and ignores → `~/.config/git/`
 - **homebrew/** — Brewfile → `~/Brewfile`
+- **launchagents/** — user LaunchAgents → `~/Library/LaunchAgents/` (e.g. `pr-worktree-clean`, which removes merged-PR worktrees and closes their Herdr workspaces every 15 min)
 - **mise/** — dev tool version management → `~/.config/mise/`
 - **nvim/** — Neovim (LazyVim) config → `~/.config/nvim/`
 - **opencode/** — OpenCode AI editor config → `~/.config/opencode/`
