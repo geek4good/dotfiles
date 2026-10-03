@@ -9,6 +9,18 @@ if ! command -v stow &>/dev/null; then
     brew install stow
 fi
 
+cd "$DOTFILES_DIR"
+
+# Snapshot the worktree so we can report exactly what this run changed.
+# sync deliberately NEVER discards repo state: home-side drift pulled in by
+# stow --adopt is surfaced in a report below for review, not wiped by a
+# `git checkout -- .` (which silently destroyed adopted improvements and
+# unrelated WIP in previous versions of this script).
+BEFORE=$(mktemp)
+AFTER=$(mktemp)
+trap 'rm -f "$BEFORE" "$AFTER"' EXIT
+git status --porcelain=v1 2>/dev/null | sort > "$BEFORE" || true
+
 # Ingest any skills installed via `npx skills ...` into the repo before stowing
 "$DOTFILES_DIR/bin/dot-local/bin/dotfiles-sync-skills"
 
@@ -22,8 +34,7 @@ else
     done
 fi
 
-cd "$DOTFILES_DIR"
-
+FAILED_PKGS=""
 for pkg in "${packages[@]}"; do
     if [ ! -d "$pkg" ]; then
         echo "Package '$pkg' not found, skipping."
@@ -31,15 +42,47 @@ for pkg in "${packages[@]}"; do
     fi
 
     echo "Stowing $pkg..."
-    stow --dotfiles --no-folding --adopt --restow -t ~ "$pkg"
+    if ! stow --dotfiles --no-folding --adopt --restow -t ~ "$pkg"; then
+        echo "⚠ Stowing '$pkg' failed (conflicts?) — continuing with remaining packages" >&2
+        FAILED_PKGS="$FAILED_PKGS $pkg"
+    fi
 done
 
-# Restore repo versions in case --adopt pulled in different files
-git -C "$DOTFILES_DIR" checkout -- .
+# ---- Drift report --------------------------------------------------------
+# Anything that changed in the worktree during this run and was not already
+# dirty before it. Adopted drift is kept in the worktree for you to review.
+git status --porcelain=v1 2>/dev/null | sort > "$AFTER" || true
+NEW_CHANGES=$(comm -13 "$BEFORE" "$AFTER" || true)
 
-# Re-apply Pi theme overrides if patch exists
-if [ -f "$HOME/.pi/agent/post-update.sh" ]; then
+if [ -n "$NEW_CHANGES" ]; then
+    ADOPTED=$(printf '%s\n' "$NEW_CHANGES" | grep -E '^[ MARC][MD]' || true)
+    UNTRACKED=$(printf '%s\n' "$NEW_CHANGES" | grep '^??' || true)
+
+    if [ -n "$ADOPTED" ]; then
+        echo ""
+        echo "⚠⚠ Home-side drift was adopted into the repo (kept, NOT discarded):"
+        printf '%s\n' "$ADOPTED" | sed 's/^/    /'
+        echo ""
+        echo "    review:   git diff"
+        echo "    keep:     git add -A && git commit"
+        echo "    discard:  git checkout -- <file>"
+        echo ""
+    fi
+    if [ -n "$UNTRACKED" ]; then
+        echo "New files this run (ingested skills, etc.):"
+        printf '%s\n' "$UNTRACKED" | sed 's/^/    /'
+        echo ""
+    fi
+fi
+
+# Re-apply Pi local customizations if present
+if [ -x "$HOME/.pi/agent/post-update.sh" ]; then
     "$HOME/.pi/agent/post-update.sh"
+fi
+
+if [ -n "$FAILED_PKGS" ]; then
+    echo "✗ Sync finished with stow failures:$FAILED_PKGS" >&2
+    exit 1
 fi
 
 echo "Done!"
