@@ -29,7 +29,7 @@
   },
   "lastChangelogVersion": "1.0.0",
   "hideThinkingBlock": true,
-  "theme": "system",
+  "theme": "midnight-ocean",
   "subagents": {
     "agentOverrides": {
       "scout": {
