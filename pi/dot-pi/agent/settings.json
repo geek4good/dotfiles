@@ -1,5 +1,5 @@
 {
-  "quietStartup": true,
+  "quietStartup": "header",
   "shellCommandPrefix": "export EDITOR=true VISUAL=true GIT_EDITOR=true PAGER=cat GIT_PAGER=cat",
   "defaultProvider": "glm-coding-plan",
   "defaultModel": "glm-5.3",
@@ -29,7 +29,7 @@
   },
   "lastChangelogVersion": "1.0.0",
   "hideThinkingBlock": true,
-  "theme": "midnight-ocean",
+  "theme": "system",
   "subagents": {
     "agentOverrides": {
       "scout": {
