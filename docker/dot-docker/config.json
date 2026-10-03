@@ -6,8 +6,17 @@
 		"https://index.docker.io/v1/refresh-token": {}
 	},
 	"credsStore": "osxkeychain",
-	"currentContext": "lima-docker",
+	"currentContext": "desktop-linux",
 	"plugins": {
+		"-x-cli-hints": {
+			"enabled": "true"
+		},
+		"ai": {
+			"hooks": "build,buildx build,run,compose"
+		},
+		"compose": {
+			"hooks": "logs,compose logs,compose attach,compose up"
+		},
 		"debug": {
 			"hooks": "exec"
 		},
