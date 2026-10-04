@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.geek4good.bidirectional-sync</string>
+
+    <key>ProgramArguments</key>
+    <array>
+        <string>/Users/geek4good/.local/share/mise/installs/python/latest/bin/python3</string>
+        <string>/Users/geek4good/Projects/music-collection/bidirectional_sync.py</string>
+    </array>
+
+    <!-- Run every 30 minutes -->
+    <key>StartInterval</key>
+    <integer>1800</integer>
+
+    <!-- Also run when the beets database changes -->
+    <key>WatchPaths</key>
+    <array>
+        <string>/Users/geek4good/Music/Library/.beets.db</string>
+    </array>
+
+    <key>StandardOutPath</key>
+    <string>/Users/geek4good/Projects/music-collection/sync_launchd.log</string>
+    <key>StandardErrorPath</key>
+    <string>/Users/geek4good/Projects/music-collection/sync_launchd.log</string>
+
+    <key>RunAtLoad</key>
+    <false/>
+    <key>ProcessType</key>
+    <string>Background</string>
+</dict>
+</plist>

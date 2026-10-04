@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.geek4good.music-to-beets-sync</string>
+
+    <key>ProgramArguments</key>
+    <array>
+        <string>/Users/geek4good/.local/share/mise/installs/python/latest/bin/python3</string>
+        <string>/Users/geek4good/Projects/music-collection/music_to_beets.py</string>
+        <string>--hours</string>
+        <string>5</string>
+    </array>
+
+    <!-- Run every 4 hours -->
+    <key>StartInterval</key>
+    <integer>14400</integer>
+
+    <key>StandardOutPath</key>
+    <string>/Users/geek4good/Projects/music-collection/reverse_sync_launchd.log</string>
+    <key>StandardErrorPath</key>
+    <string>/Users/geek4good/Projects/music-collection/reverse_sync_launchd.log</string>
+
+    <key>RunAtLoad</key>
+    <false/>
+    <key>ProcessType</key>
+    <string>Background</string>
+</dict>
+</plist>
