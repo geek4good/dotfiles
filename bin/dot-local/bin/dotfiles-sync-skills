@@ -84,10 +84,6 @@ ingest_skills() {
     TOTAL_INGESTED=$((TOTAL_INGESTED + ingested))
 }
 
-ingest_skills "$HOME/.claude/skills" \
-    "$DOTFILES_DIR/claude/dot-claude/skills" \
-    "Claude"
-
 ingest_skills "$HOME/.pi/agent/skills" \
     "$DOTFILES_DIR/pi/dot-pi/agent/skills" \
     "Pi"

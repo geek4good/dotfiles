@@ -44,7 +44,6 @@ stow -t ~ <package>
 ## Key directories
 
 - **bash/** — shell config (`.bashrc`, `.bash_profile`)
-- **claude/** — Claude Code config → `~/.claude/` (skills) and `~/.config/claude-plugins/` (local plugin marketplace)
 - **fnox/** — fnox secrets config → `~/.config/fnox/`
 - **gh/** — GitHub CLI config → `~/.config/gh/`
 - **git/** — git config and ignores → `~/.config/git/`
@@ -52,8 +51,7 @@ stow -t ~ <package>
 - **launchagents/** — user LaunchAgents → `~/Library/LaunchAgents/` (e.g. `pr-worktree-clean`, which removes merged-PR worktrees and closes their Herdr workspaces every 15 min)
 - **mise/** — dev tool version management → `~/.config/mise/`
 - **nvim/** — Neovim (LazyVim) config → `~/.config/nvim/`
-- **opencode/** — OpenCode AI editor config → `~/.config/opencode/`
-- **pi/** — pi coding agent config → `~/.pi/agent/`
+- **pi/** — pi coding agent config → `~/.pi/agent/` (skills live here too, see below)
 - **secrets/** — age-encrypted secrets (never plaintext in git)
 - **ssh/** — SSH client config → `~/.ssh/config`
 
@@ -64,36 +62,18 @@ stow -t ~ <package>
 - **gnupg/** — GPG keys and ownertrust
 - **ssh/dot-ssh/** — SSH config only; keys must never be committed
 
-## Shared skills and Claude Code plugins (`claude/`)
+## Pi skills (`pi/`)
 
-Claude Code is the primary consumer and source of truth. Shared skills live at `claude/dot-claude/skills/<name>/SKILL.md` and stow into `~/.claude/skills/`. A local plugin marketplace at `claude/dot-config/claude-plugins/` stows into `~/.config/claude-plugins/` and hosts `ghpm` and `ghpmplus`.
+Pi is the primary coding agent. Its skills live at `pi/dot-pi/agent/skills/<name>/SKILL.md` and stow into `~/.pi/agent/skills/`.
 
 ### Managing skills
 
-Skills are managed with the [`skills` npm CLI](https://github.com/vercel-labs/skills):
-
-```
-npx skills add <source> -a claude-code -g    # install a skill
-npx skills update -g                          # update all skills
-npx skills remove <name> -g                   # remove a skill
-```
-
-After any add/update/remove, run `./sync` from the repo root. `sync` calls `dotfiles-sync-skills`, which ingests anything new in `~/.claude/skills/` into `claude/dot-claude/skills/`, then stows everything back so the repo is the version-controlled source of truth.
-
-### Plugins (ghpm, ghpmplus)
-
-The local marketplace at `claude/dot-config/claude-plugins/` has a `.claude-plugin/marketplace.json` listing `ghpm` and `ghpmplus`. Each plugin is a subdirectory with `.claude-plugin/plugin.json`, `commands/`, `agents/`, and (for ghpm) `skills/`. One-time registration per machine inside Claude Code:
-
-```
-/plugin marketplace add ~/.config/claude-plugins
-/plugin install ghpm@dotfiles-local ghpmplus@dotfiles-local
-```
+Install a skill into `~/.pi/agent/skills/` — manually or via the [`skills` npm CLI](https://github.com/vercel-labs/skills) — then run `./sync` from the repo root. `sync` calls `dotfiles-sync-skills`, which ingests anything new in `~/.pi/agent/skills/` into `pi/dot-pi/agent/skills/`, then stows everything back so the repo is the version-controlled source of truth.
 
 ### Rules
 
-- **Shared skills** live only under `claude/dot-claude/skills/`. Never duplicate into agent-specific directories.
-- **Agent-specific configs** (model settings, role definitions, themes) stay in their own stow packages (`pi/`, `opencode/`).
-- **Plugin commands and sub-agents** belong inside their plugin directory under `claude/dot-config/claude-plugins/`, not in `claude/dot-claude/commands/` or `claude/dot-claude/agents/`, so they stay namespaced (`/ghpm:create-prd` rather than `/create-prd`).
+- **Pi skills** live only under `pi/dot-pi/agent/skills/` — the single source of truth.
+- **`~/.agents/skills/`** is a shared, externally managed location installed directly by the `skills` CLI. Pi loads it too, but it is not repo-managed: never copy skills between the two locations.
 
 ## Git conventions
 
@@ -109,4 +89,4 @@ The local marketplace at `claude/dot-config/claude-plugins/` has a `.claude-plug
 - Don't create files at the repo root unless they're repo-level config (`.gitignore`, `.stow-local-ignore`, `README.md`, this file)
 - Don't add stow packages that don't follow the `dot-` naming convention
 - Don't touch `secrets/encrypted/*.age` files unless explicitly asked
-- Don't duplicate shared skills into agent-specific directories — `claude/dot-claude/skills/` is the single source of truth
+- Don't duplicate skills between `pi/dot-pi/agent/skills/` and `~/.agents/skills/` — the former is repo-managed, the latter is externally managed by the `skills` CLI

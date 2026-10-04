@@ -156,12 +156,6 @@ Pi has two complementary web capabilities — they serve different purposes and 
 
 **Why both**: pi-web-access is "search and read" (fast, structured, citation-backed). Lightpanda is "browse and interact" (dynamic pages, forms, visual inspection).
 
-### Claude Code
-
-Config: `claude/dot-claude/` (stowed to `~/.claude/`).
-
-Shared skills live at `claude/dot-claude/skills/`. Plugin marketplace at `claude/dot-config/claude-plugins/`.
-
 ---
 
 ## Terminal (Ghostty)

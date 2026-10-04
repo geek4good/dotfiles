@@ -64,7 +64,6 @@ brew "oci-cli"
 
 # AI tools
 brew "ollama"
-brew "opencode"
 brew "gemini-cli"
 npm "@earendil-works/pi-coding-agent"
 
