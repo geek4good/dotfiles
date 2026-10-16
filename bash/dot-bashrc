@@ -9,10 +9,12 @@ export LESS="-FRX"
 export HOMEBREW_NO_ENV_HINTS="1"
 umask 022
 
-# Start zmx if not already inside a session
-if command -v zmx &>/dev/null && [[ -z $ZMX_SESSION ]]; then
-  exec zmx
-fi
+# zmx autostart — disabled
+# zmx is still available via `zmx attach` (`za` / cmd+k are fish-side).
+# Re-enable by uncommenting the block below.
+# if command -v zmx &>/dev/null && [[ -z $ZMX_SESSION ]]; then
+#   exec zmx
+# fi
 
 # Prompt — green ❯ on success, red ❯ on failure
 PS1='\[\e[$(( $? ? 35 : 36 ))m\]❯\[\e[0m\] '
