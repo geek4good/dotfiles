@@ -53,8 +53,12 @@ keybind = performable:ctrl+h=goto_split:left
 keybind = performable:ctrl+j=goto_split:down
 keybind = performable:ctrl+k=goto_split:up
 keybind = performable:ctrl+l=goto_split:right
-# ctrl+l is bound to goto_split:right, so ctrl+shift+l sends form feed (clear)
-keybind = ctrl+shift+l=text:\x0c
+# ctrl+l is bound to goto_split:right, so clear-screen moved to ctrl+shift+l.
+# No Ghostty mapping here: with the kitty keyboard protocol active (fish 4+
+# and nvim negotiate it), Ghostty sends ctrl+shift+l as a distinct CSI-u
+# sequence. Consumers: fish binds \e[108;6u = clear-screen; Herdr binds the
+# chord to send ctrl+l to the focused pane. Legacy (non-kitty) apps still
+# receive plain \x0c.
 
 # ─── Tabs ────────────────────────────────────────────────────────────────────
 # Defaults + ctrl+space prefix chords + direct shortcuts

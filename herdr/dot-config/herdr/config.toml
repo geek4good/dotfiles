@@ -98,10 +98,17 @@ edit_scrollback = "prefix+e"
 new_worktree = "prefix+shift+g"
 
 # ─── Clear screen ─────────────────────────────────────────────────────────
-# prefix+shift+l (ctrl+space, then L) sends ctrl+l (clear) to the focused pane
-# via send-keys, bypassing Herdr's ctrl+l=focus_pane_right interception.
-# Single-chord ctrl+shift+l is unusable: Ghostty converts it to \x0c before
-# Herdr sees it, and Herdr reads \x0c as ctrl+l (focus_pane_right).
+# ctrl+shift+l sends ctrl+l (clear) to the focused pane via send-keys,
+# bypassing Herdr's ctrl+l=focus_pane_right interception. Requires the kitty
+# keyboard protocol on the Ghostty<->Herdr hop (active whenever the focused
+# pane app — fish 4+, nvim — negotiates it); on legacy input the chord
+# collapses to \x0c and reads as ctrl+l (focus_pane_right), as before.
+[[keys.command]]
+key = "ctrl+shift+l"
+type = "shell"
+command = "herdr pane send-keys \"$HERDR_ACTIVE_PANE_ID\" ctrl+l"
+
+# prefix+shift+l (ctrl+space, then L) is the protocol-independent fallback.
 [[keys.command]]
 key = "prefix+shift+l"
 type = "shell"

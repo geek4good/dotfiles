@@ -169,7 +169,7 @@ Config: `ghostty/dot-config/ghostty/config`.
 | Create split left/down/up/right | `ctrl+space` → `h/j/k/l` | Leader prefix |
 | Zoom split | `ctrl+space` → `z` | Leader prefix |
 | Navigate split left/down/up/right | `ctrl+h/j/k/l` | Consumes ctrl+h (backspace), ctrl+l (clear screen) |
-| Clear screen (remap) | `ctrl+shift+l` | Replaces native ctrl+l |
+| Clear screen (remap) | `ctrl+shift+l` | Replaces native ctrl+l; works in Herdr too |
 | Previous/next tab | `ctrl+alt+h/l` | vim-style |
 | Tab 1–9 | `cmd+1–9` | Native Ghostty |
 | Session picker (zmx) | `cmd+k` | Sends escape sequence to fish |
