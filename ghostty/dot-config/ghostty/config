@@ -1,5 +1,9 @@
-# Font
-font-size = 16
+# Font (was: font-size=16 here, shadowed by AppSupport config's 17)
+font-family = "Iosevka NF"
+font-size = 17
+
+# Selection
+copy-on-select = clipboard
 
 # no-clown-fiesta color scheme (ported from iTerm2)
 background = #151515
@@ -110,6 +114,10 @@ keybind = cmd+z=toggle_split_zoom
 # ─── Shell ───────────────────────────────────────────────────────────────────
 # right alt+shift+backspace → fish backward-kill-bigword (left option = text)
 keybind = alt+shift+backspace=text:\x1b[127;4u
+
+# ─── Global (system-wide) ─────────────────────────────────────────────────────
+keybind = global:ctrl+grave_accent=toggle_visibility
+keybind = global:ctrl+shift+grave_accent=toggle_quick_terminal
 
 # ─── zmx session picker ──────────────────────────────────────────────────────
 keybind = cmd+k=text:\x1b[107;9u
