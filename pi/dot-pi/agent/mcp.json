@@ -6,13 +6,11 @@
   "mcpServers": {
     "lightpanda": {
       "command": "uc",
-      "args": ["exec", "-T", "lightpanda", "lightpanda", "mcp"],
-      "lifecycle": "lazy"
+      "args": ["exec", "-T", "lightpanda", "lightpanda", "mcp"]
     },
     "chrome-devtools": {
       "command": "bunx",
-      "args": ["chrome-devtools-mcp@latest"],
-      "lifecycle": "lazy"
+      "args": ["chrome-devtools-mcp@latest"]
     }
   }
 }
