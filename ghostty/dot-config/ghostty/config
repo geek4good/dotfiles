@@ -34,6 +34,18 @@ window-padding-x = 8
 window-padding-y = 8
 macos-titlebar-style = tabs
 
+# ─── macOS Option key ────────────────────────────────────────────────────────
+# Left Option = native macOS text input: dead keys (option+u/e/` then vowel
+# → ä é è …), option+s → ß — like every other macOS app.
+# Right Option = Alt for terminal chords: fish alt-D kill-bigword,
+# alt+shift+backspace, LazyVim <A-*> maps.
+# ctrl+alt+* (Herdr tabs/workspaces) composes no text and works with either
+# Option key. Set explicitly: the unset default is layout-dependent
+# (true on U.S./U.S.-International layouts, false on ABC).
+# NOTE: ~/Library/Application Support/com.mitchellh.ghostty/config loads
+# AFTER this file and overrides it — keep that file empty.
+macos-option-as-alt = right
+
 # ─── Splits ──────────────────────────────────────────────────────────────────
 # Defaults + ctrl+space prefix chords
 keybind = cmd+d=new_split:right
@@ -96,7 +108,7 @@ keybind = ctrl+space>nine=goto_tab:9
 keybind = cmd+z=toggle_split_zoom
 
 # ─── Shell ───────────────────────────────────────────────────────────────────
-# alt+shift+backspace → fish backward-kill-bigword
+# right alt+shift+backspace → fish backward-kill-bigword (left option = text)
 keybind = alt+shift+backspace=text:\x1b[127;4u
 
 # ─── zmx session picker ──────────────────────────────────────────────────────
