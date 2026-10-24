@@ -107,6 +107,7 @@ abbr -a zr 'zmx run'
 abbr -a auto 'npx autoskills'
 abbr -a ash "autossh -M 0 -q"
 abbr -a cf 'v ~/.config/fish/config.fish'
+abbr -a p 'pi update --all && ~/.pi/agent/post-update.sh && pi'
 abbr -a psql-icecast 'ssh -t ubuntu@severance \'docker exec -it $(docker ps -q --filter "name=severance-db") psql -U postgres -d icecast_stats\''
 abbr -a pua 'pi update --all && ~/.pi/agent/post-update.sh'
 abbr -a rf 'source ~/.config/fish/config.fish'
