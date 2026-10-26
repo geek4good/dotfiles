@@ -1,0 +1,187 @@
+# Dotfiles deployment — one group per package (former GNU Stow packages).
+# Apply: mise -C ~/Projects/dotfiles dot apply   (or ./sync)
+# Per-machine selection: [bootstrap] dotfile_groups in ~/.config/mise/config.local.toml
+#
+# Default excludes mirror the old .stow-local-ignore (depth-independent:
+# .gitignore/README.md were never deployed by stow either).
+
+[settings]
+experimental = true
+dotfiles.root = "~/Projects/dotfiles"
+dotfiles.relative_symlinks = true
+
+[dotfile_groups.aerospace]
+root = "aerospace"
+dot_prefix = true
+exclude = [".DS_Store", ".git", ".gitignore", "README.md"]
+
+[dotfile_groups.aws]
+root = "aws"
+dot_prefix = true
+exclude = [".DS_Store", ".git", ".gitignore", "README.md"]
+
+[dotfile_groups.bash]
+root = "bash"
+dot_prefix = true
+exclude = [".DS_Store", ".git", ".gitignore", "README.md"]
+
+[dotfile_groups.beets]
+root = "beets"
+dot_prefix = true
+exclude = [".DS_Store", ".git", ".gitignore", "README.md"]
+
+[dotfile_groups.bin]
+root = "bin"
+dot_prefix = true
+exclude = [".DS_Store", ".git", ".gitignore", "README.md"]
+
+[dotfile_groups.cloudflared]
+root = "cloudflared"
+dot_prefix = true
+exclude = [".DS_Store", ".git", ".gitignore", "README.md"]
+
+[dotfile_groups.configstore]
+root = "configstore"
+dot_prefix = true
+exclude = [".DS_Store", ".git", ".gitignore", "README.md"]
+
+[dotfile_groups.darktable]
+root = "darktable"
+dot_prefix = true
+exclude = [".DS_Store", ".git", ".gitignore", "README.md"]
+
+[dotfile_groups.docker]
+root = "docker"
+dot_prefix = true
+exclude = [".DS_Store", ".git", ".gitignore", "README.md", "config.json"]  # config.json: docker rewrites it in place; live file wins
+
+[dotfile_groups.exercism]
+root = "exercism"
+dot_prefix = true
+exclude = [".DS_Store", ".git", ".gitignore", "README.md"]
+
+[dotfile_groups.fish]
+root = "fish"
+dot_prefix = true
+exclude = [".DS_Store", ".git", ".gitignore", "README.md"]
+
+[dotfile_groups.fnox]
+root = "fnox"
+dot_prefix = true
+exclude = [".DS_Store", ".git", ".gitignore", "README.md"]
+
+[dotfile_groups.gh]
+root = "gh"
+dot_prefix = true
+exclude = [".DS_Store", ".git", ".gitignore", "README.md"]
+
+[dotfile_groups.ghostty]
+root = "ghostty"
+dot_prefix = true
+exclude = [".DS_Store", ".git", ".gitignore", "README.md"]
+
+[dotfile_groups.git]
+root = "git"
+dot_prefix = true
+exclude = [".DS_Store", ".git", ".gitignore", "README.md"]
+
+[dotfile_groups.gnupg]
+root = "gnupg"
+dot_prefix = true
+exclude = [".DS_Store", ".git", ".gitignore", "README.md"]
+
+[dotfile_groups.herdr]
+root = "herdr"
+dot_prefix = true
+exclude = [".DS_Store", ".git", ".gitignore", "README.md"]
+
+[dotfile_groups.homebrew]
+root = "homebrew"
+dot_prefix = true
+exclude = [".DS_Store", ".git", ".gitignore", "README.md"]
+
+[dotfile_groups.karabiner]
+root = "karabiner"
+dot_prefix = true
+exclude = [".DS_Store", ".git", ".gitignore", "README.md"]
+
+[dotfile_groups.launchagents]
+root = "launchagents"
+dot_prefix = true
+exclude = [".DS_Store", ".git", ".gitignore", "README.md"]
+
+[dotfile_groups.lazygit]
+root = "lazygit"
+dot_prefix = true
+exclude = [".DS_Store", ".git", ".gitignore", "README.md"]
+
+[dotfile_groups.mcphub]
+root = "mcphub"
+dot_prefix = true
+exclude = [".DS_Store", ".git", ".gitignore", "README.md"]
+
+[dotfile_groups.mise]
+root = "mise"
+dot_prefix = true
+exclude = [".DS_Store", ".git", ".gitignore", "README.md"]
+
+[dotfile_groups.nushell]
+root = "nushell"
+dot_prefix = true
+exclude = [".DS_Store", ".git", ".gitignore", "README.md"]
+
+[dotfile_groups.nvim]
+root = "nvim"
+dot_prefix = true
+exclude = [".DS_Store", ".git", ".gitignore", "README.md"]
+
+[dotfile_groups.pi]
+root = "pi"
+dot_prefix = true
+exclude = [".DS_Store", ".git", ".gitignore", "README.md"]
+
+[dotfile_groups.ruby]
+root = "ruby"
+dot_prefix = true
+exclude = [".DS_Store", ".git", ".gitignore", "README.md"]
+
+[dotfile_groups.secrets]
+root = "secrets"
+dot_prefix = true
+exclude = [".DS_Store", ".git", ".gitignore", "README.md"]
+
+[dotfile_groups.ssh]
+root = "ssh"
+dot_prefix = true
+exclude = [".DS_Store", ".git", ".gitignore", "README.md"]
+
+[dotfile_groups.starship]
+root = "starship"
+dot_prefix = true
+exclude = [".DS_Store", ".git", ".gitignore", "README.md"]
+
+[dotfile_groups.superfile]
+root = "superfile"
+dot_prefix = true
+exclude = [".DS_Store", ".git", ".gitignore", "README.md"]
+
+[dotfile_groups.uncloud]
+root = "uncloud"
+dot_prefix = true
+exclude = [".DS_Store", ".git", ".gitignore", "README.md"]
+
+[dotfile_groups.zed]
+root = "zed"
+dot_prefix = true
+exclude = [".DS_Store", ".git", ".gitignore", "README.md", ".tmp*", "prompts"]  # .tmp*/prompts: stale junk never deployed by stow
+
+[dotfile_groups.zsh]
+root = "zsh"
+dot_prefix = true
+exclude = [".DS_Store", ".git", ".gitignore", "README.md"]
+
+# Runs around `mise dot apply` (and the dotfiles step of `mise bootstrap`).
+[bootstrap.hooks]
+# Re-apply Pi local customizations after deployment (parity with old ./sync)
+post-dotfiles = '[ -x "$HOME/.pi/agent/post-update.sh" ] && "$HOME/.pi/agent/post-update.sh" || true'
+
