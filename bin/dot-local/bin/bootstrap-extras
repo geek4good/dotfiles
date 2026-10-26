@@ -1,0 +1,44 @@
+#!/usr/bin/env bash
+# Per-machine provisioning that mise's declarative sections can't cover.
+# Runs as mise's `bootstrap` task (step 19 of `mise bootstrap`) — idempotent.
+set -euo pipefail
+
+DOTFILES_DIR="${DOTFILES_DIR:-$HOME/Projects/dotfiles}"
+
+# Generate age identity for fnox from the SSH key (ssh-to-age: [tools] entry)
+AGE_IDENTITY="$HOME/.config/fnox/age.txt"
+SSH_KEY="$HOME/.ssh/id_ed25519"
+if [ ! -f "$AGE_IDENTITY" ] && [ -f "$SSH_KEY" ]; then
+    echo "Generating age identity from SSH key..."
+    mkdir -p "$(dirname "$AGE_IDENTITY")"
+    ssh-to-age -private-key -i "$SSH_KEY" > "$AGE_IDENTITY"
+    chmod 600 "$AGE_IDENTITY"
+fi
+
+# Provision secrets via age (decryption key = SSH key)
+DECRYPT_KEY="$SSH_KEY"
+if [ -d "$DOTFILES_DIR/secrets/encrypted" ] && [ -f "$DECRYPT_KEY" ]; then
+    # GPG keys
+    age -d -i "$DECRYPT_KEY" "$DOTFILES_DIR/secrets/encrypted/gpg-private-keys.age" 2>/dev/null | gpg --import 2>/dev/null || true
+    age -d -i "$DECRYPT_KEY" "$DOTFILES_DIR/secrets/encrypted/gpg-ownertrust.age" 2>/dev/null | gpg --import-ownertrust 2>/dev/null || true
+
+    # Cloudflare tunnel credentials — decrypt to temp, replace only if it
+    # differs (mv is atomic and replaces even a read-only target)
+    if [ -f "$DOTFILES_DIR/secrets/encrypted/cloudflared-creds.age" ]; then
+        mkdir -p "$HOME/.cloudflared"
+        CREDS="$HOME/.cloudflared/99877567-2599-4a31-a39d-cc2564eb9dad.json"
+        TMP=$(mktemp)
+        if age -d -i "$DECRYPT_KEY" "$DOTFILES_DIR/secrets/encrypted/cloudflared-creds.age" > "$TMP" 2>/dev/null; then
+            if [ ! -f "$CREDS" ] || ! cmp -s "$TMP" "$CREDS"; then
+                mv "$TMP" "$CREDS"
+            else
+                rm -f "$TMP"
+            fi
+            chmod 600 "$CREDS" 2>/dev/null || true
+        else
+            rm -f "$TMP"
+        fi
+    fi
+fi
+
+echo "bootstrap-extras: done"

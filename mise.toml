@@ -385,3 +385,28 @@ post-dotfiles = '[ -x "$HOME/.pi/agent/post-update.sh" ] && "$HOME/.pi/agent/pos
 "brew-cask:font-oswald" = "latest"
 "brew-cask:font-symbols-only-nerd-font" = "latest"
 "brew-cask:font-zed-mono-nerd-font" = "latest"
+
+# ─── Machine bootstrap ─────────────────────────────────────────────────────
+# Fresh machine: install mise (mise.jdx.dev), clone this repo, then:
+#   cd ~/Projects/dotfiles && mise trust && mise bootstrap
+# Daily/unattended runs: add --skip-dirty (this repo is often intentionally
+# dirty — drift lands here through symlinks; see ./sync drift report).
+
+[bootstrap.repos]
+"~/Projects/dotfiles" = { url = "git@github.com:geek4good/dotfiles.git", ref = "main" }
+
+# Touch ID (pam_tid + pam_reattach, works inside tmux/zmx too). Root-owned:
+# needs an interactive terminal once; unattended runs report it as follow-up.
+# (First apply drops the cosmetic Apple template comment — no functional
+# change to the two auth lines below.)
+[bootstrap.files."/etc/pam.d/sudo_local"]
+os = "macos"
+mode = "0644"
+content = """
+auth       optional       pam_reattach.so
+auth       sufficient     pam_tid.so
+"""
+
+# Secrets/identity provisioning (age identity, GPG import, cloudflared creds)
+[tasks.bootstrap]
+run = "{{ config_root }}/bin/dot-local/bin/bootstrap-extras"
