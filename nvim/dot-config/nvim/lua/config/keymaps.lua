@@ -7,12 +7,6 @@
 -- vim.keymap.del("n", "<leader>gs")
 vim.keymap.set("n", "<leader>fs", "<cmd>write<CR>", { desc = "Save File" })
 
--- German ß via dead-key path: on home-row-mod keyboards option+s is
--- unreachable (holding s IS option), but option+u (→ ¨) then s works.
--- macOS can't compose ¨+s, so it emits the spacing accent "¨s" — map it.
--- Native option+s → ß is untouched. "!" = insert + command-line modes.
-vim.keymap.set("!", "¨s", "ß")
-
 -- Window navigation C-h/j/k/l is now handled by vim-herdr-navigation, which moves
 -- between nvim splits AND hands off to Herdr at split edges. The plain-wincmd maps
 -- below used to override that handoff (they load on VeryLazy, after the plugin), so

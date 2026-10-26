@@ -170,8 +170,6 @@ Config: `ghostty/dot-config/ghostty/config`.
 | Zoom split | `ctrl+space` → `z` | Leader prefix |
 | Navigate split left/down/up/right | `ctrl+h/j/k/l` | Consumes ctrl+h (backspace), ctrl+l (clear screen) |
 | Clear screen (remap) | `ctrl+shift+l` | Replaces native ctrl+l; works in Herdr too |
-| Umlauts/accents (left option) | `option+u/e/\`` then vowel | macOS dead keys: ä é è … (`option+s` → ß) |
-| Terminal alt-chords (right option) | e.g. `option+d` | kill-bigword in fish; right option = Alt |
 | Previous/next tab | `ctrl+alt+h/l` | vim-style |
 | Tab 1–9 | `cmd+1–9` | Native Ghostty |
 | Session picker (zmx) | `cmd+k` | Sends escape sequence to fish |
