@@ -95,11 +95,6 @@ root = "herdr"
 dot_prefix = true
 exclude = [".DS_Store", ".git", ".gitignore", "README.md"]
 
-[dotfile_groups.homebrew]
-root = "homebrew"
-dot_prefix = true
-exclude = [".DS_Store", ".git", ".gitignore", "README.md"]
-
 [dotfile_groups.karabiner]
 root = "karabiner"
 dot_prefix = true
@@ -185,3 +180,208 @@ exclude = [".DS_Store", ".git", ".gitignore", "README.md"]
 # Re-apply Pi local customizations after deployment (parity with old ./sync)
 post-dotfiles = '[ -x "$HOME/.pi/agent/post-update.sh" ] && "$HOME/.pi/agent/post-update.sh" || true'
 
+
+# ─── System packages (former Brewfile) ────────────────────────────────────
+# Managed by mise; applied via: mise bootstrap packages apply
+
+[bootstrap.packages]
+# (taps auto-resolve to github.com/<owner>/homebrew-<tap>.git)
+# (taps auto-resolve to github.com/<owner>/homebrew-<tap>.git)
+
+# Core system tools
+# stow kept as rollback safety during the stow→mise transition; remove when settled
+"brew:stow" = "latest"
+"brew:git" = "latest"
+"brew:nushell" = "latest"
+"brew:fish" = "latest"
+"brew:gnupg" = "latest"
+# mise: self-managed via official installer (mise.jdx.dev)
+"brew:pam-reattach" = "latest"
+"brew:bash-completion@2" = "latest"
+
+# Editors
+"brew:neovim" = "latest"
+"brew:neovide" = "latest"
+
+# Prompt
+"brew:starship" = "latest"
+
+# Search & navigation
+"brew:fzf" = "latest"
+"brew:zoxide" = "latest"
+"brew:ripgrep" = "latest"
+"brew:fd" = "latest"
+
+# CLI utilities
+"brew:bat" = "latest"
+"brew:jq" = "latest"
+"brew:eza" = "latest"
+"brew:sd" = "latest"
+"brew:superfile" = "latest"
+"brew:yt-dlp" = "latest"
+"brew:trurl" = "latest"
+"brew:pup" = "latest"
+"brew:watch" = "latest"
+"brew:rlwrap" = "latest"
+"brew:worktrunk" = "latest"
+"brew:figlet" = "latest"
+"brew:glow" = "latest"
+"brew:gum" = "latest"
+"brew:toilet" = "latest"
+"brew:vhs" = "latest"
+"brew:w3m" = "latest"
+"brew:lf" = "latest"
+"brew:yazi" = "latest"
+"brew:sevenzip" = "latest"
+"brew:herdr" = "latest"
+
+# Git & dev tools
+"brew:gh" = "latest"
+"brew:lazygit" = "latest"
+"brew:lazydocker" = "latest"
+"brew:git-filter-repo" = "latest"
+"brew:fnox" = "latest"
+
+# Cloud & infra
+"brew:awscli" = "latest"
+"brew:aws-sam-cli" = "latest"
+"brew:cloudflared" = "latest"
+"brew:psviderski/tap/uncloud" = "latest"
+"brew:pocketbase" = "latest"
+"brew:oci-cli" = "latest"
+
+# AI tools
+"brew:ollama" = "latest"
+"brew:gemini-cli" = "latest"
+# → [tools]: @earendil-works/pi-coding-agent
+
+# Containers
+"brew:docker" = "latest"
+"brew:docker-buildx" = "latest"
+"brew:docker-compose" = "latest"
+"brew:docker-credential-helper" = "latest"
+"brew:lima" = "latest"
+"brew:qemu" = "latest"
+
+# Build tools & libraries
+"brew:cmake" = "latest"
+"brew:readline" = "latest"
+"brew:automake" = "latest"
+"brew:openssl@3" = "latest"
+"brew:libyaml" = "latest"
+"brew:bison" = "latest"
+"brew:coreutils" = "latest"
+"brew:gcc" = "latest"
+"brew:gdbm" = "latest"
+"brew:libffi" = "latest"
+"brew:libgccjit" = "latest"
+
+# Networking & security
+"brew:curl" = "latest"
+"brew:wget" = "latest"
+"brew:nmap" = "latest"
+"brew:telnet" = "latest"
+"brew:wireguard-tools" = "latest"
+"brew:certbot" = "latest"
+"brew:unbound" = "latest"
+"brew:gnutls" = "latest"
+"brew:pinentry-mac" = "latest"
+"brew:age" = "latest"
+"brew:autossh" = "latest"
+"brew:mole" = "latest"
+
+# Media
+"brew:ffmpeg" = "latest"
+"brew:ffmpeg-full" = "latest"
+"brew:flac" = "latest"
+"brew:faac" = "latest"
+"brew:fdk-aac" = "latest"
+"brew:lame" = "latest"
+"brew:sox" = "latest"
+"brew:vorbis-tools" = "latest"
+"brew:opus-tools" = "latest"
+"brew:imagemagick" = "latest"
+"brew:imagemagick-full" = "latest"
+"brew:chafa" = "latest"
+"brew:viu" = "latest"
+"brew:beets" = "latest"
+"brew:bento4" = "latest"
+"brew:chromaprint" = "latest"
+"brew:gpac" = "latest"
+"brew:mp3gain" = "latest"
+
+# Graphics libraries
+"brew:glib" = "latest"
+"brew:gdk-pixbuf" = "latest"
+"brew:harfbuzz" = "latest"
+"brew:pango" = "latest"
+"brew:librsvg" = "latest"
+"brew:gobject-introspection" = "latest"
+"brew:shared-mime-info" = "latest"
+"brew:ghostscript" = "latest"
+"brew:poppler" = "latest"
+"brew:potrace" = "latest"
+"brew:resvg" = "latest"
+"brew:tesseract-lang" = "latest"
+"brew:vips" = "latest"
+
+# Languages & package managers
+"brew:mercurial" = "latest"
+"brew:ispell" = "latest"
+"brew:pipx" = "latest"
+"brew:elm" = "latest"
+# → go runtime already in [tools]
+# → go runtime already in [tools]
+
+# Data tools
+"brew:mdbtools" = "latest"
+"brew:pgloader" = "latest"
+
+# Misc
+"brew:zplug" = "latest"
+"brew:neurosnap/tap/zmx" = "latest"
+# → [tools]: vtracer
+
+# Casks
+"brew-cask:1password" = "latest"
+"brew-cask:1password-cli" = "latest"
+"brew-cask:arc" = "latest"
+"brew-cask:balenaetcher" = "latest"
+"brew-cask:dash" = "latest"
+"brew-cask:discord" = "latest"
+"brew-cask:firefox" = "latest"
+"brew-cask:fujitsu-scansnap-home" = "latest"
+"brew-cask:ghostty" = "latest"
+"brew-cask:google-chrome" = "latest"
+"brew-cask:gpg-suite" = "latest"
+"brew-cask:handbrake-app" = "latest"
+"brew-cask:handy" = "latest"
+"brew-cask:iina" = "latest"
+"brew-cask:inkscape" = "latest"
+"brew-cask:linphone" = "latest"
+"brew-cask:microsoft-auto-update" = "latest"
+"brew-cask:microsoft-teams" = "latest"
+"brew-cask:mp3gain-express" = "latest"
+"brew-cask:obs" = "latest"
+"brew-cask:plex-media-server" = "latest"
+"brew-cask:raspberry-pi-imager" = "latest"
+"brew-cask:repobar" = "latest"
+"brew-cask:slack" = "latest"
+"brew-cask:spotify" = "latest"
+"brew-cask:tailscale-app" = "latest"
+"brew-cask:the-unarchiver" = "latest"
+"brew-cask:transmission" = "latest"
+"brew-cask:zed" = "latest"
+"brew-cask:zoom" = "latest"
+
+# Fonts
+"brew-cask:font-dejavu-sans-mono-for-powerline" = "latest"
+"brew-cask:font-fira-code-nerd-font" = "latest"
+"brew-cask:font-fira-mono" = "latest"
+"brew-cask:font-fira-sans" = "latest"
+"brew-cask:font-inter" = "latest"
+"brew-cask:font-iosevka-aile" = "latest"
+"brew-cask:font-iosevka-nerd-font" = "latest"
+"brew-cask:font-oswald" = "latest"
+"brew-cask:font-symbols-only-nerd-font" = "latest"
+"brew-cask:font-zed-mono-nerd-font" = "latest"

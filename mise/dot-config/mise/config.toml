@@ -41,5 +41,11 @@ tree-sitter = "latest"
 "npm:wrangler" = "3.114.17"
 "npm:yaml-language-server" = "1.23.0"
 
+# CLI extras (npm/go/cargo lines from the former Brewfile; ssh-to-age was
+# previously an undeclared ad-hoc install — needed by the bootstrap task)
+"npm:@earendil-works/pi-coding-agent" = "latest"
+"cargo:vtracer" = "latest"
+"go:github.com/Mic92/ssh-to-age/cmd/ssh-to-age" = "latest"
+
 [settings]
 experimental = true
