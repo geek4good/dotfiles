@@ -3,54 +3,34 @@ set -euo pipefail
 
 export DOTFILES_DIR="$(cd "$(dirname "$0")" && pwd)"
 
-# Install stow if needed
-if ! command -v stow &>/dev/null; then
-    echo "Installing stow..."
-    brew install stow
+# mise is the deployment engine — groups are declared in mise.toml.
+if ! command -v mise &>/dev/null; then
+    echo "mise is required but not installed." >&2
+    echo "Install it first: https://mise.jdx.dev/installation.html" >&2
+    exit 1
 fi
 
 cd "$DOTFILES_DIR"
 
 # Snapshot the worktree so we can report exactly what this run changed.
-# sync deliberately NEVER discards repo state: home-side drift pulled in by
-# stow --adopt is surfaced in a report below for review, not wiped by a
-# `git checkout -- .` (which silently destroyed adopted improvements and
-# unrelated WIP in previous versions of this script).
+# sync deliberately NEVER discards repo state: edits that landed in the repo
+# through symlinks (or new files ingested below) are surfaced in a report for
+# review, not wiped.
 BEFORE=$(mktemp)
 AFTER=$(mktemp)
 trap 'rm -f "$BEFORE" "$AFTER"' EXIT
 git status --porcelain=v1 2>/dev/null | sort > "$BEFORE" || true
 
-# Ingest any skills installed via `npx skills ...` into the repo before stowing
+# Ingest any skills installed via `npx skills ...` into the repo before deploying
 "$DOTFILES_DIR/bin/dot-local/bin/dotfiles-sync-skills"
 
-# If packages specified, use those; otherwise stow all
-if [ $# -gt 0 ]; then
-    packages=("$@")
-else
-    packages=()
-    for dir in "$DOTFILES_DIR"/*/; do
-        packages+=("$(basename "$dir")")
-    done
-fi
-
-FAILED_PKGS=""
-for pkg in "${packages[@]}"; do
-    if [ ! -d "$pkg" ]; then
-        echo "Package '$pkg' not found, skipping."
-        continue
-    fi
-
-    echo "Stowing $pkg..."
-    if ! stow --dotfiles --no-folding --adopt --restow -t ~ "$pkg"; then
-        echo "⚠ Stowing '$pkg' failed (conflicts?) — continuing with remaining packages" >&2
-        FAILED_PKGS="$FAILED_PKGS $pkg"
-    fi
-done
+# Deploy all dotfile groups. The post-dotfiles hook (mise.toml) re-applies
+# Pi local customizations afterwards, as the stow-era script did.
+mise dot apply
 
 # ---- Drift report --------------------------------------------------------
 # Anything that changed in the worktree during this run and was not already
-# dirty before it. Adopted drift is kept in the worktree for you to review.
+# dirty before it. Kept in the worktree for you to review.
 git status --porcelain=v1 2>/dev/null | sort > "$AFTER" || true
 NEW_CHANGES=$(comm -13 "$BEFORE" "$AFTER" || true)
 
@@ -60,7 +40,7 @@ if [ -n "$NEW_CHANGES" ]; then
 
     if [ -n "$ADOPTED" ]; then
         echo ""
-        echo "⚠⚠ Home-side drift was adopted into the repo (kept, NOT discarded):"
+        echo "⚠⚠ Edits landed in the repo through symlinks (kept, NOT discarded):"
         printf '%s\n' "$ADOPTED" | sed 's/^/    /'
         echo ""
         echo "    review:   git diff"
@@ -73,16 +53,6 @@ if [ -n "$NEW_CHANGES" ]; then
         printf '%s\n' "$UNTRACKED" | sed 's/^/    /'
         echo ""
     fi
-fi
-
-# Re-apply Pi local customizations if present
-if [ -x "$HOME/.pi/agent/post-update.sh" ]; then
-    "$HOME/.pi/agent/post-update.sh"
-fi
-
-if [ -n "$FAILED_PKGS" ]; then
-    echo "✗ Sync finished with stow failures:$FAILED_PKGS" >&2
-    exit 1
 fi
 
 echo "Done!"
