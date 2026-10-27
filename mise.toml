@@ -409,6 +409,15 @@ auth       optional       pam_reattach.so
 auth       sufficient     pam_tid.so
 """
 
+# Remove merged-PR worktrees + close their Herdr workspaces every 15 min
+# (was com.geek4good.pr-worktree-clean.plist; label is now dev.mise.*)
+[bootstrap.macos.launchd.agents.pr-worktree-clean]
+program = "~/.local/bin/pr-worktree-clean"
+args = ["--quiet"]
+start_interval = 900
+stdout_path = "~/Library/Logs/pr-worktree-clean.log"
+stderr_path = "~/Library/Logs/pr-worktree-clean.log"
+
 # Secrets/identity provisioning (age identity, GPG import, cloudflared creds)
 [tasks.bootstrap]
 run = "{{ config_root }}/bin/dot-local/bin/bootstrap-extras"

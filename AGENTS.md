@@ -59,7 +59,7 @@ To deploy (skills ingestion + drift report included):
 - **fnox/** — fnox secrets config → `~/.config/fnox/`
 - **gh/** — GitHub CLI config → `~/.config/gh/`
 - **git/** — git config and ignores → `~/.config/git/`
-- **launchagents/** — user LaunchAgents → `~/Library/LaunchAgents/` (plain plists; mise's `[bootstrap.macos.launchd.agents]` is NOT used — it can't express `WatchPaths` and renames labels to `dev.mise.*`)
+- **launchagents/** — fallback for plist-only LaunchAgents → `~/Library/LaunchAgents/` (the `.disabled` pair; `WatchPaths`-style triggers and custom `com.geek4good.*` labels can't be expressed declaratively). Active agents are declared in `mise.toml` under `[bootstrap.macos.launchd.agents]` (labels become `dev.mise.*`)
 - **mise/dot-config/mise/config.toml** — global mise config (`[tools]`), deployed to `~/.config/mise/config.toml`
 - **secrets/** — age-encrypted secrets (never plaintext in git)
 - **ssh/** — SSH client config → `~/.ssh/config`
