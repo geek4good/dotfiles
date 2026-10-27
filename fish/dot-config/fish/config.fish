@@ -22,7 +22,10 @@ if command -q fnox
 end
 
 # mise
-mise activate fish | source
+# Explicit path: a bare `mise` lookup resolves against whatever PATH order
+# brew shellenv left behind (it prepends /opt/homebrew/bin), which broke
+# activation when the brew formula was removed. mise lives in ~/.local/bin.
+~/.local/bin/mise activate fish | source
 
 # fzf
 fzf --fish | source

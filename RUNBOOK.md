@@ -35,6 +35,9 @@ relative symlinks, so cutover back is mechanical.
   `brew bundle cleanup`) — never run it blind.
 - mise itself lives in `~/.local/bin/mise` (official release tarball), updated via
   `mise self-update`. It is deliberately NOT a brew formula or `[tools]` entry.
+  Shell activation: fish uses the explicit path in `config.fish` (PATH-lookup
+  is fragile — brew shellenv prepends `/opt/homebrew/bin`); bash resolves via
+  PATH; zsh installs its own copy via zinit from GitHub Releases.
 
 ## Infrastructure — Oracle Cloud (Singapore, Always Free)
 
