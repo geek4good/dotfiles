@@ -238,7 +238,7 @@ post-dotfiles = '[ -x "$HOME/.pi/agent/post-update.sh" ] && "$HOME/.pi/agent/pos
 "brew:herdr" = "latest"
 
 # Git & dev tools
-"brew:gh" = "latest"
+# → gh lives in [tools] (mise wins on PATH; a brew copy would be shadowed)
 "brew:lazygit" = "latest"
 "brew:lazydocker" = "latest"
 "brew:git-filter-repo" = "latest"
@@ -330,9 +330,7 @@ post-dotfiles = '[ -x "$HOME/.pi/agent/post-update.sh" ] && "$HOME/.pi/agent/pos
 # Languages & package managers
 "brew:mercurial" = "latest"
 "brew:ispell" = "latest"
-"brew:pipx" = "latest"
-"brew:elm" = "latest"
-# → go runtime already in [tools]
+# → elm and pipx live in [tools] (mise wins on PATH)
 # → go runtime already in [tools]
 
 # Data tools
@@ -417,6 +415,17 @@ args = ["--quiet"]
 start_interval = 900
 stdout_path = "~/Library/Logs/pr-worktree-clean.log"
 stderr_path = "~/Library/Logs/pr-worktree-clean.log"
+
+# Cross-machine dotfiles convergence, every 15 min: commit local symlink
+# drift → fetch → rebase --autostash onto origin/main → push → re-apply.
+# Conflicts notify + skip; never destructive. (script: bin/dot-local/bin/
+# dotfiles-auto-sync, deployed to ~/.local/bin; log: ~/Library/Logs/
+# dotfiles-sync.log). This is what keeps every Mac on the same config.
+[bootstrap.macos.launchd.agents.dotfiles-sync]
+program = "~/.local/bin/dotfiles-auto-sync"
+start_interval = 900
+stdout_path = "~/Library/Logs/dotfiles-sync.log"
+stderr_path = "~/Library/Logs/dotfiles-sync.log"
 
 # Secrets/identity provisioning (age identity, GPG import, cloudflared creds)
 [tasks.bootstrap]

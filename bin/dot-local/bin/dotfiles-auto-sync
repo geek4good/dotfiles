@@ -1,0 +1,72 @@
+#!/usr/bin/env bash
+# dotfiles-auto-sync — cross-machine convergence loop for the dotfiles repo.
+#
+# Deployed to ~/.local/bin by the `bin` dotfile group; run every 15 min by
+# the dev.mise.dotfiles-sync launchd agent ([bootstrap.macos.launchd.agents]
+# in mise.toml). Interactive equivalent: ./sync (drift report, no git traffic).
+#
+# Flow: commit local drift (edits land in the worktree through symlinks) →
+# fetch → rebase --autostash onto origin/main → push → re-apply links.
+# Never destructive: any failure aborts the cycle; conflicts notify and skip.
+
+set -euo pipefail
+
+REPO="$HOME/Projects/dotfiles"
+BRANCH="main"
+LOG="$HOME/Library/Logs/dotfiles-sync.log"
+LOCK="$HOME/Library/Logs/.dotfiles-sync.lock"
+HOST="$(scutil --ComputerName 2>/dev/null || hostname -s 2>/dev/null || echo host)"
+MISE="$HOME/.local/bin/mise"
+
+log() { printf '%s [%s] %s\n' "$(date '+%F %T')" "$HOST" "$*" >>"$LOG"; }
+notify() { osascript -e "display notification \"$*\" with title \"dotfiles-sync\"" >/dev/null 2>&1 || true; }
+
+# launchd agents get a minimal PATH; git needs its helpers (gpg for commit
+# signing, ssh for the remote) which live in /opt/homebrew/bin et al.
+export PATH="/opt/homebrew/bin:/usr/local/bin:$PATH"
+
+# One run at a time (launchd won't overlap the agent itself; manual runs can).
+if ! mkdir "$LOCK" 2>/dev/null; then exit 0; fi
+trap 'rmdir "$LOCK" 2>/dev/null || true' EXIT
+trap 'log "unexpected failure near line $LINENO (exit $?)"' ERR
+
+cd "$REPO" || { log "FATAL: $REPO missing"; exit 1; }
+
+# 1. Commit local drift that landed through symlinks (gitignore filters junk).
+if [[ -n "$(git status --porcelain=v1 2>/dev/null)" ]]; then
+    git add -A
+    if ! git diff --cached --quiet; then
+        git commit -q \
+            -m "auto(sync): ${HOST} $(date '+%F %T')" \
+            -m "Unattended convergence commit (launchd dev.mise.dotfiles-sync)."
+        log "committed local drift"
+    fi
+fi
+
+# 2. Fetch (tolerate offline — local drift stays committed, retries next cycle).
+if ! git fetch -q origin "$BRANCH"; then
+    log "offline: fetch failed, skipping cycle"
+    exit 0
+fi
+
+# 3. Rebase local commits on remote (autostash shields uncommitted remainder).
+if ! git rebase -q --autostash "origin/$BRANCH" >>"$LOG" 2>&1; then
+    git rebase --abort 2>/dev/null || true
+    log "CONFLICT: rebase onto origin/$BRANCH failed — resolve manually; cycle skipped"
+    notify "sync conflict — needs manual resolution"
+    exit 1
+fi
+
+# 4. Publish if ahead.
+AHEAD="$(git rev-list --count "origin/$BRANCH..HEAD")"
+if [[ "$AHEAD" -gt 0 ]]; then
+    if ! git push -q origin "HEAD:$BRANCH" >>"$LOG" 2>&1; then
+        log "push failed (auth or race) — cycle skipped, will retry"
+        exit 1
+    fi
+    log "pushed $AHEAD commit(s)"
+fi
+
+# 5. Converge this machine (runs pre/post-dotfiles hooks, like ./sync).
+"$MISE" -C "$REPO" -q dot apply || { log "mise dot apply failed"; exit 1; }
+log "ok ($(git rev-parse --short HEAD) applied)"

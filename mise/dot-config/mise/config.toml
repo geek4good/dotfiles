@@ -1,11 +1,15 @@
 [tools]
-# Runtimes & languages (multi-version per project)
+# Runtimes & languages (multi-version per project).
+# Runtimes are RANGE-bound (auto-updates stay inside the range: python "3.14"
+# tracks 3.14.x, never 3.15). Leaf CLIs ride `latest`.
+# terraform is exact-pinned: its failure mode is the infra repo — bump deliberately.
+# Auto-updates: [settings] tool_update.global_auto below (see RUNBOOK).
 node = "26"
 bun = "latest"
-python = "latest"
-ruby = "latest"
-go = "latest"
-zig = "latest"
+python = "3.14"
+ruby = "4.0"
+go = "1.26"
+zig = "0.16"
 elm = "latest"
 
 # Package managers & tooling
@@ -13,7 +17,7 @@ pnpm = "latest"
 pipx = "latest"
 yarn = "latest"
 uv = "latest"
-terraform = "latest"
+terraform = "1.15.8"
 rust = "stable"
 gh = "latest"
 tree-sitter = "latest"
@@ -30,7 +34,6 @@ tree-sitter = "latest"
 "npm:hyphen" = "1.14.1"
 "npm:impeccable" = "2.3.2"
 "npm:intelephense" = "1.18.4"
-"npm:pocketbase" = "0.22.1"
 "npm:postcss" = "8.5.15"
 "npm:postcss-cli" = "11.0.1"
 "npm:prettier" = "3.8.3"
@@ -41,11 +44,17 @@ tree-sitter = "latest"
 "npm:wrangler" = "3.114.17"
 "npm:yaml-language-server" = "1.23.0"
 
-# CLI extras (npm/go/cargo lines from the former Brewfile; ssh-to-age was
-# previously an undeclared ad-hoc install — needed by the bootstrap task)
+# pi rides the regular tool auto-update (latest, unpinned) like every other
+# CLI. It must be SINGLE-homed: never also `npm i -g` it under the active node
+# install — that copy shadows the mise shim on PATH and goes stale.
 "npm:@earendil-works/pi-coding-agent" = "latest"
 "cargo:vtracer" = "latest"
 "go:github.com/Mic92/ssh-to-age/cmd/ssh-to-age" = "latest"
 
 [settings]
-experimental = true
+experimental = true  # required by cargo:/go: backends below
+# Keep every global tool current: shims/exec upgrade within the declared range
+# before running (background at prompt in activated shells); default
+# minimum_release_age (24h) gates supply-chain risk; old versions auto-prune
+# after upgrade.prune_after (24h). Exact pins (e.g. terraform) never auto-update.
+tool_update.global_auto = true

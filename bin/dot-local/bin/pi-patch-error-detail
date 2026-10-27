@@ -55,6 +55,9 @@ function findPkgDir() {
     "/usr/local/lib/node_modules",
   ];
   for (const root of roots) {
+    // mise npm-backend tool install (npm:@earendil-works/pi-coding-agent = …)
+    const npmTool = join(root, "npm-earendil-works-pi-coding-agent", "latest", "node_modules", "@earendil-works", "pi-coding-agent");
+    if (existsSync(npmTool)) return npmTool;
     for (const nodeDir of [join(root, "node"), root]) {
       const probe = join(nodeDir, "lib", "node_modules", "@earendil-works", "pi-coding-agent");
       if (existsSync(probe)) return probe;
