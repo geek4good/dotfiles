@@ -177,6 +177,8 @@ exclude = [".DS_Store", ".git", ".gitignore", "README.md"]
 
 # Runs around `mise dot apply` (and the dotfiles step of `mise bootstrap`).
 [bootstrap.hooks]
+# Ingest skills installed via `npx skills ...` into the repo before deploying
+pre-dotfiles = "{{ config_root }}/bin/dot-local/bin/dotfiles-sync-skills"
 # Re-apply Pi local customizations after deployment (parity with old ./sync)
 post-dotfiles = '[ -x "$HOME/.pi/agent/post-update.sh" ] && "$HOME/.pi/agent/post-update.sh" || true'
 
