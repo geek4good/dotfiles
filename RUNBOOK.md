@@ -13,6 +13,8 @@ the repo root). GNU Stow and the `_bootstrap` script were retired in Oct 2026.
 | System packages (brew/brew-cask) | `[bootstrap.packages]` | `mise bootstrap packages apply` |
 | Full machine setup | `mise bootstrap` | see below |
 | Drift check (CI-able) | | `mise bootstrap status --missing` |
+| Tool version updates | `tool_update.global_auto` | automatic (see notes below) |
+| Cross-machine sync | launchd `dev.mise.dotfiles-sync` | automatic every 15 min (see notes below) |
 | Homebrew CLI | kept as escape hatch | `brew list/upgrade` still work on mise-installed formulae |
 
 **Fresh machine**: install mise (<https://mise.jdx.dev>), `git clone
@@ -39,106 +41,61 @@ relative symlinks, so cutover back is mechanical.
   is fragile — brew shellenv prepends `/opt/homebrew/bin`); bash resolves via
   PATH; zsh installs its own copy via zinit from GitHub Releases.
 
-## Infrastructure — Oracle Cloud (Singapore, Always Free)
+### Tool version doctrine (2026-10-27)
 
-All instances run in the Oracle Cloud home region (Singapore).
-Arch: ARM (Ampere A1). Provisioned via Terraform + cloud-init.
+`tool_update.global_auto = true` in the global config: every global tool
+auto-updates **within its declared range** — shims/`mise exec` upgrade before
+running (background at the prompt in activated shells). Supply-chain gated by
+the default `minimum_release_age` (24h); superseded versions auto-prune after
+24h (`upgrade.prune_after`). Failures surface in `mise doctor`.
 
-### Instances
+- **Runtimes are range-bound** (`python = "3.14"`, `ruby = "4.0"`, `go = "1.26"`,
+  `zig = "0.16"`, `node = "26"`) so auto-updates never major-jump. Leaf CLIs
+  (gh, pnpm, uv, yarn, …) ride `latest`.
+- **`terraform` is exact-pinned** — bump deliberately; its failure mode is the
+  infra repo. (Exact pins are the opt-out: they never auto-update.)
+- **One owner per tool**: `gh`, `pipx`, `elm` live in `[tools]` (mise wins on
+  PATH; their `brew:` entries were removed). `pocketbase` is brew-only (the
+  dead `npm:pocketbase` pin was removed).
+- **pi is single-homed as the `npm:@earendil-works/pi-coding-agent` tool.**
+  Never `npm i -g` it under the active node — that copy shadows the mise shim
+  and goes stale (it silently broke both error-cause patchers once). If pi
+  vanishes after a node bump, check the shim: `mise exec -- pi --version`.
+- **age is deliberately dual-present**: mise keeps an internal `age@latest`
+  (its encryption integration; see the `age.strict` setting) and `brew:age`
+  serves the shell. They coexist — don't prune-battle the mise one.
+- `mise upgrade` is now a one-shot catch-up, not a routine: the steady state
+  is automatic. `mise outdated` still shows what a catch-up would do.
 
-| Instance | OCPU | RAM | Boot disk | Role |
-|---|---|---|---|---|
-| `svc-01` | 2 | 12 GB | 110 GB | Uncloud control, tududi, umami, n8n |
-| `svc-02` | 1 | 6 GB | 45 GB | Lightpanda CDP server |
-| `svc-03` | 1 | 6 GB | 45 GB | Rails Icecast stats sampler |
+### Cross-machine dotfiles sync (2026-10-27)
 
-**Total**: 4 OCPU / 24 GB RAM / 200 GB — within Always Free limits ✓
+The launchd agent `dev.mise.dotfiles-sync` (declared in `[bootstrap.macos.launchd.agents]`,
+script `~/.local/bin/dotfiles-auto-sync`, every 15 min) keeps every Mac
+converged on `origin/main`:
 
-### Networking
+1. **Commit** local drift (edits that landed in the worktree through
+   symlinks; `.gitignore` filters junk) as `auto(sync): <host> <ts>`
+2. **Fetch** — offline cycles skip quietly
+3. **Rebase --autostash** onto `origin/main` — on conflict: abort, log,
+   desktop notification, skip the cycle (never destructive)
+4. **Push** if ahead
+5. **`mise dot apply`** to converge this machine (pre/post-dotfiles hooks run,
+   same as `./sync`)
 
-Two WireGuard-based meshes, each serving a different purpose:
+Log: `~/Library/Logs/dotfiles-sync.log`. Fresh machines still go through
+`mise bootstrap`; this loop is for steady-state convergence only. The script
+prepends `/opt/homebrew/bin` to PATH (launchd PATH is minimal; git needs gpg
+for signing and ssh for the remote). Manual equivalent: `./sync` for the
+drift report, or run the script directly to force a cycle.
 
-| Layer | Tool | Connects | Purpose |
-|---|---|---|---|
-| Device → infrastructure | Tailscale | MacBook ↔ all servers | SSH, Lightpanda CDP access from laptop, MagicDNS |
-| Server → server | Uncloud mesh | Server ↔ server | Container networking, service discovery, cross-machine deploys |
+Conflicts are rare (two machines editing the same file within 15 min); resolve
+manually in the repo and the next cycle resumes automatically.
 
-**Why both**: Uncloud's mesh handles container-to-container traffic between cluster nodes. Tailscale handles device-to-infrastructure access (your MacBook isn't running Docker or the Uncloud daemon). Resource cost is minimal — ~50 MB RAM for Tailscale, ~150 MB for Uncloud per machine.
+## Infrastructure — Oracle Cloud
 
-### Tailscale
-
-Installed via cloud-init on every instance. Provides MagicDNS so services are reachable by hostname from any tailnet device.
-
-```bash
-curl -fsSL https://tailscale.com/install.sh | sh
-tailscale up --authkey=<key>
-```
-
-### Lightpanda (svc-02)
-
-Headless browser for AI agents. Runs as a systemd service, not through Docker — it's a single binary that doesn't need SSL, domains, or reverse proxying.
-
-```bash
-# Install
-curl -L -o /usr/local/bin/lightpanda \
-  https://github.com/lightpanda-io/browser/releases/download/nightly/lightpanda-aarch64-linux
-chmod +x /usr/local/bin/lightpanda
-```
-
-```ini
-# /etc/systemd/system/lightpanda.service
-[Unit]
-Description=Lightpanda headless browser CDP server
-After=network.target tailscaled.service
-Requires=tailscaled.service
-
-[Service]
-ExecStart=/usr/local/bin/lightpanda serve --host 0.0.0.0 --port 9222 --obey-robots
-Restart=on-failure
-RestartSec=5
-Environment=LIGHTPANDA_DISABLE_TELEMETRY=true
-
-[Install]
-WantedBy=multi-user.target
-```
-
-**Firewall**: Binds `0.0.0.0:9222` but access is restricted to Tailscale interface only.
-
-**Known issue**: Oracle Cloud ARM instances use 64k page kernels. Lightpanda has an open issue ([#1370](https://github.com/lightpanda-io/browser/issues/1370)) crashing on 64k pages. Verify with `getconf PAGESIZE` after provisioning — may need a custom 4k-page kernel or a Lightpanda fix.
-
-### Uncloud (svc-01, svc-02, svc-03)
-
-[Uncloud](https://uncloud.run/) orchestrates Docker Compose apps across the three instances — zero-downtime deploys, service discovery, and cross-machine container networking via its built-in WireGuard mesh.
-
-```bash
-# On the first machine (becomes cluster seed)
-uc machine init user@svc-01
-
-# Add the other machines
-uc machine add user@svc-02
-uc machine add user@svc-03
-```
-
-**Why Uncloud over Coolify**: The workload spans 3 machines. Coolify is designed for single-server deployments. Uncloud treats multiple machines as one cluster with decentralized state — no single control plane to maintain.
-
-### Terraform
-
-All infrastructure is defined as code. Machines are cattle, not pets.
-
-```
-infra/
-├── main.tf              # providers (oci, tailscale)
-├── variables.tf         # compartment OCIDs, region, instance specs
-├── oci-networking.tf    # VCN, subnets, gateways
-├── oci-instances.tf     # 3 ARM instances with cloud-init
-├── tailscale.tf         # auth keys, ACLs
-├── cloud-init/
-│   ├── svc-01.yaml      # Uncloud + Docker, tududi, umami, n8n
-│   ├── svc-02.yaml      # Tailscale + Lightpanda
-│   └── svc-03.yaml      # Tailscale + Rails Icecast sampler
-├── terraform.tfvars     # secrets (gitignored)
-└── .gitignore
-```
+Not tracked here. The source of truth for the server fleet (instances,
+networking, services, ops conventions) is `~/Projects/infra/AGENTS.md` —
+that repo is the infra definition. This RUNBOOK covers the workstation only.
 
 ---
 

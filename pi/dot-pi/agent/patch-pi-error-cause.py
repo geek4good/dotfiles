@@ -40,12 +40,23 @@ HELPER = (
 
 def find_chunks_dir():
     pi = shutil.which("pi")
-    if not pi:
-        # Fall back to the common mise/npm install layout.
-        pi = os.path.expanduser(
-            "~/.local/share/mise/installs/node/26/bin/pi"
-        )
-    cli = os.path.realpath(pi)  # resolves the bin symlink to dist/bundle/cli.js
+    if pi:
+        cli = os.path.realpath(pi)  # npm-global bins symlink into the package
+        chunks = os.path.join(os.path.dirname(cli), "chunks")
+        if os.path.isdir(chunks):
+            return chunks
+    # mise npm-backend tool install (npm:@earendil-works/pi-coding-agent).
+    # Its .bin/pi is a real file, not a symlink — probe the package dir.
+    pkg = os.path.expanduser(
+        "~/.local/share/mise/installs/npm-earendil-works-pi-coding-agent/latest/node_modules/@earendil-works/pi-coding-agent"
+    )
+    chunks = os.path.join(pkg, "dist", "bundle", "chunks")
+    if os.path.isdir(chunks):
+        return chunks
+    # Legacy node-global layout (pre re-homing) — kept for rollbacks.
+    cli = os.path.realpath(
+        os.path.expanduser("~/.local/share/mise/installs/node/26/bin/pi")
+    )
     return os.path.join(os.path.dirname(cli), "chunks")
 
 

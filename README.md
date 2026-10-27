@@ -36,5 +36,10 @@ mise bootstrap status --missing       # full drift check (CI-friendly)
 mise bootstrap --skip-dirty           # repeatable full setup
 ```
 
+Background, no action needed: the launchd agent `dev.mise.dotfiles-sync`
+commits local drift, rebases on `origin/main`, pushes, and re-applies every
+15 min (all Macs converge — see RUNBOOK), and `tool_update.global_auto`
+keeps global tools current within their declared ranges.
+
 Historical note: GNU Stow + a `Brewfile` + a `_bootstrap` script were replaced
 by mise in Oct 2026. Stow-style `dot-` layout is preserved (`dot_prefix`).
