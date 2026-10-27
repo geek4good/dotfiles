@@ -1,3 +1,4 @@
+# Symbols changed here → update prompt_hint in zsh/dot-config/zsh/dot-zshrc
 format = """
 ${custom.ZMX_SESSION}\
 $username\

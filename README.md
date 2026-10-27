@@ -12,7 +12,7 @@ Each top-level directory is a group that mirrors the target structure under
 - **Homebrew** — kept installed as an escape hatch; mise installs brew/brew-cask
   packages itself and never runs the `brew` CLI
 - **fnox** + **age** — encrypted secrets, decrypted at shell init via SSH key
-- **bash** — shell, with bash-completion, fzf integration, and fancy Ctrl-Z
+- **zsh** — shell (fish-parity UX: zsh-autosuggestions, syntax highlighting, fzf-tab, zsh-abbr, starship); fish kept installed as fallback
 - **Neovim** (LazyVim) — editor
 - **fzf** — fuzzy finder (Ctrl+R history, Ctrl+T files, Alt+C dirs)
 

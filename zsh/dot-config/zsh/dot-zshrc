@@ -1,66 +1,87 @@
+# ── Environment ──────────────────────────────────────────────────────────────
+export LC_ALL="en_GB.UTF-8"
+export EDITOR=nvim
+export LESS=-FRX
+export HOMEBREW_NO_ENV_HINTS=1
+umask 022
+
 # Make zsh behave like bash when it comes to special characters
+# (also gives alt+D `kill-word` fish's kill-bigword semantics)
 autoload -U select-word-style
 select-word-style bash
 
-# Prompt
-PROMPT='%(?.%F{14}.%F{13})❯ %f'
+# ── PATH ─────────────────────────────────────────────────────────────────────
+# Order mirrors the fish config (minus the shims entry — mise activate
+# supersedes it). brew shellenv below prepends /opt/homebrew/bin, as in fish.
+typeset -U path
+export PNPM_HOME="$HOME/Library/pnpm"
+path=(
+  $HOME/Applications
+  $HOME/.bun/bin
+  $HOME/.local/bin
+  $PNPM_HOME
+  $HOME/govuk/govuk-docker/exe
+  $path
+)
 
-# Add apps installed with homebrew to the PATH
+# ── Homebrew ─────────────────────────────────────────────────────────────────
 eval "$(/opt/homebrew/bin/brew shellenv)"
 
-# Set the directory we want to store zinit and plugins
-ZINIT_HOME="${XDG_DATA_HOME:-${HOME}/.local/share}/zinit/zinit.git"
+# ── fnox (secrets at shell init) ─────────────────────────────────────────────
+if command -v fnox >/dev/null 2>&1; then
+  eval "$(fnox activate zsh)"
+fi
 
-# Download Zinit, if it's not there yet
+# ── mise ─────────────────────────────────────────────────────────────────────
+# Explicit path: PATH-lookup activation is fragile (see commit 730dd33 — the
+# fish incident). One mise binary everywhere: ~/.local/bin/mise.
+eval "$(~/.local/bin/mise activate zsh)"
+
+# ── zinit ────────────────────────────────────────────────────────────────────
+ZINIT_HOME="${XDG_DATA_HOME:-${HOME}/.local/share}/zinit/zinit.git"
 if [ ! -d "$ZINIT_HOME" ]; then
   mkdir -p "$(dirname $ZINIT_HOME)"
   git clone https://github.com/zdharma-continuum/zinit.git "$ZINIT_HOME"
 fi
-
-# Source/load zinit
 source "$ZINIT_HOME/zinit.zsh"
 
-# Install mise-en-place (mise)
 zinit as="command" lucid from="gh-r" for \
     id-as="usage" \
     atpull="%atclone" \
     jdx/usage
 
-zinit as="command" lucid from="gh-r" for \
-    id-as="mise" mv="mise* -> mise" \
-    atclone="./mise* completion zsh > _mise" \
-    atpull="%atclone" \
-    atload='eval "$(mise activate zsh)"' \
-    jdx/mise
+# zsh-abbr persisted user abbreviations — versioned in this repo and deployed
+# by mise (zsh/dot-config/zsh/abbreviations). Must be set before zsh-abbr loads.
+ABBR_USER_PATHS=("$HOME/.config/zsh/abbreviations")
 
-# Add in zsh plugins
+zinit light olets/zsh-abbr
 zinit light zsh-users/zsh-syntax-highlighting
 zinit light zsh-users/zsh-completions
 zinit light zsh-users/zsh-autosuggestions
 zinit light Aloxaf/fzf-tab
 
-# Add in snippets
 zinit snippet OMZP::command-not-found
 zinit snippet OMZP::docker-compose
 zinit snippet OMZP::fancy-ctrl-z
 zinit snippet OMZP::git
 
-
-# Load completions
 autoload -Uz compinit && compinit
-
 zinit cdreplay -q
 
-# Keybindings
+# ── Keybindings ──────────────────────────────────────────────────────────────
 bindkey -e
 bindkey '^p' history-search-backward
 bindkey '^n' history-search-forward
 bindkey '^l' clear-screen
+bindkey '\ed' kill-word                     # alt+D kill-bigword (word style above)
+bindkey '\e[127;4u' backward-kill-word      # delete key (CSI-u)
+bindkey '\e[108;6u' clear-screen            # ctrl+shift+L (CSI-u)
+# cmd+k (\e[107;9u) → zmx session picker: deferred — spec §5, follow-up #2
 
-# History
-HISTSIZE=5000
+# ── History ──────────────────────────────────────────────────────────────────
+HISTSIZE=50000
 HISTFILE=~/.local/share/zsh/.zsh_history
-SAVEHIST=$HISTSIZE
+SAVEHIST=10000
 HISTDUP=erase
 setopt appendhistory
 setopt sharehistory
@@ -70,35 +91,23 @@ setopt hist_ignore_dups
 setopt hist_ignore_space
 setopt hist_save_no_dups
 
-# Completion styling
-zstyle ':completion:*' matcher-list 'm:{a-z}={A-Za-z}'
+# ── Options ──────────────────────────────────────────────────────────────────
+setopt auto_cd              # `dirname` cd's, like fish
+setopt interactivecomments  # `#` comments work interactively, like fish
+
+# ── Completion styling ───────────────────────────────────────────────────────
+zstyle ':completion:*' matcher-list 'm:{a-z}={A-Za-Z}'
 zstyle ':completion:*' list-colors "${(s.:.)LS_COLORS}"
 zstyle ':completion:*' menu no
 zstyle ':fzf-tab:complete:cd:*' fzf-preview 'ls --color $realpath'
-# zstyle ':fzf-tab:complete:__zoxide_z:*' fzf-preview 'ls --color $realpath'
 
-# Aliases
+# ── The one alias ────────────────────────────────────────────────────────────
+# Abbreviations expand visibly (fish-style) but can't chain; the ls color
+# modifier is transparent, so it stays an alias and applies to abbr expansions
+# (ll → `ls -lh` → alias → `ls --color -lh`) at execution time.
 alias ls='ls --color'
-alias ll='ls -lh'
-alias la='ll -A'
 
-alias bubo='brew update && brew outdated'
-alias bubc='brew upgrade && brew cleanup'
-alias bcubo='brew update && brew outdated --cask'
-alias bcubc='brew upgrade --cask && brew cleanup'
-alias bubu='bubo && bcubo && bubc && bcubc'
-
-alias ml='mise latest'
-
-alias vi="nvim"
-alias vim="nvim"
-alias view="nvim -R"
-alias vimdiff="nvim -d"
-
-alias docker="docker.lima"
-alias oc="ocx oc -p ws"
-
-# Custom functions
+# ── Functions ────────────────────────────────────────────────────────────────
 v() { nvim "${@:-.}"; }
 
 docker_start() {
@@ -110,15 +119,32 @@ docker_stop() {
   limactl stop docker
 }
 
-# Shell integrations
+# ── Shell integrations ───────────────────────────────────────────────────────
 eval "$(fzf --zsh)"
-
-# pnpm
-export PNPM_HOME="/Users/geek4good/Library/pnpm"
-case ":$PATH:" in
-  *":$PNPM_HOME:"*) ;;
-  *) export PATH="$PNPM_HOME:$PATH" ;;
-esac
-# pnpm end
-
 if command -v wt >/dev/null 2>&1; then eval "$(command wt config shell init zsh)"; fi
+
+# ── Prompt ───────────────────────────────────────────────────────────────────
+eval "$(starship init zsh)"
+
+# Usage legend for the prompt above. If you change symbols in
+# starship/dot-config/starship.toml, update this too.
+prompt_hint() {
+  cat <<'EOF'
+prompt anatomy:  [session in] ~/dir on  branch [git-status] [exit] ❯
+
+  ❯ cyan           last command succeeded
+  ❯ bright-purple  last command failed
+  [127]            exit code of last command (shown when non-zero)
+  session          zmx session name (inside zmx sessions only)
+
+git status symbols (starship defaults):
+  !   modified      +   staged       ?   untracked    ✘   deleted
+  »   renamed       $   stashed      ⇡   ahead        ⇣   behind
+  ⇕   diverged      =   conflicted
+EOF
+}
+
+# ── Terminal title (fish_title parity) ───────────────────────────────────────
+autoload -Uz add-zsh-hook
+_set_title() { print -Pn "\e]0;${ZMX_SESSION:-%~}\a" }
+add-zsh-hook precmd _set_title
