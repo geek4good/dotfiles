@@ -1,3 +1,6 @@
+[bootstrap.services.mise-history]
+builtin = "history-watch"
+
 [tools]
 # Runtimes & languages (multi-version per project).
 # Runtimes are RANGE-bound (auto-updates stay inside the range: python "3.14"
