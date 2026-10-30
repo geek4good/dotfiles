@@ -80,9 +80,9 @@ zinit as="command" lucid from="gh-r" for \
     atpull="%atclone" \
     jdx/usage
 
-# zsh-abbr persisted user abbreviations — versioned in this repo and deployed
-# by mise (zsh/dot-config/zsh/abbreviations). Must be set before zsh-abbr loads.
-ABBR_USER_PATHS=("$HOME/.config/zsh/abbreviations")
+# zsh-abbr user abbreviations file — v6's DEFAULT path is exactly
+# ~/.config/zsh/abbreviations, which is where mise deploys
+# zsh/dot-config/zsh/abbreviations. (ABBR_USER_PATHS does not exist in v6.)
 
 # Plugin load order matters:
 #   1. zsh-completions adds fpath entries → compinit must run after it
