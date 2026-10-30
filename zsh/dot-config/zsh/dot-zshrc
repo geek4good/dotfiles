@@ -37,38 +37,10 @@ fi
 # fish incident). One mise binary everywhere: ~/.local/bin/mise.
 eval "$(~/.local/bin/mise activate zsh)"
 
-# ── zinit ────────────────────────────────────────────────────────────────────
-ZINIT_HOME="${XDG_DATA_HOME:-${HOME}/.local/share}/zinit/zinit.git"
-if [ ! -d "$ZINIT_HOME" ]; then
-  mkdir -p "$(dirname $ZINIT_HOME)"
-  git clone https://github.com/zdharma-continuum/zinit.git "$ZINIT_HOME"
-fi
-source "$ZINIT_HOME/zinit.zsh"
-
-zinit as="command" lucid from="gh-r" for \
-    id-as="usage" \
-    atpull="%atclone" \
-    jdx/usage
-
-# zsh-abbr persisted user abbreviations — versioned in this repo and deployed
-# by mise (zsh/dot-config/zsh/abbreviations). Must be set before zsh-abbr loads.
-ABBR_USER_PATHS=("$HOME/.config/zsh/abbreviations")
-
-zinit light olets/zsh-abbr
-zinit light zsh-users/zsh-syntax-highlighting
-zinit light zsh-users/zsh-completions
-zinit light zsh-users/zsh-autosuggestions
-zinit light Aloxaf/fzf-tab
-
-zinit snippet OMZP::command-not-found
-zinit snippet OMZP::docker-compose
-zinit snippet OMZP::fancy-ctrl-z
-zinit snippet OMZP::git
-
-autoload -Uz compinit && compinit
-zinit cdreplay -q
-
 # ── Keybindings ──────────────────────────────────────────────────────────────
+# Base keymap BEFORE plugins load: plugins (zsh-abbr especially) wrap the
+# bindings that exist at their load time — a bindkey -e after them resets the
+# keymap and wipes plugin bindings (that's how abbr's space-expansion broke).
 bindkey -e
 bindkey '^p' history-search-backward
 bindkey '^n' history-search-forward
@@ -94,6 +66,42 @@ setopt hist_save_no_dups
 # ── Options ──────────────────────────────────────────────────────────────────
 setopt auto_cd              # `dirname` cd's, like fish
 setopt interactivecomments  # `#` comments work interactively, like fish
+
+# ── zinit ────────────────────────────────────────────────────────────────────
+ZINIT_HOME="${XDG_DATA_HOME:-${HOME}/.local/share}/zinit/zinit.git"
+if [ ! -d "$ZINIT_HOME" ]; then
+  mkdir -p "$(dirname $ZINIT_HOME)"
+  git clone https://github.com/zdharma-continuum/zinit.git "$ZINIT_HOME"
+fi
+source "$ZINIT_HOME/zinit.zsh"
+
+zinit as="command" lucid from="gh-r" for \
+    id-as="usage" \
+    atpull="%atclone" \
+    jdx/usage
+
+# zsh-abbr persisted user abbreviations — versioned in this repo and deployed
+# by mise (zsh/dot-config/zsh/abbreviations). Must be set before zsh-abbr loads.
+ABBR_USER_PATHS=("$HOME/.config/zsh/abbreviations")
+
+# Plugin load order matters:
+#   1. zsh-completions adds fpath entries → compinit must run after it
+#   2. compinit before fzf-tab (its requirement)
+#   3. fzf-tab after zsh-autosuggestions (its requirement)
+#   4. zsh-syntax-highlighting LAST — it wraps every widget present at load
+zinit light zsh-users/zsh-completions
+autoload -Uz compinit && compinit
+zinit light zsh-users/zsh-autosuggestions
+zinit light olets/zsh-abbr
+zinit light Aloxaf/fzf-tab
+zinit light zsh-users/zsh-syntax-highlighting
+
+zinit snippet OMZP::command-not-found
+zinit snippet OMZP::docker-compose
+zinit snippet OMZP::fancy-ctrl-z
+zinit snippet OMZP::git
+
+zinit cdreplay -q
 
 # ── Completion styling ───────────────────────────────────────────────────────
 zstyle ':completion:*' matcher-list 'm:{a-z}={A-Za-Z}'
