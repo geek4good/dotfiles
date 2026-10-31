@@ -61,3 +61,6 @@ experimental = true  # required by cargo:/go: backends below
 # minimum_release_age (24h) gates supply-chain risk; old versions auto-prune
 # after upgrade.prune_after (24h). Exact pins (e.g. terraform) never auto-update.
 tool_update.global_auto = true
+
+[dotfiles]
+"~/Library/Preferences/com.superlogical.rex.plist" = { mode = "track", variants = [{ os = "macos" }] }
