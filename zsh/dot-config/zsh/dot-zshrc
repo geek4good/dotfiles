@@ -129,6 +129,10 @@ docker_stop() {
 
 # ── Shell integrations ───────────────────────────────────────────────────────
 eval "$(fzf --zsh)"
+# fzf binds ctrl+t to the file widget by default; move it to alt+o ("open")
+# and restore stock ctrl+t (transpose-chars). alt+t stays stock transpose-words.
+bindkey '^[o' fzf-file-widget
+bindkey '^t' transpose-chars
 if command -v wt >/dev/null 2>&1; then eval "$(command wt config shell init zsh)"; fi
 
 # ── Prompt ───────────────────────────────────────────────────────────────────

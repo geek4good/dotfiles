@@ -14,7 +14,7 @@ Each top-level directory is a group that mirrors the target structure under
 - **fnox** + **age** — encrypted secrets, decrypted at shell init via SSH key
 - **zsh** — shell (fish-parity UX: zsh-autosuggestions, syntax highlighting, fzf-tab, zsh-abbr, starship); fish kept installed as fallback
 - **Neovim** (LazyVim) — editor
-- **fzf** — fuzzy finder (Ctrl+R history, Ctrl+T files, Alt+C dirs)
+- **fzf** — fuzzy finder (Ctrl+R history, Alt+O files, Alt+C dirs; Ctrl+T swaps adjacent characters)
 
 ## Setup (fresh machine)
 

@@ -29,6 +29,13 @@ end
 
 # fzf
 fzf --fish | source
+# fzf binds ctrl+t to the file widget by default; move it to alt+o ("open")
+# and give ctrl+t zsh-parity transpose-chars (see functions/__fish_transpose_chars.fish).
+# alt+t transpose-words is zsh-only (no fish equivalent).
+bind \eo fzf-file-widget
+bind -M insert \eo fzf-file-widget
+bind \ct __fish_transpose_chars
+bind -M insert \ct __fish_transpose_chars
 
 # Worktrunk
 if command -q wt
