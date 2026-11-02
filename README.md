@@ -1,14 +1,30 @@
 # dotfiles
 
-Configuration files deployed with [mise](https://mise.jdx.dev/) dotfile groups.
-Each top-level directory is a group that mirrors the target structure under
-`$HOME`, using `dot-` prefixes in place of leading dots (see `mise.toml`).
+Dotfiles are **tracked in place by mise** (`mise dot`) and synced across machines
+through a private origin (`setup.git`) — the watcher checkpoints every edit and
+publishes/fetches automatically.
+
+This repo is no longer the file deployment source. It holds **machine
+declarations** (`mise.toml`: packages, tools, LaunchAgents, hooks, bootstrap
+task) plus the **pi skills** and the pre-track **archive** of config files
+(`zsh/`, `fish/`, `nvim/`, …) kept for reference.
+
+## Setup (fresh machine)
+
+```sh
+# 1. Install mise — https://mise.jdx.dev
+# 2. Restore all dotfiles + declarations from the history origin:
+mise bootstrap --adopt geek4good/setup
+```
+
+Daily: nothing — the watcher syncs. Manual flush: `mise dot sync && mise dot pull`.
+Drift/status: `mise dot status`. History: `mise dot history` / `rollback` / `undo`.
 
 ## Tech stack
 
-- **mise** — dotfile deployment (`[dotfile_groups]`), system packages
-  (`[bootstrap.packages]`, former Brewfile), dev tool version management
-  (`[tools]`: Node, Go, Rust, Python, …), and full machine bootstrap
+- **mise** — everything: dotfile tracking + cross-machine sync (history origin),
+  system packages (`[bootstrap.packages]`), dev tool version management
+  (`[tools]`), and full machine bootstrap
 - **Homebrew** — kept installed as an escape hatch; mise installs brew/brew-cask
   packages itself and never runs the `brew` CLI
 - **fnox** + **age** — encrypted secrets, decrypted at shell init via SSH key
@@ -16,30 +32,18 @@ Each top-level directory is a group that mirrors the target structure under
 - **Neovim** (LazyVim) — editor
 - **fzf** — fuzzy finder (Ctrl+R history, Alt+O files, Alt+C dirs; Ctrl+T swaps adjacent characters)
 
-## Setup (fresh machine)
+## Maintenance
 
 ```sh
-# 1. Install mise — https://mise.jdx.dev (official installer)
-# 2. Clone and bootstrap:
-git clone git@github.com:geek4good/dotfiles.git ~/Projects/dotfiles
-cd ~/Projects/dotfiles
-mise trust
-mise bootstrap        # interactive terminal: creates the Touch-ID PAM file once
-```
-
-Daily use from inside the repo:
-
-```sh
-./sync                                # deploy dotfiles (+ skills ingest, drift report)
 mise bootstrap packages status        # package drift
 mise bootstrap status --missing       # full drift check (CI-friendly)
-mise bootstrap --skip-dirty           # repeatable full setup
+mise bootstrap --skip-dirty           # repeatable full setup (declarations)
 ```
 
-Background, no action needed: the launchd agent `dev.mise.dotfiles-sync`
-commits local drift, rebases on `origin/main`, pushes, and re-applies every
-15 min (all Macs converge — see RUNBOOK), and `tool_update.global_auto`
-keeps global tools current within their declared ranges.
+One caveat: `[bootstrap.packages]`/LaunchAgent declarations live in this
+repo's `mise.toml`, which the `--adopt` flow does **not** clone — until those
+move into the tracked global config, follow `--adopt` with cloning this repo
+and one `mise bootstrap`.
 
-Historical note: GNU Stow + a `Brewfile` + a `_bootstrap` script were replaced
-by mise in Oct 2026. Stow-style `dot-` layout is preserved (`dot_prefix`).
+Historical: GNU Stow → mise deploy groups (Oct 2026) → mise track + origin
+sync (Nov 2026). The per-app `dot-` directories are the pre-track archive.

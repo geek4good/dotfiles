@@ -2,6 +2,14 @@
 
 Guide for AI agents working in this dotfiles repository.
 
+> **Model change (Nov 2026):** dotfiles are no longer deployed from this repo.
+> They are tracked in place by `mise dot` and synced across machines via the
+> `setup.git` history origin (see README/RUNBOOK). The per-app directories
+> (`zsh/`, `fish/`, `nvim/`, ...) below are the **pre-track archive**, kept for
+> reference — do not edit them expecting deployment. This repo's live role:
+> `mise.toml` declarations + pi skills. Sections below describing group
+> deployment are historical.
+
 ## Repository purpose
 
 Personal configuration files deployed with [mise](https://mise.jdx.dev/) dotfile

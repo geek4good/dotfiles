@@ -4,92 +4,23 @@ Infrastructure decisions, service layout, and operational conventions for this s
 
 ## Workstation provisioning (this Mac)
 
-The dotfiles repo is the machine definition, deployed by **mise** (see `mise.toml` at
-the repo root). GNU Stow and the `_bootstrap` script were retired in Oct 2026.
+**Nov 2026 — Model B (track + origin sync).** Dotfiles are real files, tracked
+in place by `mise dot`; the watcher checkpoints every edit and syncs with the
+private origin `setup.git`. All Macs converge through the history, not through
+this repo. The repo keeps machine declarations (`mise.toml`: packages, tools,
+LaunchAgents, hooks, bootstrap task) + pi skills + the pre-track archive
+(`zsh/`, `fish/`, ...). Fresh machine: install mise, then
+`mise bootstrap --adopt geek4good/setup` (see README for the declarations caveat).
 
 | Concern | Tool | Command |
 |---|---|---|
-| Dotfile deployment | `mise dot` groups | `./sync` or `mise dot apply` |
+| Dotfiles + cross-machine sync | mise history + origin | automatic (watcher); `mise dot sync` to flush |
 | System packages (brew/brew-cask) | `[bootstrap.packages]` | `mise bootstrap packages apply` |
-| Full machine setup | `mise bootstrap` | see below |
+| Full machine setup | `mise bootstrap` | |
 | Drift check (CI-able) | | `mise bootstrap status --missing` |
-| Tool version updates | `tool_update.global_auto` | automatic (see notes below) |
-| Cross-machine sync | launchd `dev.mise.dotfiles-sync` | automatic every 15 min (see notes below) |
-| Homebrew CLI | kept as escape hatch | `brew list/upgrade` still work on mise-installed formulae |
+| History: undo/rollback | | `mise dot undo` / `mise dot rollback` |
 
-**Fresh machine**: install mise (<https://mise.jdx.dev>), `git clone
-git@github.com:geek4good/dotfiles.git ~/Projects/dotfiles`, then `cd ~/Projects/dotfiles
-&& mise trust && mise bootstrap` (interactive terminal required once — it creates the
-Touch-ID PAM file under `/etc/pam.d`). **Unattended/repeated runs**: add `--skip-dirty`
-(the repo is often intentionally dirty; edits land in it through symlinks).
-
-**Rollback to stow** (if ever needed): `brew install stow`, uncomment the stow flow
-from git history (`git show 7afb063^:sync`), restore `.stow-local-ignore` and
-`homebrew/dot-Brewfile` from `git show 078f7f1^`. mise links are stow-compatible
-relative symlinks, so cutover back is mechanical.
-
-### Package ownership notes
-
-- Formulae installed by mise's brew manager are brew-compatible (visible to
-  `brew list`); casks installed by the brew CLI stay brew-owned (mise leaves them
-  alone). Ownership is per-package, not per-machine.
-- `mise bootstrap packages prune --dry-run` is the explicit cleanup (like
-  `brew bundle cleanup`) — never run it blind.
-- mise itself lives in `~/.local/bin/mise` (official release tarball), updated via
-  `mise self-update`. It is deliberately NOT a brew formula or `[tools]` entry.
-  Shell activation: fish uses the explicit path in `config.fish` (PATH-lookup
-  is fragile — brew shellenv prepends `/opt/homebrew/bin`); bash resolves via
-  PATH; zsh installs its own copy via zinit from GitHub Releases.
-
-### Tool version doctrine (2026-10-27)
-
-`tool_update.global_auto = true` in the global config: every global tool
-auto-updates **within its declared range** — shims/`mise exec` upgrade before
-running (background at the prompt in activated shells). Supply-chain gated by
-the default `minimum_release_age` (24h); superseded versions auto-prune after
-24h (`upgrade.prune_after`). Failures surface in `mise doctor`.
-
-- **Runtimes are range-bound** (`python = "3.14"`, `ruby = "4.0"`, `go = "1.26"`,
-  `zig = "0.16"`, `node = "26"`) so auto-updates never major-jump. Leaf CLIs
-  (gh, pnpm, uv, yarn, …) ride `latest`.
-- **`terraform` is exact-pinned** — bump deliberately; its failure mode is the
-  infra repo. (Exact pins are the opt-out: they never auto-update.)
-- **One owner per tool**: `gh`, `pipx`, `elm` live in `[tools]` (mise wins on
-  PATH; their `brew:` entries were removed). `pocketbase` is brew-only (the
-  dead `npm:pocketbase` pin was removed).
-- **pi is single-homed as the `npm:@earendil-works/pi-coding-agent` tool.**
-  Never `npm i -g` it under the active node — that copy shadows the mise shim
-  and goes stale (it silently broke both error-cause patchers once). If pi
-  vanishes after a node bump, check the shim: `mise exec -- pi --version`.
-- **age is deliberately dual-present**: mise keeps an internal `age@latest`
-  (its encryption integration; see the `age.strict` setting) and `brew:age`
-  serves the shell. They coexist — don't prune-battle the mise one.
-- `mise upgrade` is now a one-shot catch-up, not a routine: the steady state
-  is automatic. `mise outdated` still shows what a catch-up would do.
-
-### Cross-machine dotfiles sync (2026-10-27)
-
-The launchd agent `dev.mise.dotfiles-sync` (declared in `[bootstrap.macos.launchd.agents]`,
-script `~/.local/bin/dotfiles-auto-sync`, every 15 min) keeps every Mac
-converged on `origin/main`:
-
-1. **Commit** local drift (edits that landed in the worktree through
-   symlinks; `.gitignore` filters junk) as `auto(sync): <host> <ts>`
-2. **Fetch** — offline cycles skip quietly
-3. **Rebase --autostash** onto `origin/main` — on conflict: abort, log,
-   desktop notification, skip the cycle (never destructive)
-4. **Push** if ahead
-5. **`mise dot apply`** to converge this machine (pre/post-dotfiles hooks run,
-   same as `./sync`)
-
-Log: `~/Library/Logs/dotfiles-sync.log`. Fresh machines still go through
-`mise bootstrap`; this loop is for steady-state convergence only. The script
-prepends `/opt/homebrew/bin` to PATH (launchd PATH is minimal; git needs gpg
-for signing and ssh for the remote). Manual equivalent: `./sync` for the
-drift report, or run the script directly to force a cycle.
-
-Conflicts are rare (two machines editing the same file within 15 min); resolve
-manually in the repo and the next cycle resumes automatically.
+mise itself lives in `~/.local/bin/mise` (official release), `mise self-update`.
 
 ## Infrastructure — Oracle Cloud
 
