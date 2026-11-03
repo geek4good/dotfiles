@@ -19,6 +19,7 @@ LaunchAgents, hooks, bootstrap task) + pi skills + the pre-track archive
 | Full machine setup | `mise bootstrap` | |
 | Drift check (CI-able) | | `mise bootstrap status --missing` |
 | History: undo/rollback | | `mise dot undo` / `mise dot rollback` |
+| Merged-PR worktree cleanup | reference-transaction hook (instant, on fetch; `--local` ancestry mode) + 15-min gh agent (squash-merge repos) | automatic |
 
 mise itself lives in `~/.local/bin/mise` (official release), `mise self-update`.
 
